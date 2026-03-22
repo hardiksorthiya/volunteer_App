@@ -1,0 +1,2483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voluntree API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #4CAF50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        
+        .status-server {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status-db {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .api-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4CAF50;
+        }
+        
+        .endpoint {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .method {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: white;
+        }
+        
+        .method.get {
+            background: #4CAF50;
+        }
+        
+        .method.post {
+            background: #2196F3;
+        }
+        
+        .method.put {
+            background: #FF9800;
+        }
+        
+        .method.delete {
+            background: #f44336;
+        }
+        
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .endpoint-desc {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .endpoint-body {
+            margin-top: 15px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .input-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn-test {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .btn-test:hover {
+            background: #45a049;
+        }
+        
+        .btn-test:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            display: none;
+        }
+        
+        .response.show {
+            display: block;
+        }
+        
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .status-code {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .status-code.success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-code.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .response-body {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .test-all-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        
+        .test-all-btn:hover {
+            background: #5568d3;
+        }
+        
+        /* Accordion styles (added) */
+        .accordion { border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
+        .accordion-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 18px 22px;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #333;
+        }
+        .accordion-toggle .title { display:flex; gap:12px; align-items:center; }
+        .accordion-toggle .icon {
+            transition: transform .25s ease;
+            font-size: 18px;
+            color: #666;
+        }
+        .accordion-toggle.collapsed .icon { transform: rotate(-90deg); } /* collapsed state rotates icon */
+        .accordion-content {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            display: none; /* collapsed by default */
+        }
+        .accordion-content.show { display: block; }
+        /* Slight spacing for inner endpoints */
+        .accordion-content .api-section { margin: 0; box-shadow: none; border-left: none; }
+
+        /* Sidebar styles (added) */
+        .layout {
+            display: flex;
+            gap: 20px;
+        }
+        .sidebar {
+            width: 220px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+            height: calc(100vh - 40px);
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+        }
+        .sidebar .brand { font-weight:700; margin-bottom:10px; color:#333; display:flex; gap:8px; align-items:center}
+        .sidebar .nav { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+        .sidebar .nav button {
+            text-align:left;
+            background: transparent;
+            border: none;
+            padding: 10px 12px;
+            border-radius:6px;
+            cursor: pointer;
+            font-weight:600;
+            color:#333;
+        }
+        .sidebar .nav button:hover { background:#f1f5f9; }
+        .sidebar .logout { color:#b91c1c; }
+        /* simple toast */
+        #toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: none;
+            z-index: 9999;
+            font-size: 13px;
+        }
+
+        /* Users sidebar (added) */
+        .users-sidebar-toggle {
+            display:inline-block;
+            margin-left:12px;
+            padding:8px 12px;
+            background:#fff;
+            border-radius:6px;
+            color:#2f80ed;
+            border:1px solid #dbeafe;
+            cursor:pointer;
+            font-weight:600;
+            text-decoration:none;
+        }
+        .users-sidebar {
+            position:fixed;
+            left:0;
+            top:0;
+            bottom:0;
+            width:340px;
+            background:#ffffff;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.12);
+            transform: translateX(-100%);
+            transition: transform .28s ease;
+            z-index:1000;
+            overflow:auto;
+            padding:18px;
+        }
+        .users-sidebar.open { transform: translateX(0); }
+        .users-sidebar .header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+        .users-sidebar .header h3 { margin:0; font-size:1.1em; color:#222; }
+        .users-sidebar .close-btn { background:#f3f4f6; border:0; padding:6px 8px; border-radius:6px; cursor:pointer; }
+        .users-sidebar .users-table { width:100%; border-collapse:collapse; font-family:monospace; font-size:13px; }
+        .users-sidebar .users-table th, .users-sidebar .users-table td { padding:8px 6px; border-bottom:1px solid #eee; text-align:left; }
+        .users-sidebar .users-table th { background:#fafafa; font-weight:700; font-size:12px; color:#444; }
+        .users-sidebar .small { font-size:12px; color:#666; margin-top:8px; }
+        .users-sidebar .refresh-btn { background:#2f80ed;color:#fff;border:0;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:600;margin-left:8px; }
+        .users-sidebar .empty { padding:18px; color:#777; text-align:center; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+       
+        <div style="flex:1">
+            <div class="container">
+                <!-- Authentication APIs (now inside accordion) -->
+                <div class="accordion" id="accordion-authentication">
+                    <div class="accordion-toggle collapsed" data-target="auth-content" role="button" aria-expanded="false" tabindex="0">
+                        <div class="title"><span>🔐</span><span>Authentication</span></div>
+                        <div class="icon">▾</div>
+                    </div>
+                    <div id="auth-content" class="accordion-content" aria-hidden="true">
+                        <div class="api-section">
+                            <h2 class="section-title">🔐 Authentication</h2>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/auth/register</span>
+                                </div>
+                                <div class="endpoint-desc">Register a new user</div>
+                                <div class="endpoint-body">
+                                    <div id="auth-register-form">
+                                        <div class="input-group">
+                                            <label>Name</label>
+                                            <input id="reg-name" type="text" placeholder="John Doe" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Email</label>
+                                            <input id="reg-email" type="email" placeholder="john@example.com" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Mobile</label>
+                                            <input id="reg-mobile" type="text" placeholder="123-456-7890" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Password</label>
+                                            <input id="reg-password" type="password" placeholder="password123" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Confirm Password</label>
+                                            <input id="reg-confirmPassword" type="password" placeholder="password123" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/auth/register', 'auth-register-form', 'auth-register-response')">Test Endpoint</button>
+                                    <div class="response" id="auth-register-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/auth/login</span>
+                                </div>
+                                <div class="endpoint-desc">Login user - Returns JWT token on success</div>
+                                <div class="endpoint-body">
+                                    <div id="auth-login-form">
+                                        <div class="input-group">
+                                            <label>Email</label>
+                                            <input id="login-email" type="email" placeholder="john@example.com" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Password</label>
+                                            <input id="login-password" type="password" placeholder="password123" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/auth/login', 'auth-login-form', 'auth-login-response')">Test Endpoint</button>
+                                    <div class="response" id="auth-login-response"></div>
+                                    <div style="margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 4px; font-size: 0.9em;">
+                                        <strong>Success Response:</strong> Returns token and user data. Status: 200
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Forgot Password API (accordion) -->
+                <div class="accordion" id="accordion-forgot">
+                    <div class="accordion-toggle collapsed" data-target="forgot-content" role="button" aria-expanded="false" tabindex="0">
+                        <div class="title"><span>🔑</span><span>Password Reset</span></div>
+                        <div class="icon">▾</div>
+                    </div>
+                    <div id="forgot-content" class="accordion-content" aria-hidden="true">
+                        <div class="api-section">
+                            <h2 class="section-title">🔑 Password Reset</h2>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/auth/forgot-password</span>
+                                </div>
+                                <div class="endpoint-desc">Request password reset link</div>
+                                <div class="endpoint-body">
+                                    <div id="forgot-password-form">
+                                        <div class="input-group">
+                                            <label>Email</label>
+                                            <input id="forgot-email" type="email" placeholder="john@example.com" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/auth/forgot-password', 'forgot-password-form', 'forgot-password-response')">Test Endpoint</button>
+                                    <div class="response" id="forgot-password-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/auth/reset-password</span>
+                        </div>
+                                <div class="endpoint-desc">Reset password with current password confirmation (requires authentication)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="reset-password-form">
+                                        <div class="input-group">
+                                            <label>Current Password</label>
+                                            <input id="reset-current-password" type="password" placeholder="Enter current password" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>New Password</label>
+                                            <input id="reset-new-password" type="password" placeholder="Enter new password (min 6 characters)" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/auth/reset-password', 'reset-password-form', 'reset-password-response')">Test Endpoint</button>
+                                    <div class="response" id="reset-password-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/users/change-password</span>
+                                </div>
+                                <div class="endpoint-desc">Change password with current password confirmation (requires authentication)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="change-password-form">
+                                        <div class="input-group">
+                                            <label>Current Password</label>
+                                            <input id="change-current-password" type="password" placeholder="Enter current password" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>New Password</label>
+                                            <input id="change-new-password" type="password" placeholder="Enter new password (min 6 characters)" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/users/change-password', 'change-password-form', 'change-password-response')">Test Endpoint</button>
+                                    <div class="response" id="change-password-response"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Users APIs (accordion) -->
+                <div class="accordion" id="accordion-users">
+                    <div class="accordion-toggle collapsed" data-target="users-content" role="button" aria-expanded="false" tabindex="0">
+                        <div class="title"><span>👥</span><span>Users</span></div>
+                        <div class="icon">▾</div>
+                    </div>
+                    <div id="users-content" class="accordion-content" aria-hidden="true">
+                        <div class="api-section">
+                            <h2 class="section-title">👥 Users</h2>
+                            
+                            <!-- Token input for user-management endpoints -->
+                            <div class="input-group">
+                                <label>Auth Token (JWT)</label>
+                                <input id="users-token" type="text" placeholder="Paste token here for protected endpoints" />
+                                <div style="margin-top:8px;font-size:13px;color:#555;">
+                                    Role: <strong id="token-role-label">unknown</strong>
+                                    <button id="apply-token-btn" class="btn-test" style="margin-left:10px;padding:6px 10px;font-size:0.9em;">Apply token</button>
+                                </div>
+                            </div>
+                            
+                            <!-- List all users (admin-only) - New endpoint -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/users</span>
+                                </div>
+                                <div class="endpoint-desc">List all users (Admin only - Requires user_management permission)</div>
+                                <div class="endpoint-body">
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/users', null, 'users-list-all-response')">Test Endpoint</button>
+                                    <div class="response" id="users-list-all-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Get user by ID -->
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/users/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Get user by ID (You can view your own profile, or admin can view any user)</div>
+                                <div class="endpoint-body">
+                                    <div id="get-user-by-id-form">
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="get-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/users/:id', 'get-user-by-id-form', 'users-get-by-id-response')">Test Endpoint</button>
+                                    <div class="response" id="users-get-by-id-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- List all users (admin-only) - Old endpoint -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/auth/users</span>
+                                </div>
+                                <div class="endpoint-desc">List all users (requires token) - Legacy endpoint</div>
+                                <div class="endpoint-body">
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/auth/users', 'users-token', 'users-list-response')">Test Endpoint</button>
+                                    <div class="response" id="users-list-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Delete user (admin-only) -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method delete">DELETE</span>
+                                    <span class="endpoint-path">/api/auth/users/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Delete user by ID (requires token)</div>
+                                <div class="endpoint-body">
+                                    <div id="delete-user-form">
+                                        <div class="input-group">
+                                            <label>User ID to Delete</label>
+                                            <input id="delete-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('DELETE', '/api/auth/users/:id', 'delete-user-form', 'users-delete-response')">Test Endpoint</button>
+                                    <div class="response" id="users-delete-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Update user (admin-only) -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/auth/users/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Update user by ID (provide any fields to update; requires token)</div>
+                                <div class="endpoint-body">
+                                    <div id="update-user-form">
+                                        <div class="input-group">
+                                            <label>User ID to Update</label>
+                                            <input id="update-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Name</label>
+                                            <input id="update-name" type="text" placeholder="New name (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Email</label>
+                                            <input id="update-email" type="email" placeholder="New email (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Mobile</label>
+                                            <input id="update-mobile" type="text" placeholder="New mobile (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>New Password</label>
+                                            <input id="update-password" type="password" placeholder="New password (optional)" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/auth/users/:id', 'update-user-form', 'users-update-response')">Test Endpoint</button>
+                                    <div class="response" id="users-update-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/users/me</span>
+                                </div>
+                                <div class="endpoint-desc">Get current user profile (requires authentication)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/users/me', null, 'users-me-response')">Test Endpoint</button>
+                                    <div class="response" id="users-me-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/users/me</span>
+                                </div>
+                                <div class="endpoint-desc">Update current user profile (requires authentication)</div>
+                                <div class="endpoint-body">
+                                    <div id="update-me-form">
+                                        <div class="input-group">
+                                            <label>Name</label>
+                                            <input id="update-me-name" type="text" placeholder="New name (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Phone</label>
+                                            <input id="update-me-phone" type="text" placeholder="New phone (optional)" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/users/me', 'update-me-form', 'users-update-me-response')">Test Endpoint</button>
+                                    <div class="response" id="users-update-me-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Upload profile image -->
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/users/me/upload-image</span>
+                                </div>
+                                <div class="endpoint-desc">Upload profile image (requires authentication)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="upload-image-form">
+                                        <div class="input-group">
+                                            <label>Image File</label>
+                                            <input id="upload-image-file" type="file" accept="image/*" />
+                                            <small style="color: #666; font-size: 0.9em; margin-top: 5px; display: block;">
+                                                Maximum file size: 5MB. Accepted formats: JPG, PNG, GIF, etc.
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/users/me/upload-image', 'upload-image-form', 'users-upload-image-response')">Test Endpoint</button>
+                                    <div class="response" id="users-upload-image-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Get hour target progress -->
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/users/me/hour-target-progress</span>
+                                </div>
+                                <div class="endpoint-desc">Get current user's hour target and progress (hours completed in current week/month). Returns target_type (weekly/monthly), target_hours, current_week_hours, current_month_hours, and period labels. Requires authentication.</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <p style="margin-bottom: 10px; color: #555;">No request body. Response includes: <code>target_type</code>, <code>target_hours</code>, <code>current_week_hours</code>, <code>current_month_hours</code>, <code>period_label_week</code>, <code>period_label_month</code>.</p>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/users/me/hour-target-progress', null, 'users-hour-target-progress-response')">Test Endpoint</button>
+                                    <div class="response" id="users-hour-target-progress-response"></div>
+                                </div>
+                            </div>
+
+                            <!-- Get hour target history -->
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/users/me/hour-targets</span>
+                                </div>
+                                <div class="endpoint-desc">Get current user's hour target history (most recent first). Each record contains target_type (weekly/monthly), target_hours, and created_at. Requires authentication.</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <p style="margin-bottom: 10px; color: #555;">No request body. Response includes a list of target records.</p>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/users/me/hour-targets', null, 'users-hour-targets-response')">Test Endpoint</button>
+                                    <div class="response" id="users-hour-targets-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Update user role (admin-only) -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/users/:id/role</span>
+                                </div>
+                                <div class="endpoint-desc">Update user role (Admin only) - Set role to 0 (admin) or 1 (volunteer)</div>
+                                <div class="endpoint-body">
+                                    <div id="update-user-role-form">
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="update-role-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Role</label>
+                                            <select id="update-role-value" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                                                <option value="0">Admin (0)</option>
+                                                <option value="1">Volunteer (1)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/users/:id/role', 'update-user-role-form', 'users-update-role-response')">Test Endpoint</button>
+                                    <div class="response" id="users-update-role-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Update user details (admin-only) -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/users/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Update user details (Admin only) - Update name, email, phone</div>
+                                <div class="endpoint-body">
+                                    <div id="update-user-details-form">
+                                        <div class="input-group">
+                                            <label>User ID to Update</label>
+                                            <input id="update-details-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Name</label>
+                                            <input id="update-details-name" type="text" placeholder="New name (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Email</label>
+                                            <input id="update-details-email" type="email" placeholder="New email (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Phone</label>
+                                            <input id="update-details-phone" type="text" placeholder="New phone (optional)" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/users/:id', 'update-user-details-form', 'users-update-details-response')">Test Endpoint</button>
+                                    <div class="response" id="users-update-details-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Toggle user status (admin-only) -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/users/:id/status</span>
+                                </div>
+                                <div class="endpoint-desc">Toggle user active/inactive status (Admin only)</div>
+                                <div class="endpoint-body">
+                                    <div id="update-user-status-form">
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="update-status-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Is Active</label>
+                                            <select id="update-status-is-active" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                                                <option value="true">Active (true)</option>
+                                                <option value="false">Inactive (false)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/users/:id/status', 'update-user-status-form', 'users-update-status-response')">Test Endpoint</button>
+                                    <div class="response" id="users-update-status-response"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Delete user (admin-only) - New endpoint -->
+                            <div class="endpoint admin-only">
+                                <div class="endpoint-header">
+                                    <span class="method delete">DELETE</span>
+                                    <span class="endpoint-path">/api/users/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Delete user (Admin only) - Cannot delete own account</div>
+                                <div class="endpoint-body">
+                                    <div id="delete-user-new-form">
+                                        <div class="input-group">
+                                            <label>User ID to Delete</label>
+                                            <input id="delete-user-new-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('DELETE', '/api/users/:id', 'delete-user-new-form', 'users-delete-new-response')">Test Endpoint</button>
+                                    <div class="response" id="users-delete-new-response"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Chat APIs (accordion) -->
+                <div class="accordion" id="accordion-chat">
+                    <div class="accordion-toggle collapsed" data-target="chat-content" role="button" aria-expanded="false" tabindex="0">
+                        <div class="title"><span>🤖</span><span>AI Chat</span></div>
+                        <div class="icon">▾</div>
+                    </div>
+                    <div id="chat-content" class="accordion-content" aria-hidden="true">
+                        <div class="api-section">
+                            <h2 class="section-title">🤖 AI Chat</h2>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/chat/status</span>
+                                </div>
+                                <div class="endpoint-desc">Check if AI chat is configured and available (requires authentication)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/chat/status', null, 'chat-status-response')">Test Endpoint</button>
+                                    <div class="response" id="chat-status-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/chat</span>
+                                </div>
+                                <div class="endpoint-desc">Chat with AI using OpenAI (requires authentication)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="chat-form">
+                                        <div class="input-group">
+                                            <label>Message</label>
+                                            <textarea id="chat-message" rows="3" placeholder="Type your message here..."></textarea>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Conversation History (Optional - JSON array)</label>
+                                            <textarea id="chat-history" rows="4" placeholder='[{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there!"}]'></textarea>
+                                            <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                                                Format: Array of objects with "role" ("user" or "assistant") and "content" fields
+                                            </div>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Model (Optional)</label>
+                                            <input id="chat-model" type="text" placeholder="gpt-4o-mini (default)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Temperature (Optional)</label>
+                                            <input id="chat-temperature" type="number" step="0.1" min="0" max="2" placeholder="0.7 (default)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Max Tokens (Optional)</label>
+                                            <input id="chat-max-tokens" type="number" placeholder="500 (default)" />
+                                        </div>
+                                    </div>
+                                    <div style="padding: 10px; background: #e3f2fd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        <strong>How it works:</strong> Send a message and get an AI reply immediately. You can optionally include conversation history to maintain context across multiple messages.
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/chat', 'chat-form', 'chat-response')">Send Message</button>
+                                    <div class="response" id="chat-response"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activities APIs (accordion) -->
+                <div class="accordion" id="accordion-activities">
+                    <div class="accordion-toggle collapsed" data-target="activities-content" role="button" aria-expanded="false" tabindex="0">
+                        <div class="title"><span>📅</span><span>Activities</span></div>
+                        <div class="icon">▾</div>
+                    </div>
+                    <div id="activities-content" class="accordion-content" aria-hidden="true">
+                        <div class="api-section">
+                            <h2 class="section-title">📅 Activities</h2>
+                            <div style="padding: 10px; background: #e3f2fd; border-radius: 4px; margin-bottom: 15px; font-size: 0.9em;">
+                                <strong>Rules:</strong><br>
+                                • Admin can create public activities that volunteers can join<br>
+                                • Volunteers can create private activities (only visible to them)<br>
+                                • Only public activities can be joined by volunteers
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/activities</span>
+                                </div>
+                                <div class="endpoint-desc">Create a new activity (Admin=public, Volunteer=private)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="create-activity-form">
+                                        <div class="input-group">
+                                            <label>Title *</label>
+                                            <input id="activity-title" type="text" placeholder="Activity title" required />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Description</label>
+                                            <textarea id="activity-description" rows="3" placeholder="Activity description"></textarea>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Category</label>
+                                            <input id="activity-category" type="text" placeholder="e.g., Education, Health, Environment, Community" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Organization Name</label>
+                                            <input id="activity-organization-name" type="text" placeholder="Organization hosting the activity" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Location</label>
+                                            <input id="activity-location" type="text" placeholder="Activity location" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Start Date *</label>
+                                            <input id="activity-start-date" type="date" required />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Start Time *</label>
+                                            <input id="activity-start-time" type="time" required />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>End Date</label>
+                                            <input id="activity-end-date" type="date" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>End Time</label>
+                                            <input id="activity-end-time" type="time" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Max Participants</label>
+                                            <input id="activity-max-participants" type="number" placeholder="Leave empty for unlimited" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/activities', 'create-activity-form', 'create-activity-response')">Create Activity</button>
+                                    <div class="response" id="create-activity-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities</span>
+                                </div>
+                                <div class="endpoint-desc">Get all activities (Admin sees all, Volunteer sees public + own private)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities', null, 'list-activities-response')">Get Activities</button>
+                                    <div class="response" id="list-activities-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/stats/total-hours</span>
+                                </div>
+                                <div class="endpoint-desc">Get total hours from tasks created by the current user</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/stats/total-hours', null, 'total-hours-response')">Get Total Hours</button>
+                                    <div class="response" id="total-hours-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/stats/completed</span>
+                                </div>
+                                <div class="endpoint-desc">Get count of completed activities for the current user</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/stats/completed', null, 'completed-activities-response')">Get Completed Activities</button>
+                                    <div class="response" id="completed-activities-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/stats/my-activities</span>
+                                </div>
+                                <div class="endpoint-desc">Get total count of activities for the current user (created, joined, or has tasks)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/stats/my-activities', null, 'my-activities-response')">Get My Activities Count</button>
+                                    <div class="response" id="my-activities-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/stats/total-tasks</span>
+                                </div>
+                                <div class="endpoint-desc">Get total count of tasks created by the current user</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/stats/total-tasks', null, 'total-tasks-response')">Get Total Tasks</button>
+                                    <div class="response" id="total-tasks-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/stats/task-hours-by-activity</span>
+                                </div>
+                                <div class="endpoint-desc">Get task hours grouped by activity for a specific date range. Query params: period (last_week, last_month, last_year) or start_date & end_date (YYYY-MM-DD format)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="task-hours-by-activity-form">
+                                        <div class="input-group">
+                                            <label>Period (optional)</label>
+                                            <select id="task-hours-period">
+                                                <option value="">Select period</option>
+                                                <option value="last_week">Last Week</option>
+                                                <option value="last_month" selected>Last Month</option>
+                                                <option value="last_year">Last Year</option>
+                                            </select>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Start Date (YYYY-MM-DD) - Use with End Date</label>
+                                            <input id="task-hours-start-date" type="date" placeholder="YYYY-MM-DD" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>End Date (YYYY-MM-DD) - Use with Start Date</label>
+                                            <input id="task-hours-end-date" type="date" placeholder="YYYY-MM-DD" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testTaskHoursByActivity()">Get Task Hours by Activity</button>
+                                    <div class="response" id="task-hours-by-activity-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/tasks/my-tasks</span>
+                                </div>
+                                <div class="endpoint-desc">Get all tasks for the current user (tasks they created or are assigned to)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/tasks/my-tasks', null, 'my-tasks-response')">Get My Tasks</button>
+                                    <div class="response" id="my-tasks-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Get activity details by ID</div>
+                                <div class="endpoint-body">
+                                    <div id="get-activity-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="get-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/:id', 'get-activity-form', 'get-activity-response')">Get Activity</button>
+                                    <div class="response" id="get-activity-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/activities/:id/join</span>
+                                </div>
+                                <div class="endpoint-desc">Join an activity (only public activities can be joined)</div>
+                                <div class="endpoint-body">
+                                    <div id="join-activity-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="join-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/activities/:id/join', 'join-activity-form', 'join-activity-response')">Join Activity</button>
+                                    <div class="response" id="join-activity-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/activities/:id/leave</span>
+                                </div>
+                                <div class="endpoint-desc">Leave an activity</div>
+                                <div class="endpoint-body">
+                                    <div id="leave-activity-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="leave-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/activities/:id/leave', 'leave-activity-form', 'leave-activity-response')">Leave Activity</button>
+                                    <div class="response" id="leave-activity-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/activities/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Update an activity (Admin can update any, Volunteer can only update own)</div>
+                                <div class="endpoint-body">
+                                    <div id="update-activity-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="update-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Title</label>
+                                            <input id="update-activity-title" type="text" placeholder="New title (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Description</label>
+                                            <textarea id="update-activity-description" rows="3" placeholder="New description (optional)"></textarea>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Category</label>
+                                            <input id="update-activity-category" type="text" placeholder="New category (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Organization Name</label>
+                                            <input id="update-activity-organization-name" type="text" placeholder="New organization name (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Location</label>
+                                            <input id="update-activity-location" type="text" placeholder="New location (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Start Date</label>
+                                            <input id="update-activity-start-date" type="date" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Start Time</label>
+                                            <input id="update-activity-start-time" type="time" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>End Date</label>
+                                            <input id="update-activity-end-date" type="date" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>End Time</label>
+                                            <input id="update-activity-end-time" type="time" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Max Participants</label>
+                                            <input id="update-activity-max-participants" type="number" placeholder="Max participants (optional)" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/activities/:id', 'update-activity-form', 'update-activity-response')">Update Activity</button>
+                                    <div class="response" id="update-activity-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method delete">DELETE</span>
+                                    <span class="endpoint-path">/api/activities/:id</span>
+                                </div>
+                                <div class="endpoint-desc">Delete an activity (Admin can delete any, Volunteer can only delete own)</div>
+                                <div class="endpoint-body">
+                                    <div id="delete-activity-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="delete-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('DELETE', '/api/activities/:id', 'delete-activity-form', 'delete-activity-response')">Delete Activity</button>
+                                    <div class="response" id="delete-activity-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks</span>
+                                </div>
+                                <div class="endpoint-desc">Get all tasks for an activity</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="get-activity-tasks-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="get-activity-tasks-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/:id/tasks', 'get-activity-tasks-form', 'get-activity-tasks-response')">Get Tasks</button>
+                                    <div class="response" id="get-activity-tasks-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks</span>
+                                </div>
+                                <div class="endpoint-desc">Create a new task for an activity (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="create-activity-task-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="create-task-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Title *</label>
+                                            <input id="task-title" type="text" placeholder="Task title" required />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Description</label>
+                                            <textarea id="task-description" rows="3" placeholder="Task description"></textarea>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Start Date</label>
+                                            <input id="task-start-date" type="date" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Due Date</label>
+                                            <input id="task-due-date" type="date" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Total Hours</label>
+                                            <input id="task-total-hours" type="number" placeholder="Total hours" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Status</label>
+                                            <select id="task-status">
+                                                <option value="pending">Pending</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/activities/:id/tasks', 'create-activity-task-form', 'create-activity-task-response')">Create Task</button>
+                                    <div class="response" id="create-activity-task-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks/:taskId</span>
+                                </div>
+                                <div class="endpoint-desc">Update a task (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="update-activity-task-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="update-task-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Task ID</label>
+                                            <input id="update-task-id" type="text" placeholder="Enter task id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Title</label>
+                                            <input id="update-task-title" type="text" placeholder="Task title (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Description</label>
+                                            <textarea id="update-task-description" rows="3" placeholder="Task description (optional)"></textarea>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Start Date</label>
+                                            <input id="update-task-start-date" type="date" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Due Date</label>
+                                            <input id="update-task-due-date" type="date" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Total Hours</label>
+                                            <input id="update-task-total-hours" type="number" placeholder="Total hours (optional)" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Status</label>
+                                            <select id="update-task-status">
+                                                <option value="">-- Keep current --</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/activities/:id/tasks/:taskId', 'update-activity-task-form', 'update-activity-task-response')">Update Task</button>
+                                    <div class="response" id="update-activity-task-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method delete">DELETE</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks/:taskId</span>
+                                </div>
+                                <div class="endpoint-desc">Delete a task (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="delete-activity-task-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="delete-task-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Task ID</label>
+                                            <input id="delete-task-id" type="text" placeholder="Enter task id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('DELETE', '/api/activities/:id/tasks/:taskId', 'delete-activity-task-form', 'delete-activity-task-response')">Delete Task</button>
+                                    <div class="response" id="delete-activity-task-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks/:taskId/users</span>
+                                </div>
+                                <div class="endpoint-desc">Get all users assigned to a task</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="get-task-users-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="get-task-users-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Task ID</label>
+                                            <input id="get-task-users-task-id" type="text" placeholder="Enter task id" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('GET', '/api/activities/:id/tasks/:taskId/users', 'get-task-users-form', 'get-task-users-response')">Get Task Users</button>
+                                    <div class="response" id="get-task-users-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks/:taskId/users</span>
+                                </div>
+                                <div class="endpoint-desc">Assign a user to a task (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="add-task-user-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="add-task-user-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Task ID</label>
+                                            <input id="add-task-user-task-id" type="text" placeholder="Enter task id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="add-task-user-user-id" type="text" placeholder="Enter user id to assign" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/activities/:id/tasks/:taskId/users', 'add-task-user-form', 'add-task-user-response')">Add User to Task</button>
+                                    <div class="response" id="add-task-user-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks/:taskId/users/:userId</span>
+                                </div>
+                                <div class="endpoint-desc">Update a user's assignment status in a task (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="update-task-user-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="update-task-user-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Task ID</label>
+                                            <input id="update-task-user-task-id" type="text" placeholder="Enter task id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="update-task-user-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Status</label>
+                                            <select id="update-task-user-status">
+                                                <option value="assigned">Assigned</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="cancelled">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/activities/:id/tasks/:taskId/users/:userId', 'update-task-user-form', 'update-task-user-response')">Update Task User</button>
+                                    <div class="response" id="update-task-user-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method delete">DELETE</span>
+                                    <span class="endpoint-path">/api/activities/:id/tasks/:taskId/users/:userId</span>
+                                </div>
+                                <div class="endpoint-desc">Remove a user from a task (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="delete-task-user-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="delete-task-user-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Task ID</label>
+                                            <input id="delete-task-user-task-id" type="text" placeholder="Enter task id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="delete-task-user-user-id" type="text" placeholder="Enter user id to remove" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('DELETE', '/api/activities/:id/tasks/:taskId/users/:userId', 'delete-task-user-form', 'delete-task-user-response')">Remove User from Task</button>
+                                    <div class="response" id="delete-task-user-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="endpoint-path">/api/activities/:id/participants</span>
+                                </div>
+                                <div class="endpoint-desc">Add a participant to an activity (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="add-activity-participant-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="add-participant-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>User ID *</label>
+                                            <input id="add-participant-user-id" type="text" placeholder="Enter user id to add" required />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('POST', '/api/activities/:id/participants', 'add-activity-participant-form', 'add-activity-participant-response')">Add Participant</button>
+                                    <div class="response" id="add-activity-participant-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method put">PUT</span>
+                                    <span class="endpoint-path">/api/activities/:id/participants/:userId</span>
+                                </div>
+                                <div class="endpoint-desc">Update a participant's status (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="update-activity-participant-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="update-participant-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="update-participant-user-id" type="text" placeholder="Enter user id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Status</label>
+                                            <select id="update-participant-status">
+                                                <option value="">-- Select status --</option>
+                                                <option value="registered">Registered</option>
+                                                <option value="confirmed">Confirmed</option>
+                                                <option value="cancelled">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('PUT', '/api/activities/:id/participants/:userId', 'update-activity-participant-form', 'update-activity-participant-response')">Update Participant</button>
+                                    <div class="response" id="update-activity-participant-response"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint">
+                                <div class="endpoint-header">
+                                    <span class="method delete">DELETE</span>
+                                    <span class="endpoint-path">/api/activities/:id/participants/:userId</span>
+                                </div>
+                                <div class="endpoint-desc">Remove a participant from an activity (Admin or activity creator only)</div>
+                                <div class="endpoint-body">
+                                    <div style="padding: 10px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                                        ⚠️ Requires Authorization header: Bearer token
+                                    </div>
+                                    <div id="delete-activity-participant-form">
+                                        <div class="input-group">
+                                            <label>Activity ID</label>
+                                            <input id="delete-participant-activity-id" type="text" placeholder="Enter activity id" />
+                                        </div>
+                                        <div class="input-group">
+                                            <label>User ID</label>
+                                            <input id="delete-participant-user-id" type="text" placeholder="Enter user id to remove" />
+                                        </div>
+                                    </div>
+                                    <button class="btn-test" onclick="testEndpoint('DELETE', '/api/activities/:id/participants/:userId', 'delete-activity-participant-form', 'delete-activity-participant-response')">Remove Participant</button>
+                                    <div class="response" id="delete-activity-participant-response"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Users Sidebar panel (added) -->
+        <aside id="usersSidebar" class="users-sidebar" aria-hidden="true">
+            <div class="header">
+                <h3>All Users</h3>
+                <div>
+                    <button id="refreshUsersBtn" class="refresh-btn" title="Refresh">Refresh</button>
+                    <button id="closeUsersSidebar" class="close-btn" title="Close">✕</button>
+                </div>
+            </div>
+
+            <div id="usersSidebarContent">
+                <div style="margin-bottom:8px;">
+                    <label style="font-weight:700;font-size:13px;">Auth Token</label>
+                    <div style="display:flex;gap:8px;margin-top:6px;">
+                        <input id="sidebar-token" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;font-family:monospace" placeholder="Paste token or use 'Auth Token (JWT)' field" />
+                        <button id="useDocToken" class="close-btn" title="Copy from docs token input">Use docs token</button>
+                    </div>
+                </div>
+
+                <div id="usersLoading" class="small">Click Refresh to load users.</div>
+                <div id="usersError" class="small" style="color:#c62828;display:none;"></div>
+
+                <div id="usersTableWrap" style="margin-top:12px; display:none;">
+                    <table class="users-table" id="usersTable">
+                        <thead>
+                            <tr><th>ID</th><th>Name</th><th>Email</th><th>Mobile</th><th>Role</th><th>Active</th></tr>
+                        </thead>
+                        <tbody id="usersTbody"></tbody>
+                    </table>
+                </div>
+
+                <div id="usersEmpty" class="empty" style="display:none;">No users found or you lack permission (admin only).</div>
+            </div>
+        </aside>
+
+        <div id="toast" role="status" aria-live="polite"></div>
+    </div>
+    
+    <script>
+        const API_BASE_URL = window.location.origin;
+        
+        // Check server and database status on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkServerStatus();
+            checkDatabaseStatus();
+            populateTokenFromStorage(); // populate token input if stored
+        });
+        
+        // Populate users-token input from localStorage (if present)
+        function populateTokenFromStorage() {
+            try {
+                const t = localStorage.getItem('voluntree_token');
+                if (t) {
+                    const el = document.getElementById('users-token');
+                    if (el) el.value = t;
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // Logout handler: clear localStorage token and clear token inputs
+        function handleLogout() {
+            try {
+                localStorage.removeItem('voluntree_token');
+            } catch (e) {}
+            const tokenInputs = document.querySelectorAll('#users-token');
+            tokenInputs.forEach(i => i.value = '');
+            showToast('Logged out — token cleared');
+        }
+
+        function showToast(msg, ms = 2500) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.style.display = 'block';
+            clearTimeout(t.__hideTimeout);
+            t.__hideTimeout = setTimeout(()=> t.style.display = 'none', ms);
+        }
+        
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(API_BASE_URL + '/');
+                const data = await response.json();
+                document.getElementById('server-status').textContent = '✅ Server: Running';
+                document.getElementById('server-status').parentElement.style.background = '#e8f5e9';
+                document.getElementById('server-status').parentElement.style.color = '#2e7d32';
+            } catch (error) {
+                document.getElementById('server-status').textContent = '❌ Server: Offline';
+                document.getElementById('server-status').parentElement.style.background = '#ffebee';
+                document.getElementById('server-status').parentElement.style.color = '#c62828';
+            }
+        }
+        
+        async function checkDatabaseStatus() {
+            try {
+                const response = await fetch(API_BASE_URL + '/api/health/db');
+                const data = await response.json();
+                if (data.status === 'connected') {
+                    document.getElementById('db-status').textContent = '✅ Database: Connected';
+                    document.getElementById('db-status').parentElement.style.background = '#e8f5e9';
+                    document.getElementById('db-status').parentElement.style.color = '#2e7d32';
+                } else {
+                    throw new Error('Database not connected');
+                }
+            } catch (error) {
+                document.getElementById('db-status').textContent = '❌ Database: Not Connected';
+                document.getElementById('db-status').parentElement.style.background = '#ffebee';
+                document.getElementById('db-status').parentElement.style.color = '#c62828';
+            }
+        }
+        
+        async function testEndpoint(method, path, bodyElementId = null, responseElementId = null) {
+            const responseDiv = document.getElementById(responseElementId || path.replace(/\//g, '-').replace(/:/g, '') + '-response');
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            button.disabled = true;
+            button.innerHTML = originalText + ' <span class="loading"></span>';
+            responseDiv.classList.remove('show');
+            
+            try {
+                let url = API_BASE_URL + path;
+                const options = { method };
+                
+                // prepare headers container
+                options.headers = options.headers || {};
+
+                // if a token is present in the users-token input, set Authorization header for protected endpoints
+                const globalTokenInput = document.getElementById('users-token');
+                const globalToken = globalTokenInput ? globalTokenInput.value.trim() : '';
+                if (globalToken) {
+                    options.headers['Authorization'] = 'Bearer ' + globalToken;
+                }
+
+                // If this is the register form, collect parameters and send them as query params
+                if (bodyElementId === 'auth-register-form') {
+                    const params = new URLSearchParams();
+                    const name = document.getElementById('reg-name').value.trim();
+                    const email = document.getElementById('reg-email').value.trim();
+                    const mobile = document.getElementById('reg-mobile').value.trim();
+                    const password = document.getElementById('reg-password').value;
+                    const confirmPassword = document.getElementById('reg-confirmPassword').value;
+
+                    // Build query string (backend reads req.query)
+                    if (name) params.append('name', name);
+                    if (email) params.append('email', email);
+                    if (mobile) params.append('mobile', mobile);
+                    if (password) params.append('password', password);
+                    if (confirmPassword) params.append('confirmPassword', confirmPassword);
+
+                    if (params.toString()) {
+                        url += '?' + params.toString();
+                    }
+                    // no body required; backend expects params in req.query
+                // If this is the login form, collect email/password and send as query params
+                } else if (bodyElementId === 'auth-login-form') {
+                    const params = new URLSearchParams();
+                    const email = document.getElementById('login-email').value.trim();
+                    const password = document.getElementById('login-password').value;
+                    if (email) params.append('email', email);
+                    if (password) params.append('password', password);
+                    if (params.toString()) url += '?' + params.toString();
+                    // no body; backend reads req.query
+                // If this is the forgot-password form, send email as query param
+                } else if (bodyElementId === 'forgot-password-form') {
+                    const params = new URLSearchParams();
+                    const email = document.getElementById('forgot-email').value.trim();
+                    if (email) params.append('email', email);
+                    if (params.toString()) url += '?' + params.toString();
+                    // no body; backend reads req.query
+                } else if (bodyElementId === 'reset-password-form') {
+                    const currentPassword = document.getElementById('reset-current-password').value;
+                    const newPassword = document.getElementById('reset-new-password').value;
+                    if (!currentPassword || !newPassword) {
+                        throw new Error('Please provide both current password and new password');
+                    }
+                    const bodyData = { currentPassword, newPassword };
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'change-password-form') {
+                    const currentPassword = document.getElementById('change-current-password').value;
+                    const newPassword = document.getElementById('change-new-password').value;
+                    if (!currentPassword || !newPassword) {
+                        throw new Error('Please provide both current password and new password');
+                    }
+                    const bodyData = { currentPassword, newPassword };
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'upload-image-form') {
+                    const fileInput = document.getElementById('upload-image-file');
+                    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                        throw new Error('Please select an image file');
+                    }
+                    const file = fileInput.files[0];
+                    
+                    // Validate file type
+                    if (!file.type.startsWith('image/')) {
+                        throw new Error('Please select a valid image file');
+                    }
+                    
+                    // Validate file size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        throw new Error('Image file is too large. Maximum size is 5MB.');
+                    }
+                    
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    // Don't set Content-Type header for FormData - browser will set it automatically with boundary
+                    // Remove Content-Type if it was set earlier
+                    delete options.headers['Content-Type'];
+                    options.body = formData;
+                } else if (bodyElementId === 'create-activity-form') {
+                    const title = document.getElementById('activity-title').value.trim();
+                    const description = document.getElementById('activity-description').value.trim();
+                    const category = document.getElementById('activity-category').value.trim();
+                    const organizationName = document.getElementById('activity-organization-name').value.trim();
+                    const location = document.getElementById('activity-location').value.trim();
+                    const startDate = document.getElementById('activity-start-date').value.trim();
+                    const startTime = document.getElementById('activity-start-time').value.trim();
+                    const endDate = document.getElementById('activity-end-date').value.trim();
+                    const endTime = document.getElementById('activity-end-time').value.trim();
+                    const maxParticipants = document.getElementById('activity-max-participants').value.trim();
+                    
+                    if (!title || !startDate || !startTime) {
+                        throw new Error('Title, start date, and start time are required');
+                    }
+                    
+                    // Combine date and time into datetime format (YYYY-MM-DD HH:MM:SS)
+                    const startDateTime = startDate + ' ' + startTime + ':00';
+                    const bodyData = { title, start_date: startDateTime };
+                    
+                    if (description) bodyData.description = description;
+                    if (category) bodyData.category = category;
+                    if (organizationName) bodyData.organization_name = organizationName;
+                    if (location) bodyData.location = location;
+                    if (endDate && endTime) {
+                        bodyData.end_date = endDate + ' ' + endTime + ':00';
+                    } else if (endDate) {
+                        bodyData.end_date = endDate + ' 23:59:59';
+                    }
+                    if (maxParticipants) bodyData.max_participants = parseInt(maxParticipants);
+                    
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'get-activity-form') {
+                    const id = document.getElementById('get-activity-id').value.trim();
+                    if (!id) throw new Error('Please provide activity id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                } else if (bodyElementId === 'join-activity-form') {
+                    const id = document.getElementById('join-activity-id').value.trim();
+                    if (!id) throw new Error('Please provide activity id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify({});
+                } else if (bodyElementId === 'leave-activity-form') {
+                    const id = document.getElementById('leave-activity-id').value.trim();
+                    if (!id) throw new Error('Please provide activity id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify({});
+                } else if (bodyElementId === 'update-activity-form') {
+                    const id = document.getElementById('update-activity-id').value.trim();
+                    if (!id) throw new Error('Please provide activity id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    
+                    const bodyData = {};
+                    const title = document.getElementById('update-activity-title').value.trim();
+                    const description = document.getElementById('update-activity-description').value.trim();
+                    const category = document.getElementById('update-activity-category').value.trim();
+                    const organizationName = document.getElementById('update-activity-organization-name').value.trim();
+                    const location = document.getElementById('update-activity-location').value.trim();
+                    const startDate = document.getElementById('update-activity-start-date').value.trim();
+                    const startTime = document.getElementById('update-activity-start-time').value.trim();
+                    const endDate = document.getElementById('update-activity-end-date').value.trim();
+                    const endTime = document.getElementById('update-activity-end-time').value.trim();
+                    const maxParticipants = document.getElementById('update-activity-max-participants').value.trim();
+                    
+                    if (title) bodyData.title = title;
+                    if (description) bodyData.description = description;
+                    if (category) bodyData.category = category;
+                    if (organizationName) bodyData.organization_name = organizationName;
+                    if (location) bodyData.location = location;
+                    if (startDate && startTime) {
+                        bodyData.start_date = startDate + ' ' + startTime + ':00';
+                    } else if (startDate) {
+                        bodyData.start_date = startDate + ' 00:00:00';
+                    }
+                    if (endDate && endTime) {
+                        bodyData.end_date = endDate + ' ' + endTime + ':00';
+                    } else if (endDate) {
+                        bodyData.end_date = endDate + ' 23:59:59';
+                    }
+                    if (maxParticipants) bodyData.max_participants = parseInt(maxParticipants);
+                    
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'delete-activity-form') {
+                    const id = document.getElementById('delete-activity-id').value.trim();
+                    if (!id) throw new Error('Please provide activity id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                } else if (bodyElementId === 'get-activity-tasks-form') {
+                    const id = document.getElementById('get-activity-tasks-id').value.trim();
+                    if (!id) throw new Error('Please provide activity id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                } else if (bodyElementId === 'create-activity-task-form') {
+                    const activityId = document.getElementById('create-task-activity-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId));
+                    
+                    const title = document.getElementById('task-title').value.trim();
+                    const description = document.getElementById('task-description').value.trim();
+                    const startDate = document.getElementById('task-start-date').value.trim();
+                    const dueDate = document.getElementById('task-due-date').value.trim();
+                    const totalHours = document.getElementById('task-total-hours').value.trim();
+                    const status = document.getElementById('task-status').value;
+                    
+                    if (!title) throw new Error('Task title is required');
+                    
+                    const bodyData = { title };
+                    if (description) bodyData.description = description;
+                    if (startDate) bodyData.start_date = startDate;
+                    if (dueDate) bodyData.due_date = dueDate;
+                    if (totalHours) bodyData.total_hours = parseInt(totalHours);
+                    if (status) bodyData.status = status;
+                    
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'update-activity-task-form') {
+                    const activityId = document.getElementById('update-task-activity-id').value.trim();
+                    const taskId = document.getElementById('update-task-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!taskId) throw new Error('Please provide task id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':taskId', encodeURIComponent(taskId));
+                    
+                    const bodyData = {};
+                    const title = document.getElementById('update-task-title').value.trim();
+                    const description = document.getElementById('update-task-description').value.trim();
+                    const startDate = document.getElementById('update-task-start-date').value.trim();
+                    const dueDate = document.getElementById('update-task-due-date').value.trim();
+                    const totalHours = document.getElementById('update-task-total-hours').value.trim();
+                    const status = document.getElementById('update-task-status').value;
+                    
+                    if (title) bodyData.title = title;
+                    if (description) bodyData.description = description;
+                    if (startDate) bodyData.start_date = startDate;
+                    if (dueDate) bodyData.due_date = dueDate;
+                    if (totalHours) bodyData.total_hours = parseInt(totalHours);
+                    if (status) bodyData.status = status;
+                    
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'delete-activity-task-form') {
+                    const activityId = document.getElementById('delete-task-activity-id').value.trim();
+                    const taskId = document.getElementById('delete-task-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!taskId) throw new Error('Please provide task id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':taskId', encodeURIComponent(taskId));
+                } else if (bodyElementId === 'get-task-users-form') {
+                    const activityId = document.getElementById('get-task-users-activity-id').value.trim();
+                    const taskId = document.getElementById('get-task-users-task-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!taskId) throw new Error('Please provide task id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':taskId', encodeURIComponent(taskId));
+                } else if (bodyElementId === 'add-task-user-form') {
+                    const activityId = document.getElementById('add-task-user-activity-id').value.trim();
+                    const taskId = document.getElementById('add-task-user-task-id').value.trim();
+                    const userId = document.getElementById('add-task-user-user-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!taskId) throw new Error('Please provide task id');
+                    if (!userId) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':taskId', encodeURIComponent(taskId));
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify({ user_id: userId });
+                } else if (bodyElementId === 'update-task-user-form') {
+                    const activityId = document.getElementById('update-task-user-activity-id').value.trim();
+                    const taskId = document.getElementById('update-task-user-task-id').value.trim();
+                    const userId = document.getElementById('update-task-user-user-id').value.trim();
+                    const status = document.getElementById('update-task-user-status').value;
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!taskId) throw new Error('Please provide task id');
+                    if (!userId) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':taskId', encodeURIComponent(taskId)).replace(':userId', encodeURIComponent(userId));
+                    
+                    const bodyData = {};
+                    if (status) bodyData.status = status;
+                    
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'delete-task-user-form') {
+                    const activityId = document.getElementById('delete-task-user-activity-id').value.trim();
+                    const taskId = document.getElementById('delete-task-user-task-id').value.trim();
+                    const userId = document.getElementById('delete-task-user-user-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!taskId) throw new Error('Please provide task id');
+                    if (!userId) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':taskId', encodeURIComponent(taskId)).replace(':userId', encodeURIComponent(userId));
+                } else if (bodyElementId === 'add-activity-participant-form') {
+                    const activityId = document.getElementById('add-participant-activity-id').value.trim();
+                    const userId = document.getElementById('add-participant-user-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!userId) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId));
+                    const bodyData = { user_id: parseInt(userId) };
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'update-activity-participant-form') {
+                    const activityId = document.getElementById('update-participant-activity-id').value.trim();
+                    const userId = document.getElementById('update-participant-user-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!userId) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':userId', encodeURIComponent(userId));
+                    const status = document.getElementById('update-participant-status').value;
+                    if (!status) throw new Error('Please select a status');
+                    const bodyData = { status: status };
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'delete-activity-participant-form') {
+                    const activityId = document.getElementById('delete-participant-activity-id').value.trim();
+                    const userId = document.getElementById('delete-participant-user-id').value.trim();
+                    if (!activityId) throw new Error('Please provide activity id');
+                    if (!userId) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(activityId)).replace(':userId', encodeURIComponent(userId));
+                // If this is the users-token direct button (used for list users), we already set Authorization header above
+                } else if (bodyElementId === 'users-token') {
+                    // nothing else to do, Authorization header is already set if token provided
+                } else if (bodyElementId === 'delete-user-form') {
+                    const id = document.getElementById('delete-user-id').value.trim();
+                    if (!id) throw new Error('Please provide user id to delete');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    // Authorization header set above if token provided; fallback to query param if not
+                    if (!options.headers['Authorization']) {
+                        const token = document.getElementById('users-token').value.trim();
+                        if (token) url += '?token=' + encodeURIComponent(token);
+                    }
+                } else if (bodyElementId === 'update-user-form') {
+                    const id = document.getElementById('update-user-id').value.trim();
+                    if (!id) throw new Error('Please provide user id to update');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    const params = new URLSearchParams();
+                    const name = document.getElementById('update-name').value.trim();
+                    const email = document.getElementById('update-email').value.trim();
+                    const mobile = document.getElementById('update-mobile').value.trim();
+                    const password = document.getElementById('update-password').value;
+                    if (name) params.append('name', name);
+                    if (email) params.append('email', email);
+                    if (mobile) params.append('mobile', mobile);
+                    if (password) params.append('password', password);
+                    // Authorization header already set above; fallback to token query param if missing
+                    if (params.toString()) {
+                        if (options.headers['Authorization']) {
+                            url += '?' + params.toString();
+                        } else {
+                            // append token too if present
+                            const token = document.getElementById('users-token').value.trim();
+                            if (token) params.append('token', token);
+                            url += '?' + params.toString();
+                        }
+                    } else if (!options.headers['Authorization']) {
+                        const token = document.getElementById('users-token').value.trim();
+                        if (token) url += '?token=' + encodeURIComponent(token);
+                    }
+                } else if (bodyElementId === 'get-user-by-id-form') {
+                    const id = document.getElementById('get-user-id').value.trim();
+                    if (!id) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    // Authorization header set above if token provided
+                } else if (bodyElementId === 'update-user-role-form') {
+                    const id = document.getElementById('update-role-user-id').value.trim();
+                    if (!id) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    const roleValue = document.getElementById('update-role-value').value;
+                    const bodyData = { role: parseInt(roleValue) };
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'update-user-details-form') {
+                    const id = document.getElementById('update-details-user-id').value.trim();
+                    if (!id) throw new Error('Please provide user id to update');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    const bodyData = {};
+                    const name = document.getElementById('update-details-name').value.trim();
+                    const email = document.getElementById('update-details-email').value.trim();
+                    const phone = document.getElementById('update-details-phone').value.trim();
+                    if (name) bodyData.name = name;
+                    if (email) bodyData.email = email;
+                    if (phone) bodyData.phone = phone;
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'update-user-status-form') {
+                    const id = document.getElementById('update-status-user-id').value.trim();
+                    if (!id) throw new Error('Please provide user id');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    const isActiveValue = document.getElementById('update-status-is-active').value;
+                    const bodyData = { is_active: isActiveValue === 'true' };
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'delete-user-new-form') {
+                    const id = document.getElementById('delete-user-new-id').value.trim();
+                    if (!id) throw new Error('Please provide user id to delete');
+                    url = API_BASE_URL + path.replace(':id', encodeURIComponent(id));
+                    // Authorization header set above if token provided
+                } else if (bodyElementId === 'update-me-form') {
+                    const bodyData = {};
+                    const name = document.getElementById('update-me-name').value.trim();
+                    const phone = document.getElementById('update-me-phone').value.trim();
+                    if (name) bodyData.name = name;
+                    if (phone) bodyData.phone = phone;
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId === 'chat-form') {
+                    const message = document.getElementById('chat-message').value.trim();
+                    if (!message) {
+                        throw new Error('Please provide a message');
+                    }
+                    const bodyData = { message };
+                    
+                    // Parse conversation history if provided
+                    const historyText = document.getElementById('chat-history')?.value.trim();
+                    if (historyText) {
+                        try {
+                            bodyData.conversationHistory = JSON.parse(historyText);
+                        } catch (e) {
+                            throw new Error('Invalid JSON format for conversation history');
+                        }
+                    }
+                    
+                    // Add optional parameters
+                    const model = document.getElementById('chat-model')?.value.trim();
+                    const temperature = document.getElementById('chat-temperature')?.value.trim();
+                    const maxTokens = document.getElementById('chat-max-tokens')?.value.trim();
+                    
+                    if (model) bodyData.model = model;
+                    if (temperature) bodyData.temperature = parseFloat(temperature);
+                    if (maxTokens) bodyData.max_tokens = parseInt(maxTokens);
+                    
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(bodyData);
+                } else if (bodyElementId) {
+                    // existing behavior for JSON body textareas (for backward compatibility)
+                    const bodyElement = document.getElementById(bodyElementId);
+                    if (bodyElement && bodyElement.tagName === 'TEXTAREA') {
+                        const bodyText = bodyElement.value.trim();
+                        if (bodyText) {
+                            try {
+                                options.headers = options.headers || {};
+                                options.headers['Content-Type'] = 'application/json';
+                                options.body = JSON.stringify(JSON.parse(bodyText));
+                            } catch (e) {
+                                throw new Error('Invalid JSON format');
+                            }
+                        }
+                    }
+                }
+
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                const statusClass = response.ok ? 'success' : 'error';
+                responseDiv.innerHTML = `
+                    <div class="response-header">
+                        <span class="status-code ${statusClass}">Status: ${response.status}</span>
+                        <span>${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="response-body">${JSON.stringify(data, null, 2)}</div>
+                `;
+                responseDiv.classList.add('show');
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="response-header">
+                        <span class="status-code error">Error</span>
+                        <span>${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="response-body">${error.message}</div>
+                `;
+                responseDiv.classList.add('show');
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+        
+        async function testAllEndpoints() {
+            const endpoints = [
+                { method: 'GET', path: '/api/users' },
+                { method: 'GET', path: '/api/volunteers' },
+                { method: 'GET', path: '/api/organizations' },
+            ];
+            
+            for (const endpoint of endpoints) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const button = Array.from(document.querySelectorAll('.btn-test')).find(btn => 
+                    btn.getAttribute('onclick')?.includes(endpoint.path)
+                );
+                if (button) {
+                    button.click();
+                }
+            }
+        }
+        
+        
+        // Accordion toggle logic (added)
+        (function initAccordions(){
+            function togglePanel(toggleEl) {
+                const targetId = toggleEl.getAttribute('data-target');
+                const panel = document.getElementById(targetId);
+                const expanded = toggleEl.classList.contains('collapsed') === false;
+                if (expanded) {
+                    // collapse
+                    toggleEl.classList.add('collapsed');
+                    toggleEl.setAttribute('aria-expanded', 'false');
+                    if (panel) { panel.classList.remove('show'); panel.setAttribute('aria-hidden', 'true'); }
+                } else {
+                    // expand
+                    toggleEl.classList.remove('collapsed');
+                    toggleEl.setAttribute('aria-expanded', 'true');
+                    if (panel) { panel.classList.add('show'); panel.setAttribute('aria-hidden', 'false'); }
+                }
+            }
+
+            document.querySelectorAll('.accordion-toggle').forEach(toggle => {
+                // default collapsed (already set). Add click and keyboard support.
+                toggle.addEventListener('click', () => togglePanel(toggle));
+                toggle.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        togglePanel(toggle);
+                    }
+                });
+            });
+        })();
+
+        // Helper: decode JWT payload (no verification) safely
+        function parseJwtPayload(token) {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return null;
+                const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                const json = decodeURIComponent(atob(payload).split('').map(c => {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(json);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Toggle admin-only elements based on token role (0 = admin)
+        function updateAdminVisibility() {
+            const tokenInput = document.getElementById('users-token');
+            const roleLabel = document.getElementById('token-role-label');
+            const token = (tokenInput && tokenInput.value.trim()) || localStorage.getItem('voluntree_token') || '';
+            let payload = null;
+            if (token) payload = parseJwtPayload(token);
+            const isAdmin = payload && (Number(payload.role) === 0);
+            roleLabel.textContent = payload ? (Number(payload.role) === 0 ? 'admin (0)' : 'volunteer (1)') : (token ? 'invalid token' : 'none');
+
+            // show/hide admin-only endpoints
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = isAdmin ? '' : 'none';
+            });
+
+            // auto-expand users accordion if admin and collapsed
+            const usersToggle = document.querySelector('#accordion-users .accordion-toggle');
+            const usersContent = document.getElementById('users-content');
+            if (isAdmin && usersToggle && usersContent && usersToggle.classList.contains('collapsed')) {
+                usersToggle.classList.remove('collapsed');
+                usersToggle.setAttribute('aria-expanded', 'true');
+                usersContent.classList.add('show');
+                usersContent.setAttribute('aria-hidden', 'false');
+            }
+            // If not admin, collapse users accordion to reduce clutter
+            if (!isAdmin && usersToggle && usersContent && !usersToggle.classList.contains('collapsed')) {
+                usersToggle.classList.add('collapsed');
+                usersToggle.setAttribute('aria-expanded', 'false');
+                usersContent.classList.remove('show');
+                usersContent.setAttribute('aria-hidden', 'true');
+            }
+        }
+
+        // Wire token apply button and input changes
+        document.addEventListener('DOMContentLoaded', () => {
+            // run existing init code...
+            try { updateAdminVisibility(); } catch(e) {}
+            const tokenInput = document.getElementById('users-token');
+            if (tokenInput) {
+                tokenInput.addEventListener('input', () => updateAdminVisibility());
+            }
+            const applyBtn = document.getElementById('apply-token-btn');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    const t = document.getElementById('users-token').value.trim();
+                    if (t) localStorage.setItem('voluntree_token', t);
+                    updateAdminVisibility();
+                });
+            }
+        });
+
+        // Users sidebar logic (added)
+        (function(){
+            const sidebar = document.getElementById('usersSidebar');
+            const openBtn = document.getElementById('openUsersSidebar');
+            const closeBtn = document.getElementById('closeUsersSidebar');
+            const refreshBtn = document.getElementById('refreshUsersBtn');
+            const usersLoading = document.getElementById('usersLoading');
+            const usersError = document.getElementById('usersError');
+            const usersTableWrap = document.getElementById('usersTableWrap');
+            const usersTbody = document.getElementById('usersTbody');
+            const usersEmpty = document.getElementById('usersEmpty');
+            const sidebarTokenInput = document.getElementById('sidebar-token');
+            const useDocTokenBtn = document.getElementById('useDocToken');
+
+            function openSidebar(){
+                sidebar.classList.add('open');
+                sidebar.setAttribute('aria-hidden','false');
+                // auto-copy token from docs input if empty
+                if (!sidebarTokenInput.value) {
+                    const docTokenInput = document.getElementById('users-token');
+                    if (docTokenInput && docTokenInput.value) sidebarTokenInput.value = docTokenInput.value;
+                    else {
+                        const saved = localStorage.getItem('voluntree_token');
+                        if (saved) sidebarTokenInput.value = saved;
+                    }
+                }
+                // load users on open
+                fetchUsers();
+            }
+            function closeSidebar(){
+                sidebar.classList.remove('open');
+                sidebar.setAttribute('aria-hidden','true');
+            }
+            openBtn.addEventListener('click', () => {
+                if (sidebar.classList.contains('open')) closeSidebar(); else openSidebar();
+            });
+            closeBtn.addEventListener('click', closeSidebar);
+            refreshBtn.addEventListener('click', fetchUsers);
+            useDocTokenBtn.addEventListener('click', () => {
+                const docToken = (document.getElementById('users-token') || {}).value || localStorage.getItem('voluntree_token') || '';
+                if (docToken) sidebarTokenInput.value = docToken;
+            });
+
+            async function fetchUsers(){
+                usersError.style.display = 'none';
+                usersTableWrap.style.display = 'none';
+                usersEmpty.style.display = 'none';
+                usersLoading.style.display = 'block';
+                usersLoading.textContent = 'Loading users...';
+
+                const token = sidebarTokenInput.value.trim();
+                if (!token) {
+                    usersLoading.style.display = 'none';
+                    usersError.style.display = 'block';
+                    usersError.textContent = 'Token missing. Paste admin token above.';
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/auth/users', {
+                        method: 'GET',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        const msg = data && data.message ? data.message : res.statusText;
+                        usersLoading.style.display = 'none';
+                        usersError.style.display = 'block';
+                        usersError.textContent = `Error: ${msg}`;
+                        return;
+                    }
+                    const users = (data && data.data) || [];
+                    usersTbody.innerHTML = '';
+                    if (!users || users.length === 0) {
+                        usersLoading.style.display = 'none';
+                        usersEmpty.style.display = 'block';
+                        return;
+                    }
+                    for (const u of users) {
+                        const tr = document.createElement('tr');
+                        const roleLabel = (v) => (Number(v) === 0 ? 'admin' : 'volunteer');
+                        tr.innerHTML = `<td>${u.id}</td><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${escapeHtml(u.mobile || u.phone || '')}</td><td>${roleLabel(u.role)}</td><td>${u.is_active == 1 ? 'Yes' : 'No'}</td>`;
+                        usersTbody.appendChild(tr);
+                    }
+                    usersLoading.style.display = 'none';
+                    usersTableWrap.style.display = 'block';
+                } catch (err) {
+                    usersLoading.style.display = 'none';
+                    usersError.style.display = 'block';
+                    usersError.textContent = 'Network error';
+                }
+            }
+
+            function escapeHtml(s) {
+                if (s === null || s === undefined) return '';
+                return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+            }
+        })();
+        async function testTaskHoursByActivity() {
+            const responseDiv = document.getElementById('task-hours-by-activity-response');
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            button.disabled = true;
+            button.innerHTML = originalText + ' <span class="loading"></span>';
+            responseDiv.classList.remove('show');
+            
+            try {
+                let url = API_BASE_URL + '/api/activities/stats/task-hours-by-activity';
+                const params = new URLSearchParams();
+                
+                const period = document.getElementById('task-hours-period').value.trim();
+                const startDate = document.getElementById('task-hours-start-date').value.trim();
+                const endDate = document.getElementById('task-hours-end-date').value.trim();
+                
+                if (startDate && endDate) {
+                    params.append('start_date', startDate);
+                    params.append('end_date', endDate);
+                } else if (period) {
+                    params.append('period', period);
+                } else {
+                    params.append('period', 'last_month'); // Default to last month
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const options = {
+                    method: 'GET',
+                    headers: {}
+                };
+                
+                const globalTokenInput = document.getElementById('users-token');
+                const globalToken = globalTokenInput ? globalTokenInput.value.trim() : '';
+                if (globalToken) {
+                    options.headers['Authorization'] = 'Bearer ' + globalToken;
+                }
+                
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                responseDiv.innerHTML = `
+                    <div class="response-header">
+                        <span class="status ${response.ok ? 'success' : 'error'}">Status: ${response.status}</span>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <pre class="response-body">${JSON.stringify(data, null, 2)}</pre>
+                `;
+                responseDiv.classList.add('show');
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="response-header">
+                        <span class="status error">Error</span>
+                        <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <pre class="response-body">${error.message}</pre>
+                `;
+                responseDiv.classList.add('show');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+    </script>
+</body>
+</html>
+

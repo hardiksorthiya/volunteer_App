@@ -1,0 +1,67 @@
+/* Users page now uses dashboard-content layout */
+/* Removed old container styles - using Bootstrap layout */
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Styles now handled by Bootstrap classes */
+/* Custom badge styles for roles */
+
+/* Status badges now use Bootstrap badge classes */
+
+/* Role badge styles */
+.role-badge-admin {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.role-badge-admin:hover {
+  background: #bfdbfe;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.2);
+}
+
+.role-badge-volunteer {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.role-badge-volunteer:hover {
+  background: #bbf7d0;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.2);
+}
+
+/* Search input placeholder color on gradient header */
+.dashboard-content input[type="text"]::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive Design - Handled by Bootstrap grid system */
+@media (max-width: 768px) {
+  .dashboard-content .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  .dashboard-content .table th,
+  .dashboard-content .table td {
+    padding: 0.75rem;
+  }
+}

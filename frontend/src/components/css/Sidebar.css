@@ -1,0 +1,257 @@
+/* Bootstrap-based Sidebar Custom Styles - Enhanced */
+
+/* Sidebar container */
+aside.bg-primary.position-fixed {
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-middle) 50%, var(--gradient-end) 100%) !important;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Sidebar content wrapper */
+aside.bg-primary .d-flex.flex-column.h-100 {
+  padding: 1.5rem 1rem;
+}
+
+/* Logo Section - Enhanced */
+aside.bg-primary .border-bottom {
+  padding-bottom: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+aside.bg-primary .border-bottom .bg-white {
+  width: 48px !important;
+  height: 48px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  border-radius: 12px !important;
+}
+
+aside.bg-primary .border-bottom .bg-white:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+aside.bg-primary .border-bottom span.fw-bold.fs-5 {
+  font-size: 1.15rem !important;
+  letter-spacing: 0.3px;
+  font-weight: 700 !important;
+}
+
+/* New Activity Button - Enhanced */
+aside.bg-primary button.btn-light {
+  background: #ffffff !important;
+  color: var(--color-primary) !important;
+  border: none !important;
+  padding: 0.875rem 1.25rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem !important;
+  gap: 12px;
+}
+
+aside.bg-primary button.btn-light svg,
+aside.bg-primary button.btn-light > svg:first-child,
+aside.bg-primary button.btn-light > *:first-child:not(span) {
+  margin-right: 12px !important;
+}
+
+aside.bg-primary button.btn-light:hover {
+  background: #f8f9fa !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+aside.bg-primary button.btn-light:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Navigation Links - Enhanced */
+aside.bg-primary nav a.sidebar-nav-link {
+  padding: 0.875rem 1rem !important;
+  margin-bottom: 0.5rem !important;
+  border-radius: 10px !important;
+  transition: all 0.3s ease;
+  position: relative;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  background-color: transparent !important;
+  gap: 16px;
+}
+
+aside.bg-primary nav a.sidebar-nav-link > svg:first-child,
+aside.bg-primary nav a.sidebar-nav-link > *:first-child:not(span) {
+  margin-right: 16px !important;
+}
+
+aside.bg-primary nav a.sidebar-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateX(4px);
+  padding-left: 1.25rem !important;
+}
+
+aside.bg-primary nav a.sidebar-nav-link.active,
+aside.bg-primary nav a.sidebar-nav-link.bg-white.bg-opacity-25 {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+aside.bg-primary nav a.sidebar-nav-link.active:hover,
+aside.bg-primary nav a.sidebar-nav-link.bg-white.bg-opacity-25:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  transform: translateX(4px);
+}
+
+/* Navigation Icons */
+aside.bg-primary nav a svg,
+aside.bg-primary nav a .icon-component {
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+aside.bg-primary nav a:hover svg,
+aside.bg-primary nav a:hover .icon-component {
+  transform: scale(1.1);
+}
+
+/* Logout Button - Enhanced */
+aside.bg-primary button.btn-outline-danger {
+  border: 2px solid rgba(220, 38, 38, 0.4) !important;
+  color: #fca5a5 !important;
+  background-color: rgba(220, 38, 38, 0.1) !important;
+  padding: 0.875rem 1.25rem !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  margin-top: auto !important;
+  gap: 12px;
+}
+
+aside.bg-primary button.btn-outline-danger svg {
+  margin-right: 12px !important;
+}
+
+aside.bg-primary button.btn-outline-danger:hover {
+  background-color: rgba(220, 38, 38, 0.2) !important;
+  border-color: rgba(220, 38, 38, 0.6) !important;
+  color: #f87171 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+aside.bg-primary button.btn-outline-danger:active {
+  transform: translateY(0);
+}
+
+aside.bg-primary button.btn-outline-danger svg {
+  transition: transform 0.3s ease;
+}
+
+aside.bg-primary button.btn-outline-danger:hover svg {
+  transform: translateX(2px);
+}
+
+/* Navigation menu scrollbar styling */
+aside.bg-primary nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+  padding-right: 0.5rem;
+}
+
+aside.bg-primary nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+aside.bg-primary nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+aside.bg-primary nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+aside.bg-primary nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Collapsed sidebar adjustments */
+aside.bg-primary[style*="width: 80px"] button.btn-light,
+aside.bg-primary[style*="width: 80px"] nav a,
+aside.bg-primary[style*="width: 80px"] button.btn-outline-danger {
+  padding-left: 0.875rem !important;
+  padding-right: 0.875rem !important;
+  justify-content: center !important;
+}
+
+/* Remove icon margins when collapsed for proper centering */
+aside.bg-primary[style*="width: 80px"] nav a.sidebar-nav-link > svg:first-child,
+aside.bg-primary[style*="width: 80px"] nav a.sidebar-nav-link > *:first-child:not(span) {
+  margin-right: 0 !important;
+}
+
+aside.bg-primary[style*="width: 80px"] button.btn-light svg,
+aside.bg-primary[style*="width: 80px"] button.btn-light > svg:first-child,
+aside.bg-primary[style*="width: 80px"] button.btn-light > *:first-child:not(span) {
+  margin-right: 0 !important;
+}
+
+aside.bg-primary[style*="width: 80px"] button.btn-outline-danger svg {
+  margin-right: 0 !important;
+}
+
+aside.bg-primary[style*="width: 80px"] nav a:hover {
+  transform: scale(1.05) !important;
+  padding-left: 0.875rem !important;
+}
+
+aside.bg-primary[style*="width: 80px"] nav a.sidebar-nav-link.active:hover,
+aside.bg-primary[style*="width: 80px"] nav a.sidebar-nav-link.bg-white.bg-opacity-25:hover {
+  transform: scale(1.05) !important;
+  padding-left: 0.875rem !important;
+}
+
+/* Responsive behavior - Mobile and Tablet */
+@media (max-width: 992px) {
+  /* Hide sidebar by default on mobile and tablet */
+  aside.bg-primary.position-fixed.sidebar-closed {
+    transform: translateX(-100%);
+    width: 280px !important; /* Keep full width for smooth transition */
+  }
+  
+  /* Show sidebar when open on mobile and tablet */
+  aside.bg-primary.position-fixed.sidebar-open {
+    transform: translateX(0);
+    width: 280px !important;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Ensure sidebar is always full width on mobile/tablet when visible */
+  aside.bg-primary.position-fixed {
+    width: 280px !important;
+  }
+  
+  /* Backdrop overlay */
+  .sidebar-backdrop {
+    display: block;
+  }
+}
+
+/* Desktop behavior - normal sidebar */
+@media (min-width: 993px) {
+  aside.bg-primary.position-fixed {
+    transform: translateX(0) !important;
+  }
+  
+  .sidebar-backdrop {
+    display: none !important;
+  }
+}

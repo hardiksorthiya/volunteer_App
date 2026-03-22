@@ -1,0 +1,648 @@
+/* Auth Container - Full screen with dark blue background */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--gradient-container-start) 0%, var(--gradient-container-end) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Main Auth Card - Two Panel Layout */
+.auth-card {
+  background: var(--color-bg-white);
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  overflow: hidden;
+  min-height: 600px;
+}
+
+/* Left Panel - Welcome Section */
+.auth-welcome-panel {
+  flex: 1;
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-middle) 50%, var(--gradient-end) 100%);
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative Circles */
+.auth-welcome-panel::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: var(--color-decorative-circle-opacity-1);
+  top: -100px;
+  right: -100px;
+  z-index: 1;
+}
+
+.auth-welcome-panel::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: var(--color-decorative-circle-opacity-2);
+  bottom: -50px;
+  left: -50px;
+  z-index: 1;
+}
+
+.auth-welcome-content {
+  position: relative;
+  z-index: 2;
+  color: var(--color-welcome-text);
+}
+
+.auth-welcome-title {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.auth-welcome-headline {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.95;
+}
+
+.auth-welcome-description {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  opacity: 0.9;
+  max-width: 400px;
+}
+
+/* Right Panel - Form Section */
+.auth-form-panel {
+  flex: 1;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--color-bg-white);
+}
+
+.auth-form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.auth-form-subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 2rem;
+}
+
+/* Form Groups - Scoped to auth container only */
+.auth-container .form-group,
+.auth-form-panel .form-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+/* Form Labels - Scoped to auth container only */
+.auth-container .form-label,
+.auth-form-panel .form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Input Fields - Scoped to auth container only */
+.auth-container .form-input-wrapper,
+.auth-form-panel .form-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-container .form-input,
+.auth-form-panel .form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--color-input-border);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 400;
+  background-color: var(--color-bg-white);
+  color: var(--color-text-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding-left 0.3s ease, background-image 0.2s ease;
+  box-sizing: border-box;
+  font-family: var(--font-family-primary);
+  background-repeat: no-repeat !important;
+  background-attachment: initial !important;
+}
+
+/* Fix for browser autofill background conflicts - Scoped to auth container only */
+.auth-container .form-input:-webkit-autofill,
+.auth-container .form-input:-webkit-autofill:hover,
+.auth-container .form-input:-webkit-autofill:focus,
+.auth-container .form-input:-webkit-autofill:active,
+.auth-form-panel .form-input:-webkit-autofill,
+.auth-form-panel .form-input:-webkit-autofill:hover,
+.auth-form-panel .form-input:-webkit-autofill:focus,
+.auth-form-panel .form-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--color-bg-white) inset !important;
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  background-repeat: no-repeat !important;
+  background-attachment: initial !important;
+}
+
+.auth-container .form-input:focus,
+.auth-form-panel .form-input:focus {
+  outline: none;
+  border-color: var(--color-input-focus-border);
+  background-color: var(--color-bg-white);
+  box-shadow: 0 0 0 4px var(--color-focus-shadow);
+  transform: translateY(-1px);
+}
+
+.auth-container .form-input:hover:not(:focus),
+.auth-form-panel .form-input:hover:not(:focus) {
+  border-color: var(--color-border-medium);
+}
+
+.auth-container .form-input::placeholder,
+.auth-form-panel .form-input::placeholder {
+  color: var(--color-input-placeholder);
+  font-weight: 400;
+}
+
+/* SVG Icons in Placeholder - Easy to use! Just add the class name */
+/* Email Icon */
+.form-input-placeholder-email {
+  padding-left: 3.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='22,6 12,13 2,6' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+/* Ensure placeholder text doesn't overlap with icon */
+.form-input-placeholder-email::placeholder {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.form-input-placeholder-email:focus {
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='22,6 12,13 2,6' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+/* Completely remove background icon when input has value or is autofilled */
+.form-input-placeholder-email:not(:placeholder-shown) {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+.form-input-placeholder-email:-webkit-autofill,
+.form-input-placeholder-email:-webkit-autofill:hover,
+.form-input-placeholder-email:-webkit-autofill:focus,
+.form-input-placeholder-email:-webkit-autofill:active {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+/* Lock/Password Icon */
+.form-input-placeholder-lock {
+  padding-left: 3.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+.form-input-placeholder-lock:focus {
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+/* Completely remove background icon when input has value or is autofilled */
+.form-input-placeholder-lock:not(:placeholder-shown) {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+.form-input-placeholder-lock:-webkit-autofill,
+.form-input-placeholder-lock:-webkit-autofill:hover,
+.form-input-placeholder-lock:-webkit-autofill:focus,
+.form-input-placeholder-lock:-webkit-autofill:active {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+/* Ensure placeholder text doesn't overlap with icon */
+.form-input-placeholder-lock::placeholder {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+/* User Icon */
+.form-input-placeholder-user {
+  padding-left: 3.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='7' r='4' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+.form-input-placeholder-user:focus {
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='7' r='4' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+/* Completely remove background icon when input has value or is autofilled */
+.form-input-placeholder-user:not(:placeholder-shown) {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+.form-input-placeholder-user:-webkit-autofill,
+.form-input-placeholder-user:-webkit-autofill:hover,
+.form-input-placeholder-user:-webkit-autofill:focus,
+.form-input-placeholder-user:-webkit-autofill:active {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+/* Phone Icon */
+.form-input-placeholder-phone {
+  padding-left: 3.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+.form-input-placeholder-phone:focus {
+  background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: 1rem center !important;
+  background-size: 18px 18px !important;
+}
+
+/* Completely remove background icon when input has value or is autofilled */
+.form-input-placeholder-phone:not(:placeholder-shown) {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+.form-input-placeholder-phone:-webkit-autofill,
+.form-input-placeholder-phone:-webkit-autofill:hover,
+.form-input-placeholder-phone:-webkit-autofill:focus,
+.form-input-placeholder-phone:-webkit-autofill:active {
+  background-image: none !important;
+  padding-left: 1rem !important;
+}
+
+.form-input-password {
+  padding-right: 4.5rem;
+}
+
+/* Password Toggle */
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--color-link);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 0.5rem;
+  z-index: 2;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-family-primary);
+}
+
+.password-toggle:hover {
+  color: var(--color-link-hover);
+  background-color: var(--color-bg-gray-light);
+}
+
+.password-toggle:active {
+  transform: scale(0.95);
+}
+
+.password-toggle-icon {
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.password-toggle-text {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Remember Me and Forgot Password Row */
+.auth-options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.remember-me input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-checkbox-accent);
+}
+
+.remember-me label {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  cursor: pointer;
+  user-select: none;
+}
+
+.forgot-password-link {
+  color: var(--color-link);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.forgot-password-link:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+/* Primary Button - Scoped to auth container only */
+.auth-container .btn-primary,
+.auth-form-panel .btn-primary {
+  width: 100%;
+  padding: 0.875rem;
+  background: var(--color-button-primary-bg);
+  color: var(--color-welcome-text);
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-button);
+  margin-bottom: 1rem;
+}
+
+.auth-container .btn-primary:hover:not(:disabled),
+.auth-form-panel .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-button-hover);
+}
+
+.auth-container .btn-primary:active:not(:disabled),
+.auth-form-panel .btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auth-container .btn-primary:disabled,
+.auth-form-panel .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.auth-divider span {
+  padding: 0 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Secondary Button */
+.btn-secondary {
+  width: 100%;
+  padding: 0.875rem;
+  background: var(--color-button-secondary-bg);
+  color: var(--color-button-secondary-text);
+  border: 2px solid var(--color-button-secondary-border);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-link);
+  color: var(--color-link);
+  background-color: var(--color-button-secondary-hover-bg);
+}
+
+/* Sign Up Link */
+.auth-link {
+  text-align: center;
+  margin-top: auto;
+  padding-top: 1.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.auth-link a {
+  color: var(--color-link);
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.25rem;
+  transition: color 0.2s;
+}
+
+.auth-link a:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+/* Error and Success Messages - Scoped to auth container only */
+.auth-container .error-message,
+.auth-form-panel .error-message {
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--color-error-border);
+}
+
+.auth-container .success-message,
+.auth-form-panel .success-message {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-text);
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--color-success-border);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .auth-card {
+    flex-direction: column;
+    max-width: 100%;
+    min-height: auto;
+  }
+
+  .auth-welcome-panel {
+    padding: 2rem;
+    min-height: 250px;
+  }
+
+  .auth-welcome-title {
+    font-size: 2rem;
+  }
+
+  .auth-welcome-headline {
+    font-size: 1.2rem;
+  }
+
+  .auth-form-panel {
+    padding: 2rem;
+  }
+
+  .auth-container {
+    padding: 1rem;
+  }
+}
+
+/* Additional decorative circle */
+.auth-welcome-panel .decorative-circle {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: var(--color-decorative-circle-opacity-3);
+  z-index: 1;
+}
+
+.auth-welcome-panel .decorative-circle:nth-child(1) {
+  top: 20%;
+  right: 10%;
+}
+
+.auth-welcome-panel .decorative-circle:nth-child(2) {
+  bottom: 15%;
+  left: 5%;
+  width: 100px;
+  height: 100px;
+}
+
+/* Forgot Password Success State */
+.forgot-password-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.success-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-icon {
+  width: 40px;
+  height: 40px;
+  color: white;
+  stroke-width: 2.5;
+}
+
+.success-info-box {
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  text-align: left;
+  width: 100%;
+}
+
+.success-info-box p {
+  font-size: 0.9rem;
+  color: var(--color-success-text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.success-info-box strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}

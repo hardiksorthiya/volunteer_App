@@ -1,0 +1,56 @@
+{
+  "name": "volunteer-connect-frontend",
+  "version": "1.0.0",
+  "description": "Volunteer Connect Web Application",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "axios": "^1.6.2",
+    "bootstrap": "^5.3.2",
+    "highlight.js": "^11.9.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.20.0",
+    "recharts": "^3.6.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop volunteer-connect-frontend",
+    "pm2:restart": "pm2 restart volunteer-connect-frontend",
+    "pm2:delete": "pm2 delete volunteer-connect-frontend",
+    "pm2:logs": "pm2 logs volunteer-connect-frontend",
+    "pm2:status": "pm2 status",
+    "pm2:setup": "./setup-pm2.sh"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "react-scripts": "^5.0.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

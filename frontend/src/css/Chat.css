@@ -1,0 +1,432 @@
+/* Chat page now uses dashboard-content layout */
+/* Removed old chat-container and chat-layout styles */
+
+/* Typing indicator bounce animation */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* History Sidebar - Now in Bootstrap card */
+.history-header {
+  /* Styles handled by Bootstrap classes */
+}
+
+.history-header-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary);
+  stroke-width: 2;
+}
+
+.history-title {
+  flex: 1;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.new-chat-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+  color: var(--color-bg-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px var(--color-button-primary-shadow);
+}
+
+.new-chat-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--color-button-primary-shadow-hover);
+}
+
+.new-chat-icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+.history-list {
+  /* Styles handled by Bootstrap classes */
+}
+
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.history-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.history-empty p {
+  margin: 0.5rem 0;
+}
+
+.history-empty-hint {
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* History item styles now handled inline with Bootstrap classes */
+
+.history-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-item-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item-preview {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item-time {
+  font-size: 0.7rem;
+  color: var(--color-text-tertiary);
+}
+
+.history-item-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.history-item:hover .history-item-delete {
+  opacity: 1;
+}
+
+.history-item-delete:hover {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+.delete-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+.history-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--color-border-light);
+  background: var(--color-bg-gray-light);
+}
+
+.clear-all-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-error-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-family-primary);
+}
+
+.clear-all-btn:hover {
+  background: var(--color-error-text);
+  color: var(--color-bg-white);
+}
+
+.clear-all-btn .clear-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+/* Chat Main Area - Now in Bootstrap card */
+/* Chat Header styles now handled inline with Bootstrap classes */
+
+
+/* Chat Messages Area */
+.chat-messages {
+  /* Styles handled by Bootstrap classes */
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Welcome Screen - Styles now handled inline with Bootstrap classes */
+
+/* Messages - Styles now handled inline with Bootstrap classes */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typing Indicator - Styles now handled inline with Bootstrap classes */
+/* Animation defined above in @keyframes bounce */
+
+/* Chat Input Container - Styles now handled inline with Bootstrap classes */
+
+/* Markdown Content Styling - ChatGPT-like formatting */
+.markdown-content {
+  width: 100%;
+}
+
+.markdown-content p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.markdown-content > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Heading styles */
+.markdown-heading {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+/* List styles */
+.markdown-list {
+  margin-bottom: 0.75rem;
+  margin-left: 1.5rem;
+  padding-left: 0;
+}
+
+.markdown-list-item {
+  margin-bottom: 0.4rem;
+  line-height: 1.6;
+}
+
+/* Code block styling */
+.code-block {
+  background-color: #1e293b;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.code-block code {
+  color: #e2e8f0;
+  font-family: 'Courier New', monospace;
+}
+
+/* Inline code styling */
+.inline-code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: inherit;
+}
+
+.ai-message .inline-code {
+  background-color: #f1f5f9;
+  color: #c7254e;
+}
+
+.user-message .inline-code {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* Blockquote styling */
+.markdown-blockquote {
+  border-left: 4px solid #94a3b8;
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Link styling */
+.markdown-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.markdown-link:hover {
+  text-decoration: underline;
+}
+
+.user-message .markdown-link {
+  color: #60a5fa;
+}
+
+/* Table styling */
+.markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.markdown-table th,
+.markdown-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.markdown-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+.markdown-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.ai-message .markdown-table th {
+  background-color: #eff6ff;
+}
+
+.ai-message .markdown-table tr:hover {
+  background-color: #f0f9ff;
+}
+
+/* Message container styling */
+.ai-message-container {
+  word-break: break-word;
+}
+
+.ai-message-container.user-message {
+  word-wrap: break-word;
+}
+
+/* Scrollbar styling for code blocks */
+.code-block::-webkit-scrollbar {
+  height: 6px;
+}
+
+.code-block::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-block::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+.code-block::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Responsive Design - Handled by Bootstrap grid system */
+/* Additional responsive styles can be added here if needed */
+@media (max-width: 992px) {
+  .dashboard-content .card {
+    margin-bottom: 1rem;
+  }
+  
+  .history-list {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-list {
+    max-height: 250px;
+  }
+  
+  .chat-messages {
+    padding: 1rem !important;
+  }
+}

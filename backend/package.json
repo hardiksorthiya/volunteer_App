@@ -1,0 +1,57 @@
+{
+  "name": "volunteer-connect-backend",
+  "version": "1.0.0",
+  "description": "Volunteer Connect Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop volunteer-connect-backend",
+    "pm2:restart": "pm2 restart volunteer-connect-backend",
+    "pm2:delete": "pm2 delete volunteer-connect-backend",
+    "pm2:logs": "pm2 logs volunteer-connect-backend",
+    "pm2:status": "pm2 status",
+    "pm2:setup": "./setup-pm2.sh",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:create": "node scripts/create_database.js",
+    "migrate": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:status": "knex migrate:status",
+    "migrate:make": "knex migrate:make",
+    "migrate:reset": "node scripts/reset_migrations.js",
+    "migrate:mark-complete": "node scripts/mark_migration_complete.js",
+    "setup": "npm run db:create && npm run migrate",
+    "test:db": "node scripts/test_db_insert.js",
+    "verify:openai": "node scripts/verify_openai_key.js",
+    "check:env": "node scripts/check_env.js"
+  },
+  "keywords": [
+    "voluntree",
+    "api",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "form-data": "^4.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.0.1",
+    "multer": "^2.0.2",
+    "mysql2": "^3.6.5",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^7.0.12",
+    "openai": "^6.15.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
