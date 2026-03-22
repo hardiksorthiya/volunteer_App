@@ -55,3 +55,16 @@ npm run dev
 ```
 
 (requires `nodemon`)
+
+---
+
+## Git (remote and push)
+
+Remote repository: [https://github.com/hardiksorthiya/volunteer_App](https://github.com/hardiksorthiya/volunteer_App)
+
+```bash
+git remote -v
+git push -u origin main
+```
+
+`node_modules` and `.env` secrets are ignored; run `npm install` in each app folder after cloning.
