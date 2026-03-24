@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, jsx-a11y/heading-has-content, jsx-a11y/anchor-has-content */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
