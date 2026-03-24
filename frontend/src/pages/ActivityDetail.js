@@ -96,12 +96,12 @@ const ActivityDetail = () => {
           }));
         }
       } else if (activity) {
-        // If there is at least one active task, ensure activity status reflects dates
-        const dateStatus = getStatusFromDates(activity.start_date, activity.end_date);
-        if (activity.status !== dateStatus || progress !== newProgress) {
+        // If there is at least one active task, keep activity ongoing.
+        // This avoids stale "completed" status when a new in-progress task is added.
+        if (activity.status !== 'ongoing' || progress !== newProgress) {
           setActivity(prev => ({
             ...prev,
-            status: dateStatus,
+            status: 'ongoing',
             progress: newProgress
           }));
         }
@@ -293,11 +293,25 @@ const ActivityDetail = () => {
         // Calculate progress based on tasks
         const taskProgress = calculateProgressFromTasks(mappedTasks);
         setProgress(taskProgress);
-        
-        // If all tasks are completed, update activity status (use functional update to avoid stale closure)
-        if (mappedTasks.length > 0 && mappedTasks.every(task => task.completed || task.status === 'completed')) {
-          setProgress(100);
-          setActivity(prev => (prev && prev.status !== 'completed' ? { ...prev, status: 'completed', progress: 100 } : prev));
+
+        // Keep activity status in sync with task completion state.
+        if (mappedTasks.length > 0) {
+          const allCompleted = mappedTasks.every(task => task.completed || task.status === 'completed');
+          const nextStatus = allCompleted ? 'completed' : 'ongoing';
+          const nextProgress = allCompleted ? 100 : taskProgress;
+          setProgress(nextProgress);
+          setActivity(prev => (prev ? { ...prev, status: nextStatus, progress: nextProgress } : prev));
+        } else {
+          // No tasks: fallback to date-based status.
+          setActivity(prev => (
+            prev
+              ? {
+                  ...prev,
+                  status: getStatusFromDates(prev.start_date, prev.end_date),
+                  progress: 0
+                }
+              : prev
+          ));
         }
         
         // Load users for each task

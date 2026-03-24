@@ -65,7 +65,6 @@ const Home = () => {
         setError(err.response.data?.message || 'Login failed. Please check your credentials.');
       } else if (err.request) {
         // Request was made but no response received (network/CORS/server down)
-        const apiUrl = process.env.REACT_APP_API_URL || 'the API server';
         setError(`Unable to connect to the server. Please ensure the backend server is running on port 3000. Error: ${err.message || 'Network error'}`);
       } else {
         // Something else happened

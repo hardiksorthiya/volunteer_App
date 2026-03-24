@@ -123,7 +123,7 @@ const Sidebar = () => {
         defaultItems.push({ path: '/activities', icon: ActivitiesIcon, label: 'Activities', adminOnly: false });
       }
 
-      defaultItems.push({ path: '/hour-targets', icon: TargetIcon, label: 'Hourly Target', adminOnly: false });
+      defaultItems.push({ path: '/hour-targets', icon: TargetIcon, label: 'Hour Targers', adminOnly: false });
 
       defaultItems.push({ path: '/dashboard', icon: HomeIcon, label: 'Dashboard', adminOnly: false });
 

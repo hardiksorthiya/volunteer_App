@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
-import { EditIcon, UserIcon, EyeIcon, EyeOffIcon, LockIcon, CalendarIcon, CheckIcon, MapPinIcon, PlusIcon, TrashIcon } from '../components/Icons';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
@@ -210,14 +209,9 @@ const Dashboard = () => {
         const myCreatedActivitiesList = currentUserId && isAdmin
           ? activities.filter(a => a.created_by === currentUserId)
           : [];
+        // "My Activities" tab should show only activities created by the current user.
         const myActivitiesList = currentUserId
-          ? activities.filter(a => {
-            if (a.created_by === currentUserId) return true;
-            if (a.is_joined === true || a.is_joined === 1 || a.is_joined === '1') return true;
-            if (a.has_tasks === true || a.has_tasks === 1 || a.has_tasks === '1') return true;
-            if (a.task_hours && parseFloat(a.task_hours) > 0) return true;
-            return false;
-          })
+          ? activities.filter(a => a.created_by === currentUserId)
           : [];
 
         const activitiesToShow = isAdmin ? myCreatedActivitiesList : activities;
@@ -624,12 +618,6 @@ const Dashboard = () => {
     return `${day} ${month}`;
   };
 
-  const formatTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-  };
-
   const formatDateRange = (startDate, endDate) => {
     if (!startDate) return 'N/A';
     const start = new Date(startDate);
@@ -642,58 +630,6 @@ const Dashboard = () => {
       return `${startFormatted} - ${endFormatted}`;
     }
     return startFormatted;
-  };
-
-  const handleJoinActivity = async (activityId) => {
-    try {
-      const response = await api.post(`/activities/${activityId}/join`);
-      if (response.data.success) {
-        // Update activity state optimistically
-        setUserActivities(prev => prev.map(activity =>
-          activity.id === activityId
-            ? { ...activity, is_joined: true }
-            : activity
-        ));
-        setMyActivities(prev => prev.map(activity =>
-          activity.id === activityId
-            ? { ...activity, is_joined: true }
-            : activity
-        ));
-        // Refresh activities to get updated data
-        fetchUserActivities();
-      }
-    } catch (error) {
-      console.error('Error joining activity:', error);
-      alert(error.response?.data?.message || 'Failed to join activity');
-    }
-  };
-
-  const handleLeaveActivity = async (activityId) => {
-    try {
-      const response = await api.post(`/activities/${activityId}/leave`);
-      if (response.data.success) {
-        // Update activity state optimistically
-        setUserActivities(prev => prev.map(activity =>
-          activity.id === activityId
-            ? { ...activity, is_joined: false }
-            : activity
-        ));
-        setMyActivities(prev => prev.map(activity =>
-          activity.id === activityId
-            ? { ...activity, is_joined: false }
-            : activity
-        ));
-        // Refresh activities to get updated data
-        fetchUserActivities();
-      }
-    } catch (error) {
-      console.error('Error leaving activity:', error);
-      alert(error.response?.data?.message || 'Failed to leave activity');
-    }
-  };
-
-  const handleViewActivity = (activityId) => {
-    navigate(`/activities/${activityId}`);
   };
 
   if (loading) {
@@ -709,13 +645,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  const getRoleLabel = () => {
-    if (!user) return 'Volunteer';
-    if (user.user_type === 'admin') return 'Admin';
-    if (user.user_type === 'organization') return 'Organization';
-    return 'Volunteer';
-  };
 
   // For admin individual: Total Hour card matches "My hour target" (current period hours) when set
   const displayTotalHours =
@@ -739,9 +668,7 @@ const Dashboard = () => {
               <div className="stat-content">
                 <div className="stat-number">{stats.myActivities}</div>
                 <div className="stat-label">My Activity</div>
-                <div className="stat-percentage">
-                  {stats.myActivities > 0 ? '100%' : '0%'}
-                </div>
+                
               </div>
               <div className="stat-chart">
                 <div className="chart-bar" style={{ height: `${Math.min((stats.myActivities / Math.max(stats.myActivities, 1)) * 100, 100)}%` }}></div>
@@ -752,9 +679,7 @@ const Dashboard = () => {
               <div className="stat-content">
                 <div className="stat-number">{stats.completedActivities}</div>
                 <div className="stat-label">Completed Activity</div>
-                <div className="stat-percentage">
-                  {stats.myActivities > 0 ? ((stats.completedActivities / stats.myActivities) * 100).toFixed(1) : 0}%
-                </div>
+                
               </div>
               <div className="stat-chart">
                 <div className="chart-bar" style={{ height: `${stats.myActivities > 0 ? (stats.completedActivities / stats.myActivities) * 100 : 0}%` }}></div>
@@ -765,9 +690,7 @@ const Dashboard = () => {
               <div className="stat-content">
                 <div className="stat-number">{displayTotalHours}</div>
                 <div className="stat-label">Total Hour</div>
-                <div className="stat-percentage">
-                  {stats.completedActivities > 0 ? (displayTotalHours / stats.completedActivities).toFixed(1) : 0} hrs/activity
-                </div>
+                
               </div>
               <div className="stat-chart">
                 <div className="chart-bar" style={{ height: `${displayTotalHours > 0 ? Math.min((displayTotalHours / 100) * 100, 100) : 0}%` }}></div>
@@ -778,9 +701,7 @@ const Dashboard = () => {
               <div className="stat-content">
                 <div className="stat-number">{stats.totalTasks}</div>
                 <div className="stat-label">Total Task</div>
-                <div className="stat-percentage">
-                  {stats.myActivities > 0 ? (stats.totalTasks / stats.myActivities).toFixed(1) : 0} tasks/activity
-                </div>
+                
               </div>
               <div className="stat-chart">
                 <div className="chart-bar" style={{ height: `${stats.totalTasks > 0 ? Math.min((stats.totalTasks / Math.max(stats.totalTasks, 1)) * 100, 100) : 0}%` }}></div>
@@ -997,7 +918,7 @@ const Dashboard = () => {
             <div className="card-body dashboard-chart-body">
               <h5 className="card-title mb-3">Activity Categories</h5>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} className="pie-chart-container">
+                <ResponsiveContainer width="100%" height={300} className="pie-chart-container">
                   <PieChart>
                     <Pie
                       data={categoryData}

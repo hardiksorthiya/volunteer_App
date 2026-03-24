@@ -105,6 +105,7 @@ const Activities = () => {
             is_public: activity.is_public,
             is_joined: activity.is_joined || false,
             created_by: activity.created_by,
+            creator_name: activity.creator_name || '',
             creator_user_type: activity.creator_user_type,
             task_hours: activity.task_hours || 0,
             start_date: activity.start_date,
@@ -564,6 +565,9 @@ const Activities = () => {
                     <th scope="col" className="col-2">Date</th>
                     <th scope="col" className="col-2">Location</th>
                     <th scope="col" className="col-1">Category</th>
+                    {isAdmin && activeTab === 'other' && (
+                      <th scope="col" className="col-2">Created By</th>
+                    )}
                     <th scope="col" className="col-1 text-end">Total Hours</th>
                     <th scope="col" className="col-1">Status</th>
                     <th scope="col" className="col-1 text-center">Actions</th>
@@ -600,6 +604,13 @@ const Activities = () => {
                           '-'
                         )}
                       </td>
+                      {isAdmin && activeTab === 'other' && (
+                        <td>
+                          <span className="text-secondary">
+                            {activity.creator_name || `User #${activity.created_by || '-'}`}
+                          </span>
+                        </td>
+                      )}
                       <td className="text-end">
                         {Number(activity.task_hours || 0)} hrs
                       </td>
