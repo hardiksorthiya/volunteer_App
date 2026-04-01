@@ -2,6 +2,61 @@ const express = require('express');
 const router = express.Router();
 const { chatCompletion, isConfigured } = require('../config/openai');
 const { authenticate } = require('../middleware/auth');
+const MAX_GUEST_MESSAGES = 3;
+const guestUsage = new Map();
+
+const getLocationInstruction = (locationContext) => {
+  if (!locationContext || typeof locationContext !== 'object') return null;
+
+  const lat = Number(locationContext.latitude);
+  const lng = Number(locationContext.longitude);
+  const accuracy = Number(locationContext.accuracy);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  const roundedLat = lat.toFixed(4);
+  const roundedLng = lng.toFixed(4);
+  const accuracyText = Number.isFinite(accuracy) ? ` (accuracy about ${Math.round(accuracy)} meters)` : '';
+
+  return `The user's approximate location is latitude ${roundedLat}, longitude ${roundedLng}${accuracyText}. Use this location context when answering with nearby suggestions, local guidance, weather-sensitive recommendations, or region-specific details. If location is not relevant to the question, answer normally.`;
+};
+
+const buildMessagesPayload = (message, conversationHistory = [], locationContext = null) => {
+  const messages = [];
+  const systemMessage = process.env.OPENAI_SYSTEM_MESSAGE ||
+    'You are a helpful assistant for Volunteer Connect, a platform that connects volunteers with organizations. Be friendly, professional, and helpful.';
+
+  messages.push({
+    role: 'system',
+    content: systemMessage
+  });
+
+  const locationInstruction = getLocationInstruction(locationContext);
+  if (locationInstruction) {
+    messages.push({
+      role: 'system',
+      content: locationInstruction
+    });
+  }
+
+  if (Array.isArray(conversationHistory) && conversationHistory.length > 0) {
+    const recentHistory = conversationHistory.slice(-10);
+    recentHistory.forEach(msg => {
+      if (msg.role && msg.content) {
+        messages.push({
+          role: msg.role,
+          content: msg.content
+        });
+      }
+    });
+  }
+
+  messages.push({
+    role: 'user',
+    content: message.trim()
+  });
+
+  return messages;
+};
 
 // @route   POST /api/chat
 // @desc    Chat with AI using OpenAI - Send a message and get AI reply
@@ -16,7 +71,7 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
-    const { message, conversationHistory = [], model, temperature, max_tokens } = req.body;
+    const { message, conversationHistory = [], model, temperature, max_tokens, locationContext = null } = req.body;
 
     // Validation
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -26,37 +81,7 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
-    // Build messages array for OpenAI
-    const messages = [];
-
-    // Add system message (optional, can be customized)
-    const systemMessage = process.env.OPENAI_SYSTEM_MESSAGE || 
-      'You are a helpful assistant for Volunteer Connect, a platform that connects volunteers with organizations. Be friendly, professional, and helpful.';
-
-    messages.push({
-      role: 'system',
-      content: systemMessage
-    });
-
-    // Add conversation history if provided
-    if (Array.isArray(conversationHistory) && conversationHistory.length > 0) {
-      // Validate and add history (limit to last 10 messages to avoid token limits)
-      const recentHistory = conversationHistory.slice(-10);
-      recentHistory.forEach(msg => {
-        if (msg.role && msg.content) {
-          messages.push({
-            role: msg.role, // 'user' or 'assistant'
-            content: msg.content
-          });
-        }
-      });
-    }
-
-    // Add current user message
-    messages.push({
-      role: 'user',
-      content: message.trim()
-    });
+    const messages = buildMessagesPayload(message, conversationHistory, locationContext);
 
     // Prepare options
     const options = {};
@@ -148,6 +173,73 @@ router.post('/', authenticate, async (req, res) => {
         code: errorCode,
         status: statusCode
       } : undefined
+    });
+  }
+});
+
+// @route   POST /api/chat/guest
+// @desc    Guest chat with AI (limited free questions before login is required)
+// @access  Public
+router.post('/guest', async (req, res) => {
+  try {
+    if (!isConfigured()) {
+      return res.status(503).json({
+        success: false,
+        message: 'AI chat service is not configured. Please set OPENAI_API_KEY in environment variables.'
+      });
+    }
+
+    const { message, conversationHistory = [], model, temperature, max_tokens, guestId, locationContext = null } = req.body;
+
+    if (!guestId || typeof guestId !== 'string' || guestId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Guest identifier is required'
+      });
+    }
+
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid message'
+      });
+    }
+
+    const normalizedGuestId = guestId.trim().slice(0, 128);
+    const currentCount = guestUsage.get(normalizedGuestId) || 0;
+
+    if (currentCount >= MAX_GUEST_MESSAGES) {
+      return res.status(403).json({
+        success: false,
+        message: 'Free AI limit reached. Please login to continue chatting.',
+        requiresLogin: true,
+        remaining: 0
+      });
+    }
+
+    const messages = buildMessagesPayload(message, conversationHistory.slice(-6), locationContext);
+    const options = {};
+    if (model) options.model = model;
+    if (temperature !== undefined) options.temperature = parseFloat(temperature);
+    if (max_tokens !== undefined) options.max_tokens = parseInt(max_tokens);
+
+    const response = await chatCompletion(messages, options);
+    const assistantMessage = response.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+
+    const newCount = currentCount + 1;
+    guestUsage.set(normalizedGuestId, newCount);
+
+    return res.json({
+      success: true,
+      message: assistantMessage,
+      remaining: Math.max(0, MAX_GUEST_MESSAGES - newCount),
+      requiresLogin: false
+    });
+  } catch (error) {
+    console.error('Guest chat API error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'An error occurred while processing your chat request'
     });
   }
 });

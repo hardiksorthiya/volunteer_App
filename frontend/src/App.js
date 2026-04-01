@@ -11,6 +11,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import { SidebarWrapper } from './components/SidebarWrapper';
 import Home from './components/Home';
+import AIChatFloatingWidget from './components/AIChatFloatingWidget';
 
 // Pages
 import Login from './pages/Login';
@@ -85,6 +86,7 @@ const AppContent = () => {
         <Route path="/settings" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} replace />} />
       </Routes>
+      <AIChatFloatingWidget />
     </div>
   );
 };

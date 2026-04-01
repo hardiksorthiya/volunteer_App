@@ -15,7 +15,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.volunteerconnect.app"
+      "bundleIdentifier": "com.volunteerconnect.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,10 +31,16 @@
       "@react-native-community/datetimepicker"
     ],
     "extra": {
-      "apiUrl": "https://volunteerconnect.io/api",
+      "apiUrl": "https://volunteerconnect.cloud/api",
       "eas": {
-        "projectId": "volunteer-connect"
+        "projectId": "c647c77f-5705-49c1-9be9-b62ea985f1db"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c647c77f-5705-49c1-9be9-b62ea985f1db"
     }
   }
 }

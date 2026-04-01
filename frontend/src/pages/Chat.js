@@ -15,6 +15,7 @@ const Chat = () => {
   const [loading, setLoading] = useState(false);
   const [aiConfigured, setAiConfigured] = useState(true);
   const [aiStatusMessage, setAiStatusMessage] = useState('');
+  const [locationContext, setLocationContext] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -30,6 +31,9 @@ const Chat = () => {
     
     // Check AI chat status
     checkAiStatus();
+
+    // Capture user location for location-aware AI responses
+    requestLocationContext();
   }, [navigate]);
 
   useEffect(() => {
@@ -75,6 +79,23 @@ const Chat = () => {
         setAiStatusMessage(error.response?.data?.message || 'Unable to check AI chat status');
       }
     }
+  };
+
+  const requestLocationContext = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocationContext({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        });
+      },
+      () => {
+        // User may deny location access; chat still works without location context.
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+    );
   };
 
   const loadConversations = () => {
@@ -215,7 +236,8 @@ const Chat = () => {
 
       const response = await api.post('/chat', {
         message: messageToSend,
-        conversationHistory: conversationHistory
+        conversationHistory: conversationHistory,
+        locationContext
       });
 
       if (response.data.success) {
@@ -662,7 +684,7 @@ const Chat = () => {
                   )}
                   {aiConfigured && (
                     <p className="text-muted small mt-2 mb-0">
-                      AI Assistant powered by OpenAI
+                      AI Assistant powered by OpenAI {locationContext ? '• location enabled' : '• location not shared'}
                     </p>
                   )}
                 </form>

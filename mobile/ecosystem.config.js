@@ -16,7 +16,6 @@ module.exports = {
     watch: false,
     max_memory_restart: '800M',
     env: {
-      CI: 'true',
       NODE_ENV: 'development',
       PATH: pathEnv
     },
