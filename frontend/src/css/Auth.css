@@ -10,6 +10,25 @@
   overflow: hidden;
 }
 
+/* Company logo above auth card (login / register / forgot password) */
+.auth-page-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 1000px;
+}
+
+
+.auth-logo-top img {
+  max-height: 72px;
+  max-width: min(280px, 85vw);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
 /* Main Auth Card - Two Panel Layout */
 .auth-card {
   background: var(--color-bg-white);
@@ -560,6 +579,10 @@
 
   .auth-container {
     padding: 1rem;
+  }
+
+  .auth-logo-top img {
+    max-height: 56px;
   }
 }
 

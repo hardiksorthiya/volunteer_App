@@ -50,6 +50,8 @@ const AppContent = () => {
   const token = localStorage.getItem('token');
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password' || location.pathname.startsWith('/reset-password');
   const showLayout = token && !isAuthPage;
+  /* Landing page has embedded AI chat; keep floating widget on login/register only */
+  const showFloatingAi = location.pathname === '/login' || location.pathname === '/register';
 
   return (
     <div className="App">
@@ -86,7 +88,7 @@ const AppContent = () => {
         <Route path="/settings" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} replace />} />
       </Routes>
-      <AIChatFloatingWidget />
+      {showFloatingAi && <AIChatFloatingWidget />}
     </div>
   );
 };

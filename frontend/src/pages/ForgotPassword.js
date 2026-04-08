@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../config/api';
+import logoImg from '../components/images/logo.png';
 import '../css/Auth.css';
 
 const ForgotPassword = () => {
@@ -43,12 +44,17 @@ const ForgotPassword = () => {
 
   return (
     <div className="auth-container">
+      <div className="auth-page-inner">
+        
       <div className="auth-card">
         {/* Left Panel - Welcome Section */}
         <div className="auth-welcome-panel">
           <div className="decorative-circle"></div>
           <div className="decorative-circle"></div>
           <div className="auth-welcome-content">
+          <div className="auth-logo-top">
+          <img src={logoImg} alt="Volunteer Connect" />
+        </div>
             <h1 className="auth-welcome-title">Reset</h1>
             <h2 className="auth-welcome-headline">Your Password</h2>
             <p className="auth-welcome-description">
@@ -160,6 +166,7 @@ const ForgotPassword = () => {
             Don't have an account? <Link to="/register">Sign up</Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

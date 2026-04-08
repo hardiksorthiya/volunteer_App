@@ -1,212 +1,308 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../config/api';
-import { EyeIcon, EyeOffIcon } from '../components/Icons';
+import logoImg from './images/logo.png';
+import GuestAIChat from './GuestAIChat';
 import '../css/Home.css';
 
 const Home = () => {
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const homeRootRef = useRef(null);
 
-  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    const root = homeRootRef.current;
+    if (!root) return undefined;
+
+    const sections = root.querySelectorAll('.home-section--observe');
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) {
+      sections.forEach((el) => el.classList.add('home-section--visible'));
+      return undefined;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('home-section--visible');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -8% 0px' }
+    );
+
+    sections.forEach((el) => io.observe(el));
+
+    const first = sections[0];
+    if (first) {
+      requestAnimationFrame(() => first.classList.add('home-section--visible'));
+    }
+
+    return () => {
+      sections.forEach((el) => io.unobserve(el));
+      io.disconnect();
+    };
+  }, []);
+
   if (token) {
     navigate('/dashboard');
     return null;
   }
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setError('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await api.post('/auth/login', {
-        email: formData.email,
-        password: formData.password
-      });
-
-      if (response.data && response.data.success) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.data));
-        
-        if (rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-        }
-        
-        setSuccess('Login successful! Redirecting...');
-        
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
-      } else {
-        setError(response.data?.message || 'Login failed. Please try again.');
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      if (err.response) {
-        // Server responded with error status
-        setError(err.response.data?.message || 'Login failed. Please check your credentials.');
-      } else if (err.request) {
-        // Request was made but no response received (network/CORS/server down)
-        setError(`Unable to connect to the server. Please ensure the backend server is running on port 3000. Error: ${err.message || 'Network error'}`);
-      } else {
-        // Something else happened
-        setError(err.message || 'An unexpected error occurred. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="home">
-      {/* Top Background Section */}
-      <div className="home-background">
-        <div className="home-background-overlay"></div>
-      </div>
+    <div className="home-page" ref={homeRootRef}>
+      {/* Top banner + hero: background image set via .home-hero__bg in Home.css */}
+      <section className="home-hero home-section--observe position-relative d-flex flex-column min-vh-100 overflow-hidden">
+        <div
+          className="home-hero__bg"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `url(${(process.env.PUBLIC_URL || '')}/images/hero-banner.jpg)`,
+          }}
+        />
+        <div className="home-hero__overlay" aria-hidden="true" />
 
-      {/* Main Content Section */}
-      <div className="home-content-wrapper">
-        <div className="home-content-container">
-          {/* Left Side - Title and Subtitle */}
-          <div className="home-left-panel">
-            <h1 className="home-title">Volunteer Connect</h1>
-            <h2 className="home-subtitle">Connect. Volunteer. Make a Difference.</h2>
-            <p className="home-description">
-              Join thousands of volunteers and organizations making a positive impact in their communities. 
-              Discover meaningful opportunities, connect with like-minded individuals, and create lasting change together.
-            </p>
-            <div className="home-features">
-              <div className="home-feature">
-                <span className="home-feature-icon">🤝</span>
-                <span>Connect with Organizations</span>
+        <header className="home-top-bar position-relative w-100">
+          <div className="container">
+            <div className="row align-items-center py-3 g-2">
+              <div className="col-auto">
+                <Link to="/" className="d-inline-block text-decoration-none home-top-bar__logo-link">
+                  <img
+                    src={logoImg}
+                    alt="Volunteer Connect"
+                    className="home-top-bar__logo img-fluid"
+                  />
+                </Link>
               </div>
-              <div className="home-feature">
-                <span className="home-feature-icon">❤️</span>
-                <span>Make a Real Impact</span>
-              </div>
-              <div className="home-feature">
-                <span className="home-feature-icon">🌟</span>
-                <span>Build Your Community</span>
-              </div>
-            </div>
-            <Link to="/register" className="home-cta-button">
-              Get Started Free
-            </Link>
-          </div>
-
-          {/* Right Side - Login Form */}
-          <div className="home-right-panel">
-            <div className="home-login-card">
-              <h2 className="home-login-title">Welcome Back</h2>
-              <p className="home-login-subtitle">Sign in to your account</p>
-              
-              <form onSubmit={handleSubmit} className="home-login-form">
-                {/* Email Input */}
-                <div className="home-form-group">
-                  <label htmlFor="home-email" className="home-form-label">Email</label>
-                  <div className="home-form-input-wrapper">
-                    <input
-                      type="email"
-                      id="home-email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Enter your email"
-                      className="home-form-input form-input-placeholder-email"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Password Input */}
-                <div className="home-form-group">
-                  <label htmlFor="home-password" className="home-form-label">Password</label>
-                  <div className="home-form-input-wrapper">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      id="home-password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Enter your password"
-                      className="home-form-input form-input-placeholder-lock form-input-password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? (
-                        <EyeOffIcon className="password-toggle-icon" />
-                      ) : (
-                        <EyeIcon className="password-toggle-icon" />
-                      )}
-                      <span className="password-toggle-text">{showPassword ? 'HIDE' : 'SHOW'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Remember Me & Forgot Password */}
-                <div className="home-options-row">
-                  <div className="remember-me">
-                    <input
-                      type="checkbox"
-                      id="home-rememberMe"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                    />
-                    <label htmlFor="home-rememberMe">Remember me</label>
-                  </div>
-                  <Link to="/forgot-password" className="forgot-password-link">
-                    Forgot Password?
+              <div className="col-auto ms-auto">
+                <div className="d-flex flex-wrap gap-2 justify-content-end">
+                  <Link to="/login" className="btn btn-outline-light home-top-bar__btn">
+                    Login
+                  </Link>
+                  <Link to="/register" className="btn btn-light text-primary fw-semibold home-top-bar__btn">
+                    Sign up
                   </Link>
                 </div>
+              </div>
+            </div>
+          </div>
+        </header>
 
-                {/* Error/Success Messages */}
-                {error && <div className="error-message">{error}</div>}
-                {success && <div className="success-message">{success}</div>}
-
-                {/* Sign In Button */}
-                <button 
-                  type="submit" 
-                  className="home-btn-primary" 
-                  disabled={loading || success}
-                >
-                  {loading ? 'Signing in...' : success ? 'Success!' : 'Sign in'}
-                </button>
-              </form>
-
-              {/* Sign Up Link */}
-              <p className="home-signup-link">
-                Don't have an account? <Link to="/register">Sign up</Link>
-              </p>
+        <div className="home-hero__body flex-grow-1 d-flex align-items-center py-4 py-lg-5">
+          <div className="container-xl">
+            <div className="row align-items-center justify-content-center g-4 g-lg-5">
+              <div className="col-12 col-lg-6 text-center text-lg-start">
+                <h1 className="home-hero__title home-hero__anim text-uppercase mb-3">Volunteer Connect</h1>
+                <p className="home-hero__lead home-hero__anim fw-semibold mb-3">
+                  Connect. Volunteer. Make a Difference.
+                </p>
+                <p className="home-hero__text home-hero__anim lead mb-4">
+                  Join thousands of volunteers and organizations making a positive impact in their communities.
+                  Discover meaningful opportunities, connect with like-minded individuals, and create lasting change together.
+                </p>
+                <ul className="home-hero__anim list-unstyled mb-0 text-start d-inline-block home-hero__anim--delay">
+                  <li className="home-hero__bullet d-flex align-items-start gap-2 mb-2">
+                    <span className="home-hero__bullet-icon" aria-hidden="true">🤝</span>
+                    <span>Connect with Organizations</span>
+                  </li>
+                  <li className="home-hero__bullet d-flex align-items-start gap-2 mb-2">
+                    <span className="home-hero__bullet-icon" aria-hidden="true">❤️</span>
+                    <span>Make a Real Impact</span>
+                  </li>
+                  <li className="home-hero__bullet d-flex align-items-start gap-2">
+                    <span className="home-hero__bullet-icon" aria-hidden="true">🌟</span>
+                    <span>
+                      Find volunteer opportunities with AI-assisted search. Set targets and manage activities — try the assistant on the right.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+              <div className="col-12 col-lg-6">
+                <div className="mx-auto home-hero__chat-wrap home-hero__anim home-hero__anim--chat">
+                  <GuestAIChat embedded />
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <section
+        className="home-value-cards home-section--observe position-relative overflow-hidden"
+        aria-label="Features"
+      >
+       
+        <div className="container position-relative py-5">
+          <div className="row g-4 justify-content-center">
+            <div className="col-12 col-md-4">
+              <div className="home-value-card card border-0 shadow h-100 text-center p-4 rounded-4">
+                <div className="home-value-card__icon mb-3" aria-hidden="true">
+                  <svg viewBox="0 0 80 80" width="72" height="72" role="img">
+                    <circle cx="34" cy="34" r="22" fill="none" stroke="#22c55e" strokeWidth="5" />
+                    <path d="M28 34l4 4 10-12" fill="none" stroke="#eab308" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                    <line x1="50" y1="50" x2="68" y2="68" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <h3 className="home-value-card__title h5 fw-bold">Find Volunteer Opportunities</h3>
+                <p className="home-value-card__text text-muted mb-0 small">
+                  Discover many ways to volunteer — from local community projects to virtual roles — and explore causes
+                  that match your skills and schedule.
+                </p>
+              </div>
+            </div>
+            <div className="col-12 col-md-4">
+              <div className="home-value-card card border-0 shadow h-100 text-center p-4 rounded-4">
+                <div className="home-value-card__icon mb-3" aria-hidden="true">
+                  <svg viewBox="0 0 80 80" width="72" height="72" role="img">
+                    <rect x="18" y="14" width="40" height="48" rx="4" fill="#2563eb" opacity="0.9" />
+                    <rect x="24" y="22" width="28" height="4" rx="1" fill="#fff" opacity="0.9" />
+                    <rect x="24" y="30" width="20" height="3" rx="1" fill="#fff" opacity="0.7" />
+                    <path d="M48 18 L58 12 L58 26 Z" fill="#3b82f6" />
+                  </svg>
+                </div>
+                <h3 className="home-value-card__title home-value-card__title--accent h5 fw-bold text-primary">Add Your Organization</h3>
+                <p className="home-value-card__text text-muted mb-0 small">
+                  Share your volunteer opportunities with people nearby and around the world who are looking for meaningful
+                  ways to give back.
+                </p>
+              </div>
+            </div>
+            <div className="col-12 col-md-4">
+              <div className="home-value-card card border-0 shadow h-100 text-center p-4 rounded-4">
+                <div className="home-value-card__icon mb-3" aria-hidden="true">
+                  <svg viewBox="0 0 80 80" width="72" height="72" role="img">
+                    <circle cx="40" cy="40" r="28" fill="#facc15" />
+                    <path
+                      d="M28 24 L28 52 L36 44 L40 58 L44 44 L52 52 L48 28 Z"
+                      fill="#fff"
+                      stroke="#1f2937"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h3 className="home-value-card__title h5 fw-bold">Explore Business Solutions</h3>
+                <p className="home-value-card__text text-muted mb-0 small">
+                  Offer volunteer programs to your team or community — share virtual and on-site opportunities in one
+                  place through Volunteer Connect.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-about home-section--observe py-5 bg-white" aria-labelledby="home-about-heading">
+        <div className="container">
+          <div className="row align-items-center g-4 g-lg-5">
+            <div className="col-lg-6">
+              <h2 id="home-about-heading" className="home-about__heading">
+                About Us
+              </h2>
+              <p className="home-about__text text-muted">
+                Volunteer Connect helps volunteers and organizations find each other — whether you are looking for
+                meaningful opportunities, coordinating activities, or tracking hours toward your goals. We believe
+                technology should make giving back simpler, clearer, and more rewarding.
+              </p>
+              <p className="home-about__text text-muted mb-0">
+                Our mission is to connect more people with social-impact work than ever before: one signup, one activity,
+                and one community at a time. Together we can build a better world through service, partnership, and shared
+                purpose.
+              </p>
+            </div>
+            <div className="col-lg-6 text-center text-lg-end">
+              <img
+                src="/images/about.png"
+                alt="Illustration of connecting people with volunteer opportunities online"
+                className="img-fluid home-about__illustration"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-mvv home-section--observe py-5" aria-labelledby="home-mvv-heading">
+        <div className="container">
+          <h2 id="home-mvv-heading" className="home-mvv__section-title text-center mb-2 h3 fw-bold">
+            Our mission, vision &amp; values
+          </h2>
+          <p className="home-mvv__intro text-center text-muted mx-auto mb-5">
+            What guides Volunteer Connect every day.
+          </p>
+          <div className="row g-4 justify-content-center">
+            <div className="col-12 col-md-4">
+              <article className="home-mvv-card card border h-100 shadow-sm rounded-4 p-4">
+                <div className="home-mvv-card__accent home-mvv-card__accent--mission" aria-hidden="true" />
+                <h3 className="home-mvv-card__title h5 fw-bold mt-1">Mission</h3>
+                <p className="home-mvv-card__text text-muted mb-0 small">
+                  To connect volunteers with organizations through an easy, trustworthy platform — so more people can
+                  turn intent into action and strengthen their communities.
+                </p>
+              </article>
+            </div>
+            <div className="col-12 col-md-4">
+              <article className="home-mvv-card card border h-100 shadow-sm rounded-4 p-4">
+                <div className="home-mvv-card__accent home-mvv-card__accent--vision" aria-hidden="true" />
+                <h3 className="home-mvv-card__title h5 fw-bold mt-1">Vision</h3>
+                <p className="home-mvv-card__text text-muted mb-0 small">
+                  A world where everyone can discover volunteer work that fits their life — and where every organization
+                  can find the people and passion to power their mission.
+                </p>
+              </article>
+            </div>
+            <div className="col-12 col-md-4">
+              <article className="home-mvv-card card border h-100 shadow-sm rounded-4 p-4">
+                <div className="home-mvv-card__accent home-mvv-card__accent--values" aria-hidden="true" />
+                <h3 className="home-mvv-card__title h5 fw-bold mt-1">Values</h3>
+                <p className="home-mvv-card__text text-muted mb-0 small">
+                  <strong className="text-dark">Community</strong> first — we listen and build together.
+                  <br />
+                  <strong className="text-dark">Integrity</strong> — transparent, respectful, and fair.
+                  <br />
+                  <strong className="text-dark">Impact</strong> — we measure success by real outcomes for people and places.
+                </p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        className="home-cta-contact home-section--observe py-5 text-center text-white"
+        aria-labelledby="home-cta-contact-heading"
+      >
+        <div className="container py-3">
+          <h2 id="home-cta-contact-heading" className="home-cta-contact__title h3 fw-bold mb-3">
+            Are you a nonprofit looking for volunteers?
+          </h2>
+          <p className="home-cta-contact__subtitle lead mb-4">
+            Join Volunteer Connect for free — list opportunities, reach volunteers, and manage your impact in one place.
+            Get started by creating an account:
+          </p>
+          <div className="d-flex flex-wrap gap-3 justify-content-center mb-5">
+            <Link to="/login" className="btn btn-light text-primary fw-semibold px-4 py-2 home-cta-contact__btn">
+              Login
+            </Link>
+            <Link to="/register" className="btn btn-outline-light fw-semibold px-4 py-2 home-cta-contact__btn">
+              Sign up
+            </Link>
+          </div>
+          <p className="home-cta-contact__contact-label fw-semibold mb-2">Contact us</p>
+          <a
+            href="mailto:volunteerconnect.contact@gmail.com"
+            className="home-cta-contact__email link-light text-decoration-underline"
+          >
+            volunteerconnect.contact@gmail.com
+          </a>
+        </div>
+      </section>
     </div>
   );
 };
 
 export default Home;
-

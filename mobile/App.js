@@ -5,6 +5,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import LandingScreen from './src/screens/LandingScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
@@ -24,6 +26,7 @@ import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import HourTargetsScreen from './src/screens/HourTargetsScreen';
 import { HomeIcon, ActivityIcon, ChatIcon, SettingsIcon } from './src/components/Icons';
 import { ClockIcon } from './src/components/Icons';
+import AIGuestFloatingWidget from './src/components/AIGuestFloatingWidget';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -108,6 +111,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSplashFinished, setIsSplashFinished] = useState(false);
+  const [currentRouteName, setCurrentRouteName] = useState(null);
   const navigationRef = useRef(null);
   const splashScale = useRef(new Animated.Value(0.92)).current;
 
@@ -164,7 +168,7 @@ export default function App() {
             setTimeout(() => {
               navigationRef.current?.reset({
                 index: 0,
-                routes: [{ name: 'Login' }],
+                routes: [{ name: 'Landing' }],
               });
             }, 100);
           }
@@ -199,15 +203,28 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <SafeAreaProvider>
+    <View style={{ flex: 1 }}>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          const initialRoute = navigationRef.current?.getCurrentRoute()?.name;
+          setCurrentRouteName(initialRoute || null);
+        }}
+        onStateChange={() => {
+          const routeName = navigationRef.current?.getCurrentRoute()?.name;
+          setCurrentRouteName(routeName || null);
+        }}
+      >
       <StatusBar style="light" />
       <Stack.Navigator
-        initialRouteName={isAuthenticated ? 'MainTabs' : 'Login'}
+        initialRouteName={isAuthenticated ? 'MainTabs' : 'Landing'}
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: '#1e3a8a' },
         }}
       >
+        <Stack.Screen name="Landing" component={LandingScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
@@ -276,7 +293,17 @@ export default function App() {
           }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+      </NavigationContainer>
+      <AIGuestFloatingWidget
+        visible={currentRouteName === 'Login' || currentRouteName === 'Register'}
+        onNavigateLogin={() => {
+          if (navigationRef.current?.isReady()) {
+            navigationRef.current.navigate('Login');
+          }
+        }}
+      />
+    </View>
+    </SafeAreaProvider>
   );
 }
 

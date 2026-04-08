@@ -37,7 +37,7 @@ const SettingsScreen = () => {
               await AsyncStorage.removeItem('rememberMe');
               navigation.reset({
                 index: 0,
-                routes: [{ name: 'Login' }],
+                routes: [{ name: 'Landing' }],
               });
             } catch (error) {
               console.error('Error during logout:', error);

@@ -163,7 +163,6 @@ const AdminDashboard = () => {
                 <div className="stat-content">
                   <div className="stat-number">{stats.totalActivities}</div>
                   <div className="stat-label">Total Activity</div>
-                  <div className="stat-percentage">{stats.totalActivities > 0 ? '100%' : '0%'}</div>
                 </div>
                 <div className="stat-chart">
                   <div className="chart-bar" style={{ height: `${stats.totalActivities > 0 ? 100 : 0}%` }}></div>
@@ -173,9 +172,7 @@ const AdminDashboard = () => {
                 <div className="stat-content">
                   <div className="stat-number">{stats.completedActivities}</div>
                   <div className="stat-label">Completed Activity</div>
-                  <div className="stat-percentage">
-                    {stats.totalActivities > 0 ? ((stats.completedActivities / stats.totalActivities) * 100).toFixed(1) : 0}%
-                  </div>
+                  
                 </div>
                 <div className="stat-chart">
                   <div className="chart-bar" style={{ height: `${stats.totalActivities > 0 ? (stats.completedActivities / stats.totalActivities) * 100 : 0}%` }}></div>
@@ -185,9 +182,7 @@ const AdminDashboard = () => {
                 <div className="stat-content">
                   <div className="stat-number">{stats.totalHours}</div>
                   <div className="stat-label">Total Hour</div>
-                  <div className="stat-percentage">
-                    {stats.completedActivities > 0 ? (stats.totalHours / stats.completedActivities).toFixed(1) : 0} hrs/activity
-                  </div>
+                  
                 </div>
                 <div className="stat-chart">
                   <div className="chart-bar" style={{ height: `${stats.totalHours > 0 ? Math.min((stats.totalHours / 100) * 100, 100) : 0}%` }}></div>
@@ -197,9 +192,7 @@ const AdminDashboard = () => {
                 <div className="stat-content">
                   <div className="stat-number">{stats.totalTasks}</div>
                   <div className="stat-label">Total Task</div>
-                  <div className="stat-percentage">
-                    {stats.totalActivities > 0 ? (stats.totalTasks / stats.totalActivities).toFixed(1) : 0} tasks/activity
-                  </div>
+                  
                 </div>
                 <div className="stat-chart">
                   <div className="chart-bar" style={{ height: `${stats.totalTasks > 0 ? Math.min((stats.totalTasks / Math.max(stats.totalTasks, 1)) * 100, 100) : 0}%` }}></div>

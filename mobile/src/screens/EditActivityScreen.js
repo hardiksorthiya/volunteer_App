@@ -376,6 +376,9 @@ const EditActivityScreen = () => {
         max_participants: formData.max_participants
           ? parseInt(formData.max_participants, 10)
           : null,
+        contact_email: formData.contact_email.trim() || null,
+        contact_phone: formData.contact_phone.trim() || null,
+        requirements: formData.requirements.trim() || null,
       };
 
       // Only send participant_ids if user is admin and selections have changed

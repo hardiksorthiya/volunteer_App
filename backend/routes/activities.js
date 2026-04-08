@@ -119,7 +119,7 @@ const getActivityStatusFromRow = (row) => {
 //   - Volunteers can create private activities (is_public = false) visible only to them
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { title, description, category, organization_name, location, start_date, end_date, max_participants, participant_ids } = req.body;
+    const { title, description, category, organization_name, location, start_date, end_date, max_participants, participant_ids, contact_email, contact_phone, requirements } = req.body;
     const userId = req.user.id;
     const userRole = Number(req.user.role);
     const isAdmin = userRole === 0 || req.user.user_type === 'admin';
@@ -147,12 +147,26 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
-    // Insert activity
+    // Insert activity (contact + requirements stored for mobile/web forms)
     const [result] = await db.promise.execute(
       `INSERT INTO activities 
-       (title, description, category, organization_name, location, start_date, end_date, created_by, is_public, max_participants) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, description || null, category || null, organization_name || null, location || null, formattedStartDate, formattedEndDate, userId, is_public, max_participants || null]
+       (title, description, category, organization_name, location, contact_email, contact_phone, start_date, end_date, created_by, is_public, max_participants, requirements) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        title,
+        description || null,
+        category || null,
+        organization_name || null,
+        location || null,
+        contact_email || null,
+        contact_phone || null,
+        formattedStartDate,
+        formattedEndDate,
+        userId,
+        is_public,
+        max_participants || null,
+        requirements || null
+      ]
     );
 
     const activityId = result.insertId;
@@ -2017,7 +2031,7 @@ router.put('/:id', authenticate, async (req, res) => {
     const userRole = Number(req.user.role);
     const isAdmin = userRole === 0 || req.user.user_type === 'admin';
 
-    const { title, description, category, organization_name, location, start_date, end_date, max_participants, is_active, participant_ids } = req.body;
+    const { title, description, category, organization_name, location, start_date, end_date, max_participants, is_active, participant_ids, contact_email, contact_phone, requirements } = req.body;
 
     // Get activity
     const [activities] = await db.promise.execute(
@@ -2068,6 +2082,9 @@ router.put('/:id', authenticate, async (req, res) => {
       values.push(formattedEndDate); 
     }
     if (max_participants !== undefined) { updates.push('max_participants = ?'); values.push(max_participants); }
+    if (contact_email !== undefined) { updates.push('contact_email = ?'); values.push(contact_email); }
+    if (contact_phone !== undefined) { updates.push('contact_phone = ?'); values.push(contact_phone); }
+    if (requirements !== undefined) { updates.push('requirements = ?'); values.push(requirements); }
     if (is_active !== undefined) { updates.push('is_active = ?'); values.push(is_active ? 1 : 0); }
     
     // Only admin can change is_public status

@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
@@ -129,6 +130,12 @@ const RegisterScreen = () => {
         <View style={styles.decorativeCircle1} />
         <View style={styles.decorativeCircle2} />
         <View style={styles.welcomeContent}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.companyLogo}
+            resizeMode="contain"
+            accessibilityLabel="Volunteer Connect"
+          />
           <Text style={styles.welcomeTitle}>Join Us</Text>
           <Text style={styles.welcomeHeadline}>Volunteer Connect</Text>
         </View>
@@ -318,6 +325,12 @@ const styles = StyleSheet.create({
   welcomeContent: {
     position: 'relative',
     zIndex: 2,
+    alignItems: 'center',
+  },
+  companyLogo: {
+    width: 220,
+    height: 56,
+    marginBottom: 16,
   },
   welcomeTitle: {
     fontSize: 32,
