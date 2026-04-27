@@ -9,6 +9,7 @@ import '../css/Dashboard.css';
 import '../css/AdminDashboard.css';
 
 const AdminDashboard = () => {
+  const CATEGORY_COLORS = ['#2563eb', '#8b5cf6', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#06b6d4', '#ec4899'];
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -246,26 +247,47 @@ const AdminDashboard = () => {
               <div className="card-body dashboard-chart-body">
                 <h5 className="card-title mb-3">Activity Categories</h5>
                 {categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250} className="pie-chart-container">
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {categoryData.map((entry, index) => {
-                          const COLORS = ['#2563eb', '#8b5cf6', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#06b6d4', '#ec4899'];
-                          return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
-                        })}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <>
+                    <div className="pie-chart-wrapper">
+                      <ResponsiveContainer width="100%" height="100%" className="pie-chart-container">
+                        <PieChart>
+                          <Pie
+                            data={categoryData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius="74%"
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {categoryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="category-legend-container">
+                      {categoryData.map((entry, index) => {
+                        const total = categoryData.reduce((sum, item) => sum + Number(item.value || 0), 0);
+                        const percent = total > 0 ? Math.round((Number(entry.value || 0) / total) * 100) : 0;
+                        return (
+                          <div className="category-legend-item" key={`legend-${entry.name}-${index}`}>
+                            <span
+                              className="category-legend-color"
+                              style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }}
+                              aria-hidden="true"
+                            />
+                            <span className="category-legend-name" title={entry.name}>
+                              {entry.name}
+                            </span>
+                            <span className="category-legend-value">{percent}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 ) : (
                   <div className="text-center py-5">
                     <p className="text-muted">No activities with categories found</p>

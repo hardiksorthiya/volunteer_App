@@ -134,7 +134,7 @@
 /* Form Groups - Scoped to auth container only */
 .auth-container .form-group,
 .auth-form-panel .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   position: relative;
 }
 
@@ -142,11 +142,14 @@
 .auth-container .form-label,
 .auth-form-panel .form-label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0rem;
   color: var(--color-text-primary);
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.3px;
+}
+.auth-logo-top {
+  margin-bottom: 1rem;
 }
 
 /* Input Fields - Scoped to auth container only */

@@ -13,6 +13,11 @@
   max-height: min(560px, calc(100vh - 12rem));
 }
 
+/* Landing page embedded chat should not create a second page-edge scrollbar */
+.guest-ai-chat--embedded .guest-ai-chat__messages {
+  overflow-y: visible;
+}
+
 .guest-ai-chat--popover {
   width: 100%;
   height: 440px;
@@ -179,6 +184,10 @@
   .guest-ai-chat--embedded {
     max-height: none;
     min-height: 360px;
+  }
+
+  .guest-ai-chat--embedded .guest-ai-chat__messages {
+    overflow-y: visible;
   }
 }
 

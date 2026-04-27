@@ -122,7 +122,7 @@
 }
 
 .home-top-bar__logo {
-  height: 52px;
+  height: 74px;
   width: auto;
   max-width: min(280px, 50vw);
   object-fit: contain;
@@ -190,10 +190,6 @@
   border-radius: 50%;
   flex-shrink: 0;
   border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.home-hero__chat-wrap {
-  max-width: 520px;
 }
 
 @media (min-width: 992px) {

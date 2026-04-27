@@ -116,10 +116,14 @@ const Home = () => {
                   <li className="home-hero__bullet d-flex align-items-start gap-2">
                     <span className="home-hero__bullet-icon" aria-hidden="true">🌟</span>
                     <span>
-                      Find volunteer opportunities with AI-assisted search. Set targets and manage activities — try the assistant on the right.
-                    </span>
+                    Be Part of Life Minded Community
+                      </span>
                   </li>
                 </ul>
+                <p className="home-hero__text home-hero__anim lead mb-4">
+                Find volunteer opportunities with AI-assisted search. Set targets and manage activities — try the assistant on the right.
+                    
+                </p>
               </div>
               <div className="col-12 col-lg-6">
                 <div className="mx-auto home-hero__chat-wrap home-hero__anim home-hero__anim--chat">
@@ -138,7 +142,7 @@ const Home = () => {
        
         <div className="container position-relative py-5">
           <div className="row g-4 justify-content-center">
-            <div className="col-12 col-md-4">
+            <div className="col-12 col-md-6">
               <div className="home-value-card card border-0 shadow h-100 text-center p-4 rounded-4">
                 <div className="home-value-card__icon mb-3" aria-hidden="true">
                   <svg viewBox="0 0 80 80" width="72" height="72" role="img">
@@ -154,7 +158,7 @@ const Home = () => {
                 </p>
               </div>
             </div>
-            <div className="col-12 col-md-4">
+            <div className="col-12 col-md-6">
               <div className="home-value-card card border-0 shadow h-100 text-center p-4 rounded-4">
                 <div className="home-value-card__icon mb-3" aria-hidden="true">
                   <svg viewBox="0 0 80 80" width="72" height="72" role="img">
@@ -164,14 +168,13 @@ const Home = () => {
                     <path d="M48 18 L58 12 L58 26 Z" fill="#3b82f6" />
                   </svg>
                 </div>
-                <h3 className="home-value-card__title home-value-card__title--accent h5 fw-bold text-primary">Add Your Organization</h3>
+                <h3 className="home-value-card__title home-value-card__title--accent h5 fw-bold text-primary">Manage your volunteer activities</h3>
                 <p className="home-value-card__text text-muted mb-0 small">
-                  Share your volunteer opportunities with people nearby and around the world who are looking for meaningful
-                  ways to give back.
+                Add or join selected volunteer activities, add tasks to activities, set volunteer activity targets and track your time against target
                 </p>
               </div>
             </div>
-            <div className="col-12 col-md-4">
+            {/* <div className="col-12 col-md-4">
               <div className="home-value-card card border-0 shadow h-100 text-center p-4 rounded-4">
                 <div className="home-value-card__icon mb-3" aria-hidden="true">
                   <svg viewBox="0 0 80 80" width="72" height="72" role="img">
@@ -191,7 +194,7 @@ const Home = () => {
                   place through Volunteer Connect.
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -292,6 +295,7 @@ const Home = () => {
               Sign up
             </Link>
           </div>
+          <p className="home-cta-contact__subtitle lead mb-0">Get your organization and activity added on our application so that volunteers can connect to you.</p>
           <p className="home-cta-contact__contact-label fw-semibold mb-2">Contact us</p>
           <a
             href="mailto:volunteerconnect.contact@gmail.com"

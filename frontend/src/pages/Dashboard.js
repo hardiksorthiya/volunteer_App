@@ -28,6 +28,7 @@ const getImageUrl = (imagePath) => {
 };
 
 const Dashboard = () => {
+  const CATEGORY_COLORS = ['#2563eb', '#8b5cf6', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#06b6d4', '#ec4899'];
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -215,6 +216,18 @@ const Dashboard = () => {
           ? activities.filter(a => a.created_by === currentUserId)
           : [];
 
+        // For volunteer category graph, include only activities the user is involved in:
+        // created by user, joined by user, or has user-created/assigned tasks.
+        const volunteerRelevantActivities = currentUserId
+          ? activities.filter(a => {
+            if (a.created_by === currentUserId) return true;
+            if (a.is_joined === true || a.is_joined === 1 || a.is_joined === '1') return true;
+            if (a.has_tasks === true || a.has_tasks === 1 || a.has_tasks === '1') return true;
+            if (a.task_hours && parseFloat(a.task_hours) > 0) return true;
+            return false;
+          })
+          : [];
+
         const activitiesToShow = isAdmin ? myCreatedActivitiesList : activities;
         setUserActivities(activitiesToShow);
         setMyActivities(myActivitiesList);
@@ -236,9 +249,12 @@ const Dashboard = () => {
           totalTasks: totalTasks
         });
 
-        // Category distribution from the same activities we show (individual for admin)
+        // Category distribution:
+        // - Admin: activities created by admin user (individual mode)
+        // - Volunteer: only activities user is related to (created/joined/has tasks)
+        const categorySourceActivities = isAdmin ? myCreatedActivitiesList : volunteerRelevantActivities;
         const categoryCounts = {};
-        activitiesToShow.forEach(activity => {
+        categorySourceActivities.forEach(activity => {
           const category = activity.category || 'Uncategorized';
           categoryCounts[category] = (categoryCounts[category] || 0) + 1;
         });
@@ -919,26 +935,47 @@ const Dashboard = () => {
             <div className="card-body dashboard-chart-body">
               <h5 className="card-title mb-3">Activity Categories</h5>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300} className="pie-chart-container">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => {
-                        const COLORS = ['#2563eb', '#8b5cf6', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#06b6d4', '#ec4899'];
-                        return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
-                      })}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <>
+                  <div className="pie-chart-wrapper">
+                    <ResponsiveContainer width="100%" height="100%" className="pie-chart-container">
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius="74%"
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="category-legend-container">
+                    {categoryData.map((entry, index) => {
+                      const total = categoryData.reduce((sum, item) => sum + Number(item.value || 0), 0);
+                      const percent = total > 0 ? Math.round((Number(entry.value || 0) / total) * 100) : 0;
+                      return (
+                        <div className="category-legend-item" key={`legend-${entry.name}-${index}`}>
+                          <span
+                            className="category-legend-color"
+                            style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }}
+                            aria-hidden="true"
+                          />
+                          <span className="category-legend-name" title={entry.name}>
+                            {entry.name}
+                          </span>
+                          <span className="category-legend-value">{percent}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-5">
                   <p className="text-muted">No activities with categories found</p>
