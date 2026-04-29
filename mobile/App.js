@@ -46,10 +46,14 @@ function MainTabs() {
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
+          paddingHorizontal: 1,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
+        },
+        tabBarItemStyle: {
+          paddingHorizontal: 2,
         },
       }}
     >

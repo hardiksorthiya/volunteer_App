@@ -51,6 +51,7 @@ const DashboardScreen = () => {
   const [deletingHourTarget, setDeletingHourTarget] = useState(false);
   const [showHourTargetStartPicker, setShowHourTargetStartPicker] = useState(false);
   const [showHourTargetEndPicker, setShowHourTargetEndPicker] = useState(false);
+  const CATEGORY_COLORS = ['#2563eb', '#8b5cf6', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#06b6d4', '#ec4899'];
 
   useEffect(() => {
     const checkAuthAndFetch = async () => {
@@ -243,9 +244,12 @@ const DashboardScreen = () => {
           totalTasks: totalTasks
         });
 
-        // Calculate category-wise distribution (from what we show in "All Activities")
+        // Category distribution should match web behavior:
+        // - Admin: own created activities (personal_created view)
+        // - Volunteer: only user-related activities (created/joined/has tasks)
+        const categorySourceActivities = isAdminUser ? myCreatedActivitiesList : myActivitiesList;
         const categoryCounts = {};
-        visibleActivities.forEach(activity => {
+        categorySourceActivities.forEach(activity => {
           const category = activity.category || 'Uncategorized';
           categoryCounts[category] = (categoryCounts[category] || 0) + 1;
         });
@@ -780,18 +784,25 @@ const DashboardScreen = () => {
               <Text style={styles.sectionTitle}>Activity Categories</Text>
             </View>
             <View style={styles.chartContainer}>
-              <PieChart
-                data={categoryData.map((category, index) => {
-                  const COLORS = ['#2563eb', '#8b5cf6', '#f97316', '#10b981', '#ef4444', '#f59e0b', '#06b6d4', '#ec4899'];
-                  const percentage = ((category.value / userActivities.length) * 100).toFixed(0);
+              {(() => {
+                const totalCategories = categoryData.reduce((sum, category) => sum + Number(category.value || 0), 0);
+                const chartData = categoryData.map((category, index) => {
+                  const percentage = totalCategories > 0
+                    ? Math.round((Number(category.value || 0) / totalCategories) * 100)
+                    : 0;
                   return {
-                    name: category.name,
-                    population: category.value,
-                    color: COLORS[index % COLORS.length],
+                    name: `${percentage}%`,
+                    population: Number(category.value || 0),
+                    color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
                     legendFontColor: '#7F7F7F',
                     legendFontSize: 12,
                   };
-                })}
+                });
+
+                return (
+                  <>
+              <PieChart
+                data={chartData}
                 width={screenWidth - 64}
                 height={220}
                 chartConfig={{
@@ -806,6 +817,28 @@ const DashboardScreen = () => {
                 paddingLeft="15"
                 absolute
               />
+                    <View style={styles.categoryLegendContainer}>
+                      {categoryData.map((category, index) => {
+                        const percentage = totalCategories > 0
+                          ? Math.round((Number(category.value || 0) / totalCategories) * 100)
+                          : 0;
+                        return (
+                          <View key={`${category.name}-${index}`} style={styles.categoryLegendRow}>
+                            <View
+                              style={[
+                                styles.categoryLegendDot,
+                                { backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }
+                              ]}
+                            />
+                            <Text style={styles.categoryLegendName}>{category.name}</Text>
+                            <Text style={styles.categoryLegendPercent}>{percentage}%</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </>
+                );
+              })()}
             </View>
           </View>
         )}
@@ -1484,6 +1517,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 10,
+    width: '100%',
+  },
+  categoryLegendContainer: {
+    width: '100%',
+    marginTop: 10,
+    gap: 8,
+  },
+  categoryLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+  },
+  categoryLegendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+    flexShrink: 0,
+  },
+  categoryLegendName: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1f2937',
+  },
+  categoryLegendPercent: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
   },
   chartLoadingContainer: {
     padding: 40,

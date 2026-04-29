@@ -551,9 +551,7 @@ const ChatScreen = () => {
                 <Text style={styles.welcomeText}>I'm here to help you with:</Text>
                 <View style={styles.welcomeList}>
                   <Text style={styles.welcomeListItem}>• Finding volunteer opportunities</Text>
-                  <Text style={styles.welcomeListItem}>• Managing your activities</Text>
                   <Text style={styles.welcomeListItem}>• Answering questions about events</Text>
-                  <Text style={styles.welcomeListItem}>• Providing platform guidance</Text>
                 </View>
                 <Text style={styles.welcomeFooter}>Start a conversation by typing a message below!</Text>
               </View>

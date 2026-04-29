@@ -141,8 +141,7 @@ const hourTargetProgressHandler = async (req, res) => {
     }
 
     // "Hours worked" should match dashboard "task-hours-by-activity":
-    // Count logged hours (total_hours > 0) for tasks created by user that were created OR updated in the period,
-    // regardless of task status.
+    // Use one effective task date: start_date -> due_date -> created_at.
     const [weekResult] = await db.promise.execute(
       `SELECT COALESCE(SUM(at.total_hours), 0) as hours
        FROM activity_tasks at
@@ -151,12 +150,9 @@ const hourTargetProgressHandler = async (req, res) => {
          AND at.created_by = ?
          AND at.total_hours IS NOT NULL
          AND at.total_hours > 0
-         AND (
-           (DATE(at.created_at) >= ? AND DATE(at.created_at) <= ?)
-           OR
-           (DATE(at.updated_at) >= ? AND DATE(at.updated_at) <= ?)
-         )`,
-      [userId, weekStartStr, todayStr, weekStartStr, todayStr]
+         AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) >= ?
+         AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) <= ?`,
+      [userId, weekStartStr, todayStr]
     );
     const [monthResult] = await db.promise.execute(
       `SELECT COALESCE(SUM(at.total_hours), 0) as hours
@@ -166,12 +162,9 @@ const hourTargetProgressHandler = async (req, res) => {
          AND at.created_by = ?
          AND at.total_hours IS NOT NULL
          AND at.total_hours > 0
-         AND (
-           (DATE(at.created_at) >= ? AND DATE(at.created_at) <= ?)
-           OR
-           (DATE(at.updated_at) >= ? AND DATE(at.updated_at) <= ?)
-         )`,
-      [userId, monthStartStr, todayStr, monthStartStr, todayStr]
+         AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) >= ?
+         AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) <= ?`,
+      [userId, monthStartStr, todayStr]
     );
     const currentWeekHours = parseInt(weekResult[0]?.hours || 0, 10);
     const currentMonthHours = parseInt(monthResult[0]?.hours || 0, 10);
@@ -190,12 +183,9 @@ const hourTargetProgressHandler = async (req, res) => {
            AND at.created_by = ?
            AND at.total_hours IS NOT NULL
            AND at.total_hours > 0
-           AND (
-             (DATE(at.created_at) >= ? AND DATE(at.created_at) <= ?)
-             OR
-             (DATE(at.updated_at) >= ? AND DATE(at.updated_at) <= ?)
-           )`,
-        [userId, rangeStartStr, rangeEndStr, rangeStartStr, rangeEndStr]
+           AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) >= ?
+           AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) <= ?`,
+        [userId, rangeStartStr, rangeEndStr]
       );
       currentRangeHours = parseInt(rangeResult[0]?.hours || 0, 10);
       periodLabelRange = `${rangeStartStr} - ${rangeEndStr}`;

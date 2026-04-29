@@ -105,22 +105,22 @@ const Home = () => {
                   Discover meaningful opportunities, connect with like-minded individuals, and create lasting change together.
                 </p>
                 <ul className="home-hero__anim list-unstyled mb-0 text-start d-inline-block home-hero__anim--delay">
-                  <li className="home-hero__bullet d-flex align-items-start gap-2 mb-2">
+                  <li className="home-hero__bullet d-flex align-items-center gap-2 mb-2">
                     <span className="home-hero__bullet-icon" aria-hidden="true">🤝</span>
                     <span>Connect with Organizations</span>
                   </li>
-                  <li className="home-hero__bullet d-flex align-items-start gap-2 mb-2">
+                  <li className="home-hero__bullet d-flex align-items-center gap-2 mb-2">
                     <span className="home-hero__bullet-icon" aria-hidden="true">❤️</span>
                     <span>Make a Real Impact</span>
                   </li>
-                  <li className="home-hero__bullet d-flex align-items-start gap-2">
+                  <li className="home-hero__bullet d-flex align-items-center gap-2">
                     <span className="home-hero__bullet-icon" aria-hidden="true">🌟</span>
                     <span>
-                    Be Part of Life Minded Community
+                    Be Part of Like Minded Community
                       </span>
                   </li>
                 </ul>
-                <p className="home-hero__text home-hero__anim lead mb-4">
+                <p className="home-hero__text home-hero__anim lead my-4 ">
                 Find volunteer opportunities with AI-assisted search. Set targets and manage activities — try the assistant on the right.
                     
                 </p>

@@ -89,12 +89,13 @@ const parseCSVLine = (line) => {
 };
 
 // Helper: compute activity status from dates and task completion
-// When activity has tasks: "completed" only when ALL tasks are completed (ignore date-based completed).
-// When activity has no tasks: use date-based status only.
+// When activity has tasks: "completed" only when ALL tasks are completed.
+// When activity has no tasks: keep activity "ongoing".
 const getActivityStatusFromRow = (row) => {
   const allTasksCompleted = row.all_tasks_completed === 1 || row.all_tasks_completed === true;
   const activityHasTasks = row.activity_has_tasks === 1 || row.activity_has_tasks === true;
   if (allTasksCompleted) return 'completed';
+  if (!activityHasTasks) return 'ongoing';
   const startDate = row.start_date ? new Date(row.start_date) : null;
   const endDate = row.end_date ? new Date(row.end_date) : null;
   const now = new Date();
@@ -105,9 +106,6 @@ const getActivityStatusFromRow = (row) => {
     if (startDate <= now && (!endDate || endDate >= now)) return 'ongoing';
     return 'upcoming';
   }
-  // No tasks: use date-based status
-  if (endDate && endDate < now) return 'completed';
-  if (startDate <= now && (!endDate || endDate >= now)) return 'ongoing';
   return 'upcoming';
 };
 
@@ -577,7 +575,6 @@ router.get('/stats/completed', authenticate, async (req, res) => {
             EXISTS(SELECT 1 FROM activity_tasks atx WHERE atx.activity_id = a.id)
             AND NOT EXISTS (SELECT 1 FROM activity_tasks atx WHERE atx.activity_id = a.id AND atx.status <> 'completed')
           )
-          OR (NOT EXISTS(SELECT 1 FROM activity_tasks atx WHERE atx.activity_id = a.id) AND a.end_date IS NOT NULL AND a.end_date < NOW())
         )
       `;
       params = [userId];
@@ -585,7 +582,7 @@ router.get('/stats/completed', authenticate, async (req, res) => {
       // Admin (global): completed activities across ALL activities.
       // Completion logic matches activity status logic:
       // - If activity has tasks: completed only when ALL tasks are completed
-      // - If activity has no tasks: completed when end_date is in the past
+      // - If activity has no tasks: not completed
       query = `
         SELECT COUNT(DISTINCT a.id) as completed_count
         FROM activities a
@@ -600,26 +597,24 @@ router.get('/stats/completed', authenticate, async (req, res) => {
                 AND atx.status <> 'completed'
             )
           )
-          OR
-          (
-            NOT EXISTS(SELECT 1 FROM activity_tasks atx WHERE atx.activity_id = a.id)
-            AND a.end_date IS NOT NULL AND a.end_date < NOW()
-          )
         )
       `;
       params = [];
     } else {
-      // Volunteer: count completed activities they created, joined, or have tasks in
-      // Completed when EITHER:
-      //   - end_date is in the past (time-based completion), OR
-      //   - all tasks for the activity are marked as completed (task-based completion)
+      // Volunteer: count completed activities they created, joined, or have tasks in.
+      // Match activity status logic:
+      //   - completed only when activity has tasks AND all tasks are completed
       query = `
         SELECT COUNT(DISTINCT a.id) as completed_count
         FROM activities a
         WHERE a.is_active = true
         AND (
-          (a.end_date IS NOT NULL AND a.end_date < NOW())
-          OR NOT EXISTS (
+          EXISTS (
+            SELECT 1
+            FROM activity_tasks at
+            WHERE at.activity_id = a.id
+          )
+          AND NOT EXISTS (
             SELECT 1 
             FROM activity_tasks at 
             WHERE at.activity_id = a.id 
@@ -839,6 +834,15 @@ router.get('/stats/task-hours-by-activity', authenticate, async (req, res) => {
     // personal: tasks created by user (any activity). global: all tasks.
     const usePersonalCreated = isAdmin && scopePersonalCreated;
     const usePersonal = !isAdmin || scopePersonal || usePersonalCreated;
+    // Use one effective task date to avoid over-counting from broad OR conditions.
+    // Priority: task start_date -> due_date -> created_at.
+    const taskDateFilter = `
+      (
+        DATE(COALESCE(at.start_date, at.due_date, at.created_at)) >= ?
+        AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) <= ?
+      )
+    `;
+
     const query = usePersonalCreated
       ? `SELECT 
           a.id as activity_id,
@@ -850,10 +854,7 @@ router.get('/stats/task-hours-by-activity', authenticate, async (req, res) => {
          WHERE a.is_active = true AND a.created_by = ? AND at.created_by = ?
            AND at.total_hours IS NOT NULL
            AND at.total_hours > 0
-           AND (
-             (DATE(at.created_at) >= ? AND DATE(at.created_at) <= ?)
-             OR (DATE(at.updated_at) >= ? AND DATE(at.updated_at) <= ?)
-           )
+           AND ${taskDateFilter}
          GROUP BY a.id, a.title
          ORDER BY total_hours DESC`
       : !usePersonal
@@ -867,11 +868,7 @@ router.get('/stats/task-hours-by-activity', authenticate, async (req, res) => {
          WHERE a.is_active = true
            AND at.total_hours IS NOT NULL
            AND at.total_hours > 0
-           AND (
-             (DATE(at.created_at) >= ? AND DATE(at.created_at) <= ?)
-             OR
-             (DATE(at.updated_at) >= ? AND DATE(at.updated_at) <= ?)
-           )
+           AND ${taskDateFilter}
          GROUP BY a.id, a.title
          ORDER BY total_hours DESC`
       : `SELECT 
@@ -885,19 +882,17 @@ router.get('/stats/task-hours-by-activity', authenticate, async (req, res) => {
            AND at.created_by = ?
            AND at.total_hours IS NOT NULL
            AND at.total_hours > 0
-           AND (
-             (DATE(at.created_at) >= ? AND DATE(at.created_at) <= ?)
-             OR
-             (DATE(at.updated_at) >= ? AND DATE(at.updated_at) <= ?)
-           )
+           AND ${taskDateFilter}
          GROUP BY a.id, a.title
          ORDER BY total_hours DESC`;
 
+    const dateParams = [startDateStr, endDateStr];
+
     const params = usePersonalCreated
-      ? [userId, userId, startDateStr, endDateStr, startDateStr, endDateStr]
+      ? [userId, userId, ...dateParams]
       : usePersonal
-      ? [userId, startDateStr, endDateStr, startDateStr, endDateStr]
-      : [startDateStr, endDateStr, startDateStr, endDateStr];
+      ? [userId, ...dateParams]
+      : [...dateParams];
 
     const [result] = await db.promise.execute(query, params);
 
