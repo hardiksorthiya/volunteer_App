@@ -244,7 +244,7 @@ const ProfileScreen = () => {
         throw new Error(data.message || 'Failed to upload image');
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.log('Image upload failed:', error?.message || error);
       let errorMessage = 'Failed to upload image. Please try again.';
       if (error.message) errorMessage = error.message;
       Alert.alert('Error', errorMessage);

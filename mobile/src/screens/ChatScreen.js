@@ -413,118 +413,118 @@ const ChatScreen = () => {
         />
       )}
 
+      {/* Full-height History Sidebar */}
+      <Animated.View style={[
+        styles.sidebar,
+        {
+          transform: [{
+            translateX: sidebarAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-width, 0],
+            }),
+          }],
+        },
+      ]}>
+        <View style={styles.sidebarHeader}>
+          <View style={styles.sidebarHeaderLeft}>
+            <HistoryIcon size={20} color="#2563eb" />
+            <Text style={styles.sidebarTitle}>Chat History</Text>
+          </View>
+          <View style={styles.sidebarHeaderRight}>
+            <TouchableOpacity
+              onPress={createNewConversation}
+              style={styles.newConversationButton}
+            >
+              <PlusIcon size={18} color="#ffffff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setSidebarVisible(false)}
+              style={styles.closeSidebarButton}
+            >
+              <Text style={styles.closeSidebarText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.historyList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={async () => {
+                setRefreshing(true);
+                loadConversations();
+                await checkAiStatus();
+                setRefreshing(false);
+              }}
+              colors={['#2563eb']}
+              tintColor="#2563eb"
+            />
+          }
+        >
+          {conversations.length === 0 ? (
+            <View style={styles.emptyHistory}>
+              <Text style={styles.emptyHistoryText}>No conversations yet</Text>
+              <Text style={styles.emptyHistorySubtext}>Start a new chat to begin!</Text>
+            </View>
+          ) : (
+            conversations
+              .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+              .map((conversation) => (
+                <TouchableOpacity
+                  key={conversation.id}
+                  style={[
+                    styles.conversationItem,
+                    currentConversationId === conversation.id && styles.conversationItemActive
+                  ]}
+                  onPress={() => selectConversation(conversation.id)}
+                >
+                  <View style={styles.conversationContent}>
+                    <Text style={[
+                      styles.conversationTitle,
+                      currentConversationId === conversation.id && styles.conversationTitleActive
+                    ]}>
+                      {conversation.title}
+                    </Text>
+                    <Text style={[
+                      styles.conversationPreview,
+                      currentConversationId === conversation.id && styles.conversationPreviewActive
+                    ]}>
+                      {getConversationPreview(conversation)}
+                    </Text>
+                    <Text style={[
+                      styles.conversationTime,
+                      currentConversationId === conversation.id && styles.conversationTimeActive
+                    ]}>
+                      {formatTime(conversation.updatedAt)}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => deleteConversation(conversation.id)}
+                    style={styles.deleteButton}
+                  >
+                    <TrashIcon size={16} color={currentConversationId === conversation.id ? '#ffffff' : '#dc2626'} />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))
+          )}
+        </ScrollView>
+
+        {conversations.length > 0 && (
+          <View style={styles.sidebarFooter}>
+            <TouchableOpacity
+              onPress={handleClearAllHistory}
+              style={styles.clearAllButton}
+            >
+              <TrashIcon size={16} color="#dc2626" />
+              <Text style={styles.clearAllButtonText}>Clear All</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Animated.View>
+
       {/* Main Content */}
       <View style={styles.mainContent}>
-        {/* History Sidebar */}
-        <Animated.View style={[
-          styles.sidebar,
-          {
-            transform: [{
-              translateX: sidebarAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-width, 0],
-              }),
-            }],
-          },
-        ]}>
-          <View style={styles.sidebarHeader}>
-            <View style={styles.sidebarHeaderLeft}>
-              <HistoryIcon size={20} color="#2563eb" />
-              <Text style={styles.sidebarTitle}>Chat History</Text>
-            </View>
-            <View style={styles.sidebarHeaderRight}>
-              <TouchableOpacity
-                onPress={createNewConversation}
-                style={styles.newConversationButton}
-              >
-                <PlusIcon size={18} color="#ffffff" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setSidebarVisible(false)}
-                style={styles.closeSidebarButton}
-              >
-                <Text style={styles.closeSidebarText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <ScrollView
-            style={styles.historyList}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={async () => {
-                  setRefreshing(true);
-                  loadConversations();
-                  await checkAiStatus();
-                  setRefreshing(false);
-                }}
-                colors={['#2563eb']}
-                tintColor="#2563eb"
-              />
-            }
-          >
-            {conversations.length === 0 ? (
-              <View style={styles.emptyHistory}>
-                <Text style={styles.emptyHistoryText}>No conversations yet</Text>
-                <Text style={styles.emptyHistorySubtext}>Start a new chat to begin!</Text>
-              </View>
-            ) : (
-              conversations
-                .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-                .map((conversation) => (
-                  <TouchableOpacity
-                    key={conversation.id}
-                    style={[
-                      styles.conversationItem,
-                      currentConversationId === conversation.id && styles.conversationItemActive
-                    ]}
-                    onPress={() => selectConversation(conversation.id)}
-                  >
-                    <View style={styles.conversationContent}>
-                      <Text style={[
-                        styles.conversationTitle,
-                        currentConversationId === conversation.id && styles.conversationTitleActive
-                      ]}>
-                        {conversation.title}
-                      </Text>
-                      <Text style={[
-                        styles.conversationPreview,
-                        currentConversationId === conversation.id && styles.conversationPreviewActive
-                      ]}>
-                        {getConversationPreview(conversation)}
-                      </Text>
-                      <Text style={[
-                        styles.conversationTime,
-                        currentConversationId === conversation.id && styles.conversationTimeActive
-                      ]}>
-                        {formatTime(conversation.updatedAt)}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => deleteConversation(conversation.id)}
-                      style={styles.deleteButton}
-                    >
-                      <TrashIcon size={16} color={currentConversationId === conversation.id ? '#ffffff' : '#dc2626'} />
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                ))
-            )}
-          </ScrollView>
-
-          {conversations.length > 0 && (
-            <View style={styles.sidebarFooter}>
-              <TouchableOpacity
-                onPress={handleClearAllHistory}
-                style={styles.clearAllButton}
-              >
-                <TrashIcon size={16} color="#dc2626" />
-                <Text style={styles.clearAllButtonText}>Clear All</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </Animated.View>
-
         {/* Chat Area */}
         <View style={styles.chatArea}>
           <View style={styles.chatHeader}>
@@ -762,6 +762,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerLeft: {
+    flex: 1,
+    paddingRight: 14,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
@@ -772,6 +776,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ffffff',
     opacity: 0.9,
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   mainContent: {
     flex: 1,
@@ -794,6 +807,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+    zIndex: 998,
   },
   sidebarHeader: {
     flexDirection: 'row',

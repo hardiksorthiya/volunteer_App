@@ -229,7 +229,7 @@ const EditProfileScreen = () => {
       }
       throw new Error(data.message || 'Failed to upload image');
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.log('Image upload failed:', error?.message || error);
       let errorMessage = 'Failed to upload image. Please try again.';
       if (error.message) errorMessage = error.message;
       throw new Error(errorMessage);
@@ -262,76 +262,10 @@ const EditProfileScreen = () => {
         try {
           imageUrl = await uploadImage(selectedImage);
         } catch (error) {
-          console.error('Image upload failed, trying alternative method:', error);
-          
-          // Try alternative: upload image as part of profile update
-          try {
-            const uploadFormData = new FormData();
-            const filename = selectedImage.split('/').pop() || 'photo.jpg';
-            const match = /\.(\w+)$/.exec(filename);
-            let fileType = 'image/jpeg';
-            
-            if (match) {
-              const ext = match[1].toLowerCase();
-              if (ext === 'png') fileType = 'image/png';
-              else if (ext === 'gif') fileType = 'image/gif';
-              else if (ext === 'webp') fileType = 'image/webp';
-            }
-
-            const fileUri = Platform.OS === 'ios' 
-              ? (selectedImage.startsWith('file://') ? selectedImage : `file://${selectedImage}`)
-              : (selectedImage.startsWith('file://') ? selectedImage : `file://${selectedImage}`);
-
-            uploadFormData.append('image', {
-              uri: fileUri,
-              name: filename,
-              type: fileType,
-            });
-            
-            uploadFormData.append('name', formData.name.trim());
-            uploadFormData.append('email', formData.email.trim());
-            if (formData.phone.trim()) {
-              uploadFormData.append('phone', formData.phone.trim());
-              uploadFormData.append('mobile', formData.phone.trim());
-            }
-
-            const token = await AsyncStorage.getItem('token');
-            const axios = require('axios').default;
-            const API_BASE_URL = api.defaults.baseURL;
-            
-            const uploadResponse = await axios.put(`${API_BASE_URL}/users/me`, uploadFormData, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-              },
-              timeout: 30000,
-              transformRequest: (data, headers) => {
-                if (headers) {
-                  delete headers['Content-Type'];
-                }
-                return data;
-              },
-            });
-
-            if (uploadResponse.data && uploadResponse.data.success) {
-              const updatedUser = uploadResponse.data.data;
-              setUser(updatedUser);
-              setSelectedImage(null);
-              await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-              Alert.alert('Success', 'Profile updated successfully!', [
-                {
-                  text: 'OK',
-                  onPress: () => navigation.goBack(),
-                },
-              ]);
-              return;
-            }
-          } catch (altError) {
-            console.error('Alternative upload method also failed:', altError);
-            Alert.alert(
-              'Image Upload Error',
-              'Failed to upload image. Profile will be updated without image change.'
-            );
-          }
+          Alert.alert(
+            'Image Upload Error',
+            error?.message || 'Failed to upload image. Profile will be updated without image change.'
+          );
         }
       }
 

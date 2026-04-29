@@ -787,11 +787,8 @@ const DashboardScreen = () => {
               {(() => {
                 const totalCategories = categoryData.reduce((sum, category) => sum + Number(category.value || 0), 0);
                 const chartData = categoryData.map((category, index) => {
-                  const percentage = totalCategories > 0
-                    ? Math.round((Number(category.value || 0) / totalCategories) * 100)
-                    : 0;
                   return {
-                    name: `${percentage}%`,
+                    name: '',
                     population: Number(category.value || 0),
                     color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
                     legendFontColor: '#7F7F7F',
@@ -815,6 +812,7 @@ const DashboardScreen = () => {
                 accessor="population"
                 backgroundColor="transparent"
                 paddingLeft="15"
+                hasLegend={false}
                 absolute
               />
                     <View style={styles.categoryLegendContainer}>
