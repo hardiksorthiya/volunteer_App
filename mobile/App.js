@@ -46,14 +46,14 @@ function MainTabs() {
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
-          paddingHorizontal: 1,
+          paddingHorizontal: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
         },
         tabBarItemStyle: {
-          paddingHorizontal: 2,
+          paddingHorizontal: 0,
         },
       }}
     >
@@ -101,7 +101,7 @@ function MainTabs() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          tabBarLabel: 'Setting',
+          tabBarLabel: 'Settings',
           tabBarIcon: ({ color, size }) => (
             <SettingsIcon size={size} color={color} />
           ),

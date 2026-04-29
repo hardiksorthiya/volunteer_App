@@ -393,7 +393,7 @@ const ChatScreen = () => {
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>Chat with our AI assistant for help and guidance</Text>
+            <Text style={styles.headerSubtitle}>Chat with our AI agent to find volunteer opportunities</Text>
           </View>
           <TouchableOpacity
             onPress={() => setSidebarVisible(!sidebarVisible)}
@@ -733,16 +733,7 @@ const ChatScreen = () => {
               <SendIcon size={20} color="#ffffff" />
         </TouchableOpacity>
           </View>
-          {!aiConfigured && (
-            <Text style={styles.aiStatusError}>
-              ⚠️ {aiStatusMessage || 'AI chat is not configured'}
-            </Text>
-          )}
-          {aiConfigured && (
-            <Text style={styles.aiStatusText}>
-              AI Assistant powered by OpenAI
-            </Text>
-          )}
+          
         </View>
       </View>
     </View>
