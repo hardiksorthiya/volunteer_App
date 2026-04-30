@@ -651,6 +651,33 @@ const ActivityDetail = () => {
     }
   };
 
+  const formatTaskDate = (dateValue) => {
+    if (!dateValue) return '-';
+    return new Date(dateValue).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const getTaskHoursPerDay = (task) => {
+    const totalHoursNum = Number(task.totalHours);
+    if (!(totalHoursNum > 0)) return '-';
+
+    const start = task.startDate ? new Date(task.startDate) : null;
+    const end = task.dueDate ? new Date(task.dueDate) : null;
+
+    if (start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      const startTime = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+      const endTime = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+      const diffDays = Math.floor((endTime - startTime) / (1000 * 60 * 60 * 24)) + 1;
+      const totalDays = Math.max(1, diffDays);
+      return `${(totalHoursNum / totalDays).toFixed(2).replace(/\.00$/, '')} hrs/day`;
+    }
+
+    return `${totalHoursNum.toFixed(2).replace(/\.00$/, '')} hrs/day`;
+  };
+
   // Check if current user can add tasks to this activity
   const canAddTask = () => {
     if (!currentUser || !activity) return false;
@@ -1467,9 +1494,11 @@ const ActivityDetail = () => {
                     <thead>
                       <tr>
                         <th>Task</th>
-                        <th>Date</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
                         <th>Description</th>
                         <th className="text-end">Working hours</th>
+                        <th className="text-end">Hours/Day</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
@@ -1483,25 +1512,13 @@ const ActivityDetail = () => {
                             </div>
                             <span className={task.completed ? 'task-title completed' : 'task-title'}>{task.title || 'N/A'}</span>
                           </td>
-                          <td>
-                            {task.dueDate ? (
-                              new Date(task.dueDate).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric', 
-                                year: 'numeric' 
-                              })
-                            ) : task.startDate ? (
-                              new Date(task.startDate).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric', 
-                                year: 'numeric' 
-                              })
-                            ) : '-'}
-                          </td>
+                          <td>{formatTaskDate(task.startDate)}</td>
+                          <td>{formatTaskDate(task.dueDate)}</td>
                           <td className="task-description-cell">{task.description || '-'}</td>
                           <td className="text-end">
                             {task.totalHours != null && task.totalHours !== '' ? `${Number(task.totalHours)} hrs` : '-'}
                           </td>
+                          <td className="text-end">{getTaskHoursPerDay(task)}</td>
                           <td>
                             <span 
                               className="task-status-badge"
