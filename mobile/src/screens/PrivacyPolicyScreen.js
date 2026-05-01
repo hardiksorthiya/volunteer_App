@@ -190,7 +190,7 @@ const PrivacyPolicyScreen = () => {
             <Text style={styles.listText}><Text style={styles.bold}>Portability:</Text> Request transfer of your data to another service</Text>
           </View>
           <Text style={styles.text}>
-            To exercise these rights, please contact us at privacy@volunteerconnectors.com. We will respond to your request within a reasonable timeframe.
+            To exercise these rights, please contact us at volunteerconnect.usa@gmail.com. We will respond to your request within a reasonable timeframe.
           </Text>
         </View>
 
@@ -228,7 +228,7 @@ const PrivacyPolicyScreen = () => {
             If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:
           </Text>
           <Text style={styles.text}>
-            Email: privacy@volunteerconnectors.com{'\n'}
+            Email: volunteerconnect.usa@gmail.com{'\n'}
             We will respond to your inquiry within a reasonable timeframe.
           </Text>
         </View>

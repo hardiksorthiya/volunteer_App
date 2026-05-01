@@ -169,9 +169,7 @@ const PrivacyPolicy = () => {
                   If you have any questions about this Privacy Policy or our privacy practices, please contact us:
                 </p>
                 <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
-                  <p className="mb-2"><strong>Email:</strong> privacy@volunteerconnect.com</p>
-                  <p className="mb-2"><strong>Support:</strong> Visit our Help & Support page for assistance</p>
-                  <p className="mb-0"><strong>Address:</strong> [Your Organization Address]</p>
+                  <p className="mb-2"><strong>Email:</strong> volunteerconnect.usa@gmail.com</p>
                 </div>
               </section>
 

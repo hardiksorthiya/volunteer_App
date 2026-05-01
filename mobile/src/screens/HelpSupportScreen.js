@@ -10,7 +10,7 @@ const HelpSupportScreen = () => {
   };
 
   const openEmail = () => {
-    Linking.openURL('mailto:support@volunteerconnectors.com?subject=Support Request');
+    Linking.openURL('mailto:volunteerconnect.usa@gmail.com?subject=Support Request');
   };
 
   return (
@@ -126,7 +126,7 @@ const HelpSupportScreen = () => {
           </TouchableOpacity>
 
           <Text style={styles.contactInfo}>
-            Email: support@volunteerconnectors.com{'\n'}
+            Email: volunteerconnect.usa@gmail.com{'\n'}
             We typically respond within 24-48 hours.
           </Text>
         </View>

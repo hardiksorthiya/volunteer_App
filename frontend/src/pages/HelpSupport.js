@@ -121,19 +121,19 @@ const HelpSupport = () => {
 
         {/* Quick Contact */}
         <div className="row g-4 mb-4">
-          <div className="col-md-4">
+          <div className="col-md-6">
             <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '16px' }}>
               <div className="card-body p-4 text-center">
                 <div className="mb-3" style={{ fontSize: '2.5rem' }}>📧</div>
                 <h5 className="fw-bold mb-2" style={{ color: '#1e293b' }}>Email Support</h5>
                 <p className="text-muted mb-3 small">Get help via email</p>
-                <a href="mailto:support@volunteerconnect.com" className="btn btn-primary w-100">
-                  support@volunteerconnect.com
+                <a href="mailto:volunteerconnect.usa@gmail.com" className="btn btn-primary w-100">
+                  volunteerconnect.usa@gmail.com
                 </a>
               </div>
             </div>
           </div>
-          <div className="col-md-4">
+          <div className="col-md-6">
             <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '16px' }}>
               <div className="card-body p-4 text-center">
                 <div className="mb-3" style={{ fontSize: '2.5rem' }}>💬</div>
@@ -145,7 +145,7 @@ const HelpSupport = () => {
               </div>
             </div>
           </div>
-          <div className="col-md-4">
+          {/* <div className="col-md-4">
             <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '16px' }}>
               <div className="card-body p-4 text-center">
                 <div className="mb-3" style={{ fontSize: '2.5rem' }}>📞</div>
@@ -156,7 +156,7 @@ const HelpSupport = () => {
                 </a>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* FAQ Section */}

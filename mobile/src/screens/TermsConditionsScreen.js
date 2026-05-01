@@ -178,7 +178,7 @@ const TermsConditionsScreen = () => {
             If you have any questions about these Terms & Conditions, please contact us at:
           </Text>
           <Text style={styles.text}>
-            Email: legal@volunteerconnectors.com{'\n'}
+            Email: volunteerconnect.usa@gmail.com{'\n'}
             We will respond to your inquiry within a reasonable timeframe.
           </Text>
         </View>

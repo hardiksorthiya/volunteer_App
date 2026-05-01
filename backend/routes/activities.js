@@ -834,79 +834,139 @@ router.get('/stats/task-hours-by-activity', authenticate, async (req, res) => {
     // personal: tasks created by user (any activity). global: all tasks.
     const usePersonalCreated = isAdmin && scopePersonalCreated;
     const usePersonal = !isAdmin || scopePersonal || usePersonalCreated;
-    // Use one effective task date to avoid over-counting from broad OR conditions.
-    // Priority: task start_date -> due_date -> created_at.
-    const taskDateFilter = `
-      (
-        DATE(COALESCE(at.start_date, at.due_date, at.created_at)) >= ?
-        AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) <= ?
-      )
-    `;
-
     const query = usePersonalCreated
-      ? `SELECT 
+      ? `SELECT
           a.id as activity_id,
           a.title as activity_title,
-          COALESCE(SUM(at.total_hours), 0) as total_hours,
-          COUNT(at.id) as task_count
+          at.id as task_id,
+          at.total_hours,
+          at.start_date,
+          at.due_date,
+          at.created_at
          FROM activities a
          INNER JOIN activity_tasks at ON a.id = at.activity_id
-         WHERE a.is_active = true AND a.created_by = ? AND at.created_by = ?
+         WHERE a.is_active = true
+           AND a.created_by = ?
+           AND at.created_by = ?
            AND at.total_hours IS NOT NULL
-           AND at.total_hours > 0
-           AND ${taskDateFilter}
-         GROUP BY a.id, a.title
-         ORDER BY total_hours DESC`
+           AND at.total_hours > 0`
       : !usePersonal
-      ? `SELECT 
+      ? `SELECT
           a.id as activity_id,
           a.title as activity_title,
-          COALESCE(SUM(at.total_hours), 0) as total_hours,
-          COUNT(at.id) as task_count
+          at.id as task_id,
+          at.total_hours,
+          at.start_date,
+          at.due_date,
+          at.created_at
          FROM activities a
          INNER JOIN activity_tasks at ON a.id = at.activity_id
          WHERE a.is_active = true
            AND at.total_hours IS NOT NULL
-           AND at.total_hours > 0
-           AND ${taskDateFilter}
-         GROUP BY a.id, a.title
-         ORDER BY total_hours DESC`
-      : `SELECT 
+           AND at.total_hours > 0`
+      : `SELECT
           a.id as activity_id,
           a.title as activity_title,
-          COALESCE(SUM(at.total_hours), 0) as total_hours,
-          COUNT(at.id) as task_count
+          at.id as task_id,
+          at.total_hours,
+          at.start_date,
+          at.due_date,
+          at.created_at
          FROM activities a
          INNER JOIN activity_tasks at ON a.id = at.activity_id
          WHERE a.is_active = true
            AND at.created_by = ?
            AND at.total_hours IS NOT NULL
-           AND at.total_hours > 0
-           AND ${taskDateFilter}
-         GROUP BY a.id, a.title
-         ORDER BY total_hours DESC`;
-
-    const dateParams = [startDateStr, endDateStr];
+           AND at.total_hours > 0`;
 
     const params = usePersonalCreated
-      ? [userId, userId, ...dateParams]
+      ? [userId, userId]
       : usePersonal
-      ? [userId, ...dateParams]
-      : [...dateParams];
+      ? [userId]
+      : [];
 
-    const [result] = await db.promise.execute(query, params);
+    const [rows] = await db.promise.execute(query, params);
 
-    console.log('📊 Query result count:', result.length);
-    if (result.length > 0) {
-      console.log('📊 Sample result:', result[0]);
-    }
+    const normalizeYMD = (value) => {
+      if (!value) return null;
+      if (value instanceof Date) {
+        const y = value.getUTCFullYear();
+        const m = String(value.getUTCMonth() + 1).padStart(2, '0');
+        const d = String(value.getUTCDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      const s = String(value);
+      const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+      const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+      if (dmy) {
+        const dd = String(parseInt(dmy[1], 10)).padStart(2, '0');
+        const mm = String(parseInt(dmy[2], 10)).padStart(2, '0');
+        return `${dmy[3]}-${mm}-${dd}`;
+      }
+      const dt = new Date(value);
+      if (Number.isNaN(dt.getTime())) return null;
+      const y = dt.getUTCFullYear();
+      const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getUTCDate()).padStart(2, '0');
+      return `${y}-${mm}-${dd}`;
+    };
+    const toUtcDate = (ymd) => {
+      if (!ymd) return null;
+      const dt = new Date(`${ymd}T00:00:00Z`);
+      return Number.isNaN(dt.getTime()) ? null : dt;
+    };
+    const dayDiffInclusive = (startDt, endDt) => {
+      const msPerDay = 24 * 60 * 60 * 1000;
+      return Math.floor((endDt - startDt) / msPerDay) + 1;
+    };
 
-    const taskHoursData = result.map(row => ({
-      activity_id: row.activity_id,
-      activity_title: row.activity_title,
-      total_hours: parseInt(row.total_hours) || 0,
-      task_count: parseInt(row.task_count) || 0
-    }));
+    const rangeStartDate = toUtcDate(startDateStr);
+    const rangeEndDate = toUtcDate(endDateStr);
+    const grouped = new Map();
+
+    rows.forEach((row) => {
+      const totalHoursNum = Number(row.total_hours || 0);
+      if (!(totalHoursNum > 0)) return;
+
+      const taskStartStr = normalizeYMD(row.start_date || row.due_date || row.created_at);
+      const taskEndStr = normalizeYMD(row.due_date || row.start_date || row.created_at);
+      const taskStartDate = toUtcDate(taskStartStr);
+      const taskEndDate = toUtcDate(taskEndStr);
+      if (!taskStartDate || !taskEndDate || !rangeStartDate || !rangeEndDate) return;
+
+      const effectiveStart = taskStartDate <= taskEndDate ? taskStartDate : taskEndDate;
+      const effectiveEnd = taskStartDate <= taskEndDate ? taskEndDate : taskStartDate;
+      const overlapStart = new Date(Math.max(effectiveStart.getTime(), rangeStartDate.getTime()));
+      const overlapEnd = new Date(Math.min(effectiveEnd.getTime(), rangeEndDate.getTime()));
+      if (overlapStart > overlapEnd) return;
+
+      const totalTaskDays = Math.max(1, dayDiffInclusive(effectiveStart, effectiveEnd));
+      const overlapDays = dayDiffInclusive(overlapStart, overlapEnd);
+      const overlapHours = (totalHoursNum * overlapDays) / totalTaskDays;
+
+      const key = String(row.activity_id);
+      const existing = grouped.get(key) || {
+        activity_id: row.activity_id,
+        activity_title: row.activity_title,
+        total_hours: 0,
+        task_ids: new Set()
+      };
+      existing.total_hours += overlapHours;
+      if (row.task_id != null) existing.task_ids.add(String(row.task_id));
+      grouped.set(key, existing);
+    });
+
+    const taskHoursData = Array.from(grouped.values())
+      .map((item) => ({
+        activity_id: item.activity_id,
+        activity_title: item.activity_title,
+        total_hours: Number(item.total_hours.toFixed(2)),
+        task_count: item.task_ids.size
+      }))
+      .sort((a, b) => b.total_hours - a.total_hours);
+
+    console.log('📊 Query rows:', rows.length, 'Grouped activities:', taskHoursData.length);
 
     res.json({
       success: true,

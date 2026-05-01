@@ -141,7 +141,7 @@ export default function App() {
 
     // Check if user is already logged in
     checkAuthStatus();
-    
+
     // Set up interval to check auth status periodically
     const authCheckInterval = setInterval(() => {
       checkAuthStatus();
@@ -156,7 +156,7 @@ export default function App() {
   const checkAuthStatus = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      
+
       if (token) {
         setIsAuthenticated((prevAuth) => {
           if (!prevAuth) {
@@ -208,105 +208,105 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-    <View style={{ flex: 1 }}>
-      <NavigationContainer
-        ref={navigationRef}
-        onReady={() => {
-          const initialRoute = navigationRef.current?.getCurrentRoute()?.name;
-          setCurrentRouteName(initialRoute || null);
-        }}
-        onStateChange={() => {
-          const routeName = navigationRef.current?.getCurrentRoute()?.name;
-          setCurrentRouteName(routeName || null);
-        }}
-      >
-      <StatusBar style="light" />
-      <Stack.Navigator
-        initialRouteName={isAuthenticated ? 'MainTabs' : 'Landing'}
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#1e3a8a' },
-        }}
-      >
-        <Stack.Screen name="Landing" component={LandingScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen 
-          name="ActivityDetail" 
-          component={ActivityDetailScreen}
-          options={{
-            headerShown: false,
+      <View style={{ flex: 1 }}>
+        <NavigationContainer
+          ref={navigationRef}
+          onReady={() => {
+            const initialRoute = navigationRef.current?.getCurrentRoute()?.name;
+            setCurrentRouteName(initialRoute || null);
+          }}
+          onStateChange={() => {
+            const routeName = navigationRef.current?.getCurrentRoute()?.name;
+            setCurrentRouteName(routeName || null);
+          }}
+        >
+          <StatusBar style="light" />
+          <Stack.Navigator
+            initialRouteName={isAuthenticated ? 'MainTabs' : 'Landing'}
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#1e3a8a' },
+            }}
+          >
+            <Stack.Screen name="Landing" component={LandingScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen
+              name="ActivityDetail"
+              component={ActivityDetailScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="AddActivity"
+              component={AddActivityScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="EditActivity"
+              component={EditActivityScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Profile"
+              component={ProfileScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ChangePassword"
+              component={ChangePasswordScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="HelpSupport"
+              component={HelpSupportScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="TermsConditions"
+              component={TermsConditionsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="PrivacyPolicy"
+              component={PrivacyPolicyScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+        <AIGuestFloatingWidget
+          visible={currentRouteName === 'Login' || currentRouteName === 'Register'}
+          onNavigateLogin={() => {
+            if (navigationRef.current?.isReady()) {
+              navigationRef.current.navigate('Login');
+            }
           }}
         />
-        <Stack.Screen 
-          name="AddActivity" 
-          component={AddActivityScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="EditActivity" 
-          component={EditActivityScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Profile" 
-          component={ProfileScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="EditProfile" 
-          component={EditProfileScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="ChangePassword" 
-          component={ChangePasswordScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="HelpSupport" 
-          component={HelpSupportScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="TermsConditions" 
-          component={TermsConditionsScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="PrivacyPolicy" 
-          component={PrivacyPolicyScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-      </Stack.Navigator>
-      </NavigationContainer>
-      <AIGuestFloatingWidget
-        visible={currentRouteName === 'Login' || currentRouteName === 'Register'}
-        onNavigateLogin={() => {
-          if (navigationRef.current?.isReady()) {
-            navigationRef.current.navigate('Login');
-          }
-        }}
-      />
-    </View>
+      </View>
     </SafeAreaProvider>
   );
 }

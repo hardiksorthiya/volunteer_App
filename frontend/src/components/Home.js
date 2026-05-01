@@ -298,10 +298,10 @@ const Home = () => {
           <p className="home-cta-contact__subtitle lead mb-0">Get your organization and activity added on our application so that volunteers can connect to you.</p>
           <p className="home-cta-contact__contact-label fw-semibold mb-2">Contact us</p>
           <a
-            href="mailto:volunteerconnect.contact@gmail.com"
+            href="mailto:volunteerconnect.usa@gmail.com"
             className="home-cta-contact__email link-light text-decoration-underline"
           >
-            volunteerconnect.contact@gmail.com
+            volunteerconnect.usa@gmail.com
           </a>
         </div>
       </section>

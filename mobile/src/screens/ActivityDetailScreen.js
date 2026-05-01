@@ -672,6 +672,33 @@ const ActivityDetailScreen = () => {
     }
   };
 
+  const formatTaskDate = (dateValue) => {
+    if (!dateValue) return '-';
+    const dt = new Date(dateValue);
+    if (Number.isNaN(dt.getTime())) return '-';
+    return dt.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const getTaskHoursPerDay = (task) => {
+    const totalHoursNum = Number(task.totalHours);
+    if (!(totalHoursNum > 0)) return '-';
+
+    const start = task.startDate ? new Date(task.startDate) : null;
+    const end = task.dueDate ? new Date(task.dueDate) : null;
+    if (start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+      const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+      const totalDays = Math.max(1, Math.floor((endUtc - startUtc) / (1000 * 60 * 60 * 24)) + 1);
+      return `${(totalHoursNum / totalDays).toFixed(2).replace(/\.00$/, '')} hrs/day`;
+    }
+
+    return `${totalHoursNum.toFixed(2).replace(/\.00$/, '')} hrs/day`;
+  };
+
   const isAdmin = currentUser && (currentUser.role === 0 || currentUser.user_type === 'admin');
   const canEdit = isAdmin || (activity && activity.created_by === currentUser?.id);
 
@@ -886,21 +913,22 @@ const ActivityDetailScreen = () => {
             ) : null}
             <View style={styles.taskInfo}>
               <View style={styles.taskInfoRow}>
+                <Text style={styles.taskInfoLabel}>Start Date:</Text>
+                <Text style={styles.taskInfoText}>{formatTaskDate(task.startDate)}</Text>
+              </View>
+              <View style={styles.taskInfoRow}>
+                <Text style={styles.taskInfoLabel}>End Date:</Text>
+                <Text style={styles.taskInfoText}>{formatTaskDate(task.dueDate)}</Text>
+              </View>
+              <View style={styles.taskInfoRow}>
+                <Text style={styles.taskInfoLabel}>Total Hours:</Text>
                 <Text style={styles.taskInfoText}>
-                  {task.dueDate ? (
-                    new Date(task.dueDate).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric', 
-                      year: 'numeric' 
-                    })
-                  ) : task.startDate ? (
-                    new Date(task.startDate).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric', 
-                      year: 'numeric' 
-                    })
-                  ) : '-'}
+                  {task.totalHours != null && task.totalHours !== '' ? `${Number(task.totalHours)} hrs` : '-'}
                 </Text>
+              </View>
+              <View style={styles.taskInfoRow}>
+                <Text style={styles.taskInfoLabel}>Hours/Day:</Text>
+                <Text style={styles.taskInfoText}>{getTaskHoursPerDay(task)}</Text>
               </View>
               {task.description ? (
                 <Text style={styles.taskDescriptionCell}>{task.description || '-'}</Text>
@@ -1838,6 +1866,12 @@ const styles = StyleSheet.create({
   taskInfoText: {
     fontSize: 14,
     color: '#1f2937',
+  },
+  taskInfoLabel: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '600',
+    minWidth: 92,
   },
   taskDescriptionCell: {
     fontSize: 14,

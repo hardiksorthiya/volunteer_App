@@ -110,6 +110,12 @@ const hourTargetProgressHandler = async (req, res) => {
       const s = String(value);
       const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+      const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+      if (dmy) {
+        const dd = String(parseInt(dmy[1], 10)).padStart(2, '0');
+        const mm = String(parseInt(dmy[2], 10)).padStart(2, '0');
+        return `${dmy[3]}-${mm}-${dd}`;
+      }
       const dt = new Date(value);
       if (Number.isNaN(dt.getTime())) return s;
       const y = dt.getUTCFullYear();
@@ -175,19 +181,56 @@ const hourTargetProgressHandler = async (req, res) => {
     let currentRangeHours = 0;
     let periodLabelRange = null;
     if (rangeStartStr && rangeEndStr && targetHours != null) {
-      const [rangeResult] = await db.promise.execute(
-        `SELECT COALESCE(SUM(at.total_hours), 0) as hours
+      const [taskRows] = await db.promise.execute(
+        `SELECT at.total_hours, at.start_date, at.due_date, at.created_at
          FROM activity_tasks at
          INNER JOIN activities a ON at.activity_id = a.id
          WHERE a.is_active = true
            AND at.created_by = ?
            AND at.total_hours IS NOT NULL
-           AND at.total_hours > 0
-           AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) >= ?
-           AND DATE(COALESCE(at.start_date, at.due_date, at.created_at)) <= ?`,
-        [userId, rangeStartStr, rangeEndStr]
+           AND at.total_hours > 0`,
+        [userId]
       );
-      currentRangeHours = parseInt(rangeResult[0]?.hours || 0, 10);
+
+      const toUtcDate = (ymd) => {
+        if (!ymd) return null;
+        const dt = new Date(`${ymd}T00:00:00Z`);
+        return Number.isNaN(dt.getTime()) ? null : dt;
+      };
+      const dayDiffInclusive = (startDt, endDt) => {
+        const msPerDay = 24 * 60 * 60 * 1000;
+        return Math.floor((endDt - startDt) / msPerDay) + 1;
+      };
+
+      const rangeStartDate = toUtcDate(rangeStartStr);
+      const rangeEndDate = toUtcDate(rangeEndStr);
+      let overlapHours = 0;
+
+      if (rangeStartDate && rangeEndDate) {
+        taskRows.forEach((task) => {
+          const totalHoursNum = Number(task.total_hours || 0);
+          if (!(totalHoursNum > 0)) return;
+
+          const taskStartStr = normalizeYMD(task.start_date || task.due_date || task.created_at);
+          const taskEndStr = normalizeYMD(task.due_date || task.start_date || task.created_at);
+          const taskStartDate = toUtcDate(taskStartStr);
+          const taskEndDate = toUtcDate(taskEndStr);
+          if (!taskStartDate || !taskEndDate) return;
+
+          const effectiveStart = taskStartDate <= taskEndDate ? taskStartDate : taskEndDate;
+          const effectiveEnd = taskStartDate <= taskEndDate ? taskEndDate : taskStartDate;
+          const totalTaskDays = Math.max(1, dayDiffInclusive(effectiveStart, effectiveEnd));
+
+          const overlapStart = new Date(Math.max(effectiveStart.getTime(), rangeStartDate.getTime()));
+          const overlapEnd = new Date(Math.min(effectiveEnd.getTime(), rangeEndDate.getTime()));
+          if (overlapStart > overlapEnd) return;
+
+          const overlapDays = dayDiffInclusive(overlapStart, overlapEnd);
+          overlapHours += (totalHoursNum * overlapDays) / totalTaskDays;
+        });
+      }
+
+      currentRangeHours = Number(overlapHours.toFixed(2));
       periodLabelRange = `${rangeStartStr} - ${rangeEndStr}`;
     }
     res.json({
