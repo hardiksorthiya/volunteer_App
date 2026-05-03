@@ -43,8 +43,6 @@ const TermsConditions = () => {
                   <li className="mb-2">Browse and search for volunteer opportunities</li>
                   <li className="mb-2">Create and manage volunteer activities</li>
                   <li className="mb-2">Track your volunteer hours and contributions</li>
-                  <li className="mb-2">Communicate with organizations and other volunteers</li>
-                  <li className="mb-2">Access resources and support materials</li>
                 </ul>
               </section>
 
@@ -195,9 +193,9 @@ const TermsConditions = () => {
               <section className="mb-4">
                 <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>13. Governing Law</h2>
                 <p className="mb-3">
-                  These Terms shall be governed by and construed in accordance with the laws of [Your Jurisdiction], 
+                  These Terms shall be governed by and construed in accordance with the laws of United States of America in "Governing Law", 
                   without regard to its conflict of law provisions. Any disputes arising from these Terms or your use 
-                  of the platform shall be subject to the exclusive jurisdiction of the courts in [Your Jurisdiction].
+                  of the platform shall be subject to the exclusive jurisdiction of the courts in United States of America in "Governing Law".
                 </p>
               </section>
 

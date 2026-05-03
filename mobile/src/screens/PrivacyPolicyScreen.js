@@ -18,7 +18,7 @@ const PrivacyPolicyScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.text}>
-            At Volunteer Connectors, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application. Please read this policy carefully to understand our views and practices regarding your personal data.
+            At Volunteer Connect, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application. Please read this policy carefully to understand our views and practices regarding your personal data.
           </Text>
         </View>
 
@@ -235,7 +235,7 @@ const PrivacyPolicyScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.text}>
-            By using Volunteer Connectors, you acknowledge that you have read and understood this Privacy Policy and agree to the collection and use of your information as described herein.
+            By using Volunteer Connect, you acknowledge that you have read and understood this Privacy Policy and agree to the collection and use of your information as described herein.
           </Text>
         </View>
       </ScrollView>

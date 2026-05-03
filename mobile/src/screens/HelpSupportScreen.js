@@ -20,9 +20,9 @@ const HelpSupportScreen = () => {
         <Text style={styles.title}>Help & Support</Text>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Welcome to Volunteer Connectors</Text>
+          <Text style={styles.sectionTitle}>Welcome to Volunteer Connect</Text>
           <Text style={styles.text}>
-            Volunteer Connectors is a platform designed to connect volunteers with meaningful activities and organizations in their community. Whether you're looking to give back, find opportunities, or manage volunteer programs, we're here to help.
+            Volunteer Connect is a platform designed to connect volunteers with meaningful activities and organizations in their community. Whether you're looking to give back, find opportunities, or manage volunteer programs, we're here to help.
           </Text>
         </View>
 
@@ -64,7 +64,7 @@ const HelpSupportScreen = () => {
 
           <Text style={styles.question}>Can I create my own volunteer activities?</Text>
           <Text style={styles.answer}>
-            Yes! If you're an organization or admin user, you can create new volunteer activities from the Activities screen. Tap the "+" button to add a new activity.
+            Yes! you can create new volunteer activities from the Activities screen. Tap the "+" button to add a new activity.
           </Text>
 
           <Text style={styles.question}>How do I track my volunteer hours?</Text>
@@ -107,14 +107,6 @@ const HelpSupportScreen = () => {
             </Text>
           </View>
 
-          <View style={styles.featureCard}>
-            <Text style={styles.featureTitle}>👥 Community Connection</Text>
-            <Text style={styles.featureText}>
-              Connect with organizations and other volunteers. Build a network of like-minded individuals making a difference.
-            </Text>
-          </View>
-        </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Need More Help?</Text>
           <Text style={styles.text}>
@@ -135,7 +127,7 @@ const HelpSupportScreen = () => {
           <Text style={styles.sectionTitle}>App Information</Text>
           <Text style={styles.text}>
             <Text style={styles.bold}>App Version:</Text> 1.0.0{'\n'}
-            <Text style={styles.bold}>Platform:</Text> Volunteer Connectors Mobile App{'\n'}
+            <Text style={styles.bold}>Platform:</Text> Volunteer Connect Mobile App{'\n'}
             <Text style={styles.bold}>Last Updated:</Text> {new Date().getFullYear()}
           </Text>
         </View>

@@ -19,14 +19,14 @@ const TermsConditionsScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
           <Text style={styles.text}>
-            By accessing and using the Volunteer Connectors mobile application ("the App"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+            By accessing and using the Volunteer Connect mobile application ("the App"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>2. Description of Service</Text>
           <Text style={styles.text}>
-            Volunteer Connectors is a platform that connects volunteers with volunteer activities and organizations. The App allows users to:
+            Volunteer Connect is a platform that connects volunteers with volunteer activities and organizations. The App allows users to:
           </Text>
           <View style={styles.listItem}>
             <Text style={styles.bullet}>•</Text>
@@ -39,10 +39,6 @@ const TermsConditionsScreen = () => {
           <View style={styles.listItem}>
             <Text style={styles.bullet}>•</Text>
             <Text style={styles.listText}>Track volunteer hours and contributions</Text>
-          </View>
-          <View style={styles.listItem}>
-            <Text style={styles.bullet}>•</Text>
-            <Text style={styles.listText}>Communicate with organizations and other volunteers</Text>
           </View>
           <View style={styles.listItem}>
             <Text style={styles.bullet}>•</Text>
@@ -119,7 +115,7 @@ const TermsConditionsScreen = () => {
           </View>
           <View style={styles.listItem}>
             <Text style={styles.bullet}>•</Text>
-            <Text style={styles.listText}>Volunteer Connectors is not liable for any injuries, damages, or losses that occur during volunteer activities</Text>
+            <Text style={styles.listText}>Volunteer Connect is not liable for any injuries, damages, or losses that occur during volunteer activities</Text>
           </View>
           <View style={styles.listItem}>
             <Text style={styles.bullet}>•</Text>
@@ -130,7 +126,7 @@ const TermsConditionsScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>6. Intellectual Property</Text>
           <Text style={styles.text}>
-            The App and its original content, features, and functionality are owned by Volunteer Connectors and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of the App without written permission.
+            The App and its original content, features, and functionality are owned by Volunteer Connect and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of the App without written permission.
           </Text>
         </View>
 
@@ -154,14 +150,14 @@ const TermsConditionsScreen = () => {
             THE APP IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
           </Text>
           <Text style={styles.text}>
-            Volunteer Connectors does not guarantee that the App will be available at all times, be error-free, or meet your requirements.
+            Volunteer Connect does not guarantee that the App will be available at all times, be error-free, or meet your requirements.
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>10. Limitation of Liability</Text>
           <Text style={styles.text}>
-            TO THE MAXIMUM EXTENT PERMITTED BY LAW, VOLUNTEER CONNECTORS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES RESULTING FROM YOUR USE OF THE APP.
+            TO THE MAXIMUM EXTENT PERMITTED BY LAW, Volunteer Connect SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES RESULTING FROM YOUR USE OF THE APP.
           </Text>
         </View>
 
@@ -185,7 +181,7 @@ const TermsConditionsScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.text}>
-            By using Volunteer Connectors, you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions.
+            By using Volunteer Connect, you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions.
           </Text>
         </View>
       </ScrollView>

@@ -6,7 +6,7 @@
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
@@ -27,7 +27,11 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#1e3a8a"
       },
-      "package": "com.volunteerconnect.app"
+      "package": "com.volunteerconnect.app",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "scheme": "volunteerconnect",
     "plugins": [
@@ -37,7 +41,7 @@
     "extra": {
       "apiUrl": "https://volunteerconnect.cloud/api",
       "eas": {
-        "projectId": "c647c77f-5705-49c1-9be9-b62ea985f1db"
+        "projectId": "55332645-ee23-4454-8e78-f87af83b8d0b"
       }
     },
     "runtimeVersion": {
@@ -45,6 +49,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/c647c77f-5705-49c1-9be9-b62ea985f1db"
-    }
+    },
+    "owner": "umashankars1"
   }
 }

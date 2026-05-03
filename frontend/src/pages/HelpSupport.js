@@ -44,7 +44,7 @@ const HelpSupport = () => {
         },
         {
           q: 'Can I create my own volunteer activity?',
-          a: 'Yes! If you are an organization or have the necessary permissions, you can create activities by clicking "Add Activity" in the Activities section. Fill in the activity details, set dates, and assign tasks.'
+          a: 'Yes! if you have information about an Activity which you might have got with the help of our AI Assistant or through other means, you can create activities by clicking "Add Activity" in the Activities section. Fill in the activity details, set dates, and assign tasks.'
         }
       ]
     },
@@ -62,8 +62,8 @@ const HelpSupport = () => {
         },
         {
           q: 'How do I delete my account?',
-          a: 'To delete your account, please contact our support team through the Help & Support page or email support@volunteerconnect.com. Account deletion is permanent and cannot be undone.'
-        }
+            a: 'To delete your account, please contact our support team through the Help & Support page or email volunteerconnect.usa@gmail.com. Account deletion is permanent and cannot be undone.'
+          }
       ]
     },
     {
