@@ -106,6 +106,7 @@ const HelpSupportScreen = () => {
               View comprehensive statistics about your volunteer contributions, including hours logged, activities completed, and impact metrics.
             </Text>
           </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Need More Help?</Text>
