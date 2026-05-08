@@ -229,6 +229,11 @@ const Register = () => {
           <p className="auth-link">
             Already have an account? <Link to="/login">Sign in</Link>
           </p>
+          <p className="auth-link">
+            <Link to="/terms-conditions">Terms & Conditions</Link>
+            {' '}|{' '}
+            <Link to="/privacy-policy">Privacy Policy</Link>
+          </p>
         </div>
       </div>
       </div>

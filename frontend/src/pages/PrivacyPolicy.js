@@ -143,7 +143,21 @@ const PrivacyPolicy = () => {
               </section>
 
               <section className="mb-4">
-                <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>9. Children's Privacy</h2>
+                <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>9. Camera Permission and Usage</h2>
+                <p className="mb-3">
+                  Our mobile application may request access to your device camera (`android.permission.CAMERA`) only when you choose
+                  camera-related actions, such as capturing or uploading images for your profile or volunteer activity records.
+                </p>
+                <ul className="mb-3" style={{ paddingLeft: '1.5rem' }}>
+                  <li className="mb-2">Camera access is used only while you are actively using the related feature.</li>
+                  <li className="mb-2">We do not access the camera in the background.</li>
+                  <li className="mb-2">We do not sell camera data or images.</li>
+                  <li className="mb-2">You can deny or revoke camera permission at any time from your device settings.</li>
+                </ul>
+              </section>
+
+              <section className="mb-4">
+                <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>10. Children's Privacy</h2>
                 <p className="mb-3">
                   Our platform is not intended for children under the age of 13. We do not knowingly collect personal information 
                   from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, 
@@ -152,7 +166,7 @@ const PrivacyPolicy = () => {
               </section>
 
               <section className="mb-4">
-                <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>10. Changes to This Privacy Policy</h2>
+                <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>11. Changes to This Privacy Policy</h2>
                 <p className="mb-3">
                   We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy 
                   on this page and updating the "Last updated" date at the top of this policy.
@@ -164,7 +178,7 @@ const PrivacyPolicy = () => {
               </section>
 
               <section className="mb-4">
-                <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>11. Contact Us</h2>
+                <h2 className="fw-bold mb-3" style={{ color: '#1e293b', fontSize: '1.5rem' }}>12. Contact Us</h2>
                 <p className="mb-3">
                   If you have any questions about this Privacy Policy or our privacy practices, please contact us:
                 </p>

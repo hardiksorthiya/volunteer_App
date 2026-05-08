@@ -209,21 +209,40 @@ const PrivacyPolicyScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>8. International Data Transfers</Text>
+          <Text style={styles.sectionTitle}>8. Camera Permission and Usage</Text>
+          <Text style={styles.text}>
+            The App may request camera access (`android.permission.CAMERA`) only when you choose features that need image capture or upload, such as profile or activity-related images.
+          </Text>
+          <View style={styles.listItem}>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.listText}>Camera access is used only while you actively use relevant features.</Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.listText}>The App does not use the camera in the background.</Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.listText}>You can deny or revoke camera permission anytime from device settings.</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>9. International Data Transfers</Text>
           <Text style={styles.text}>
             Your information may be transferred to and processed in countries other than your country of residence. These countries may have data protection laws that differ from those in your country. By using the App, you consent to the transfer of your information to these countries.
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>9. Changes to This Privacy Policy</Text>
+          <Text style={styles.sectionTitle}>10. Changes to This Privacy Policy</Text>
           <Text style={styles.text}>
             We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. You are advised to review this Privacy Policy periodically for any changes.
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>10. Contact Us</Text>
+          <Text style={styles.sectionTitle}>11. Contact Us</Text>
           <Text style={styles.text}>
             If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:
           </Text>

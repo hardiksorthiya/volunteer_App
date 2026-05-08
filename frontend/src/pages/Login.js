@@ -201,6 +201,11 @@ const Login = () => {
           <p className="auth-link">
             Don't have an account? <Link to="/register">Sign up</Link>
           </p>
+          <p className="auth-link">
+            <Link to="/terms-conditions">Terms & Conditions</Link>
+            {' '}|{' '}
+            <Link to="/privacy-policy">Privacy Policy</Link>
+          </p>
         </div>
       </div>
       </div>

@@ -303,6 +303,15 @@ const Home = () => {
           >
             volunteerconnect.usa@gmail.com
           </a>
+          <div className="d-flex flex-wrap gap-2 justify-content-center mt-3">
+            <Link to="/terms-conditions" className="link-light text-decoration-underline">
+              Terms & Conditions
+            </Link>
+            <span className="text-white-50">|</span>
+            <Link to="/privacy-policy" className="link-light text-decoration-underline">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </section>
     </div>

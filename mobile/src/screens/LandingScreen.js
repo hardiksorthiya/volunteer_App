@@ -93,6 +93,23 @@ const LandingScreen = () => {
               </View>
             </View>
           </View>
+          <View style={styles.footer}>
+            <View style={styles.legalLinksRow}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('TermsConditions')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.legalLinkText}>Terms & Conditions</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalDivider}>|</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('PrivacyPolicy')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.legalLinkText}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -158,6 +175,28 @@ const styles = StyleSheet.create({
   bottomActions: {
     marginTop: 12,
     paddingTop: 6,
+  },
+  legalLinksRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legalLinkText: {
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 13,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  legalDivider: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 13,
+  },
+  footer: {
+    marginTop: 'auto',
+    paddingTop: 12,
+    paddingBottom: 8,
+    paddingHorizontal: 16,
   },
   btnLogin: {
     minWidth: 102,

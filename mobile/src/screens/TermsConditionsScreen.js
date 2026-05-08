@@ -135,6 +135,9 @@ const TermsConditionsScreen = () => {
           <Text style={styles.text}>
             Your use of the App is also governed by our Privacy Policy. Please review our Privacy Policy to understand our practices regarding the collection and use of your information.
           </Text>
+          <Text style={styles.text}>
+            If you use features that need camera access (such as capturing or uploading profile or activity images), permission is requested only when required and used as described in our Privacy Policy. You can deny or revoke camera permission in your device settings at any time.
+          </Text>
         </View>
 
         <View style={styles.section}>

@@ -283,6 +283,15 @@ const RegisterScreen = () => {
             <Text style={styles.link}>Sign in</Text>
           </TouchableOpacity>
         </View>
+        <View style={styles.legalLinksRow}>
+          <TouchableOpacity onPress={() => navigation.navigate('TermsConditions')}>
+            <Text style={styles.legalLink}>Terms & Conditions</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalDivider}>|</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}>
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -471,6 +480,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#2563eb',
+  },
+  legalLinksRow: {
+    marginTop: 14,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legalLink: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#2563eb',
+    textDecorationLine: 'underline',
+  },
+  legalDivider: {
+    fontSize: 13,
+    color: '#9ca3af',
   },
 });
 

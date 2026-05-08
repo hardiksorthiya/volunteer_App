@@ -125,6 +125,11 @@ const TermsConditions = () => {
                   Your use of our platform is also governed by our Privacy Policy. Please review our Privacy Policy to understand 
                   how we collect, use, and protect your personal information.
                 </p>
+                <p className="mb-3">
+                  Where features require camera access (for example, capturing or uploading profile or activity images), such access is
+                  requested only when needed and handled as described in our Privacy Policy, including your control to deny or revoke
+                  permission in device settings.
+                </p>
               </section>
 
               <section className="mb-4">
