@@ -510,7 +510,7 @@ const Activities = () => {
           </div>
         )}
 
-        {isAdmin && (
+        {user && (
           <>
             <button
               className="btn btn-sm btn-outline-secondary ms-2"

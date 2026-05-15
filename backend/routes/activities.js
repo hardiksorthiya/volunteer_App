@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const multer = require('multer');
 
 // Multer setup for CSV uploads (activities import)
@@ -234,6 +234,7 @@ router.post('/', authenticate, async (req, res) => {
 
 // Import CSV handler (used by router and by server.js so route is matched before /:id)
 // @route   POST /api/activities/import-csv
+// @access  Private (any authenticated user). Admins may set public/private per CSV; others import as private only.
 // Expected CSV header: title,description,category,organization_name,location,start_date,end_date,max_participants,is_public
 const importCsvHandler = async (req, res) => {
   console.log('📥 POST /api/activities/import-csv - CSV import request received');
@@ -246,6 +247,12 @@ const importCsvHandler = async (req, res) => {
     }
 
     const userId = req.user.id;
+    let userRole = Number(req.user.role);
+    if (Number.isNaN(userRole)) {
+      userRole = req.user.user_type === 'admin' ? 0 : 1;
+    }
+    const isAdmin = userRole === 0 || req.user.user_type === 'admin';
+
     let text = req.file.buffer.toString('utf-8');
     // Strip BOM (Excel/some editors add UTF-8 BOM)
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
@@ -338,8 +345,9 @@ const importCsvHandler = async (req, res) => {
       }
 
       const max_participants = max_participants_raw ? parseInt(max_participants_raw, 10) || null : null;
-      let is_public = true; // Admin imports are public by default
-      if (idxIsPublic !== -1 && is_public_raw) {
+      // Match POST / rules: only admins may create public activities; volunteers/orgs import as private only
+      let is_public = isAdmin;
+      if (isAdmin && idxIsPublic !== -1 && is_public_raw) {
         const lowered = is_public_raw.toLowerCase();
         is_public = lowered === '1' || lowered === 'true' || lowered === 'yes' || lowered === 'y';
       }
@@ -387,7 +395,7 @@ const importCsvHandler = async (req, res) => {
   }
 };
 
-router.post('/import-csv', authenticate, authorize('admin'), uploadCsv.single('file'), importCsvHandler);
+router.post('/import-csv', authenticate, uploadCsv.single('file'), importCsvHandler);
 router.importCsvHandler = importCsvHandler;
 router.uploadCsv = uploadCsv;
 

@@ -1,12 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  RefreshControl,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../components/Header';
+import api from '../config/api';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const handleNotificationPress = () => {
     console.log('Notification pressed');
@@ -16,6 +33,34 @@ const SettingsScreen = () => {
     setRefreshing(true);
     // Refresh settings data if needed
     setTimeout(() => setRefreshing(false), 1000);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      Alert.alert('Password required', 'Enter your password to delete your account.');
+      return;
+    }
+    setDeleteLoading(true);
+    try {
+      const response = await api.post('/auth/delete-account', { password: deletePassword });
+      if (response.data?.success) {
+        setDeleteModalVisible(false);
+        setDeletePassword('');
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
+        await AsyncStorage.removeItem('rememberMe');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Landing' }],
+        });
+      } else {
+        Alert.alert('Error', response.data?.message || 'Could not delete account.');
+      }
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Could not delete account. Check your password and try again.');
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -91,6 +136,17 @@ const SettingsScreen = () => {
             <Text style={styles.settingLabel}>Change Password</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.settingItem, styles.dangerItem]}
+            onPress={() => {
+              setDeletePassword('');
+              setDeleteModalVisible(true);
+            }}
+          >
+            <Text style={styles.dangerLabel}>Delete account</Text>
+            <Text style={styles.settingArrow}>›</Text>
+          </TouchableOpacity>
         </View>
 
 
@@ -151,6 +207,60 @@ const SettingsScreen = () => {
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !deleteLoading && setDeleteModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Delete account</Text>
+            <Text style={styles.modalBody}>
+              This permanently removes your Volunteer Connect account and related data. Enter your password to confirm.
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Current password"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+              editable={!deleteLoading}
+              autoCapitalize="none"
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => {
+                  if (!deleteLoading) {
+                    setDeleteModalVisible(false);
+                    setDeletePassword('');
+                  }
+                }}
+                disabled={deleteLoading}
+              >
+                <Text style={styles.modalBtnCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnDanger]}
+                onPress={handleDeleteAccount}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={styles.modalBtnDangerText}>Delete</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 };
@@ -196,6 +306,15 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  dangerItem: {
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  dangerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#b91c1c',
+  },
   settingLabel: {
     fontSize: 16,
     color: '#1f2937',
@@ -214,6 +333,66 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  modalBody: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginBottom: 16,
+    color: '#1f2937',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    minWidth: 88,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnCancel: {
+    backgroundColor: '#f3f4f6',
+  },
+  modalBtnCancelText: {
+    fontWeight: '600',
+    color: '#374151',
+  },
+  modalBtnDanger: {
+    backgroundColor: '#dc2626',
+  },
+  modalBtnDangerText: {
+    fontWeight: '600',
+    color: '#ffffff',
   },
   logoutButtonText: {
     color: '#ffffff',

@@ -682,11 +682,7 @@ const Chat = () => {
                       ⚠️ {aiStatusMessage || 'AI chat is not configured'}
                     </p>
                   )}
-                  {aiConfigured && (
-                    <p className="text-muted small mt-2 mb-0">
-                      AI Assistant powered by OpenAI {locationContext ? '• location enabled' : '• location not shared'}
-                    </p>
-                  )}
+                  
                 </form>
               </div>
             </div>

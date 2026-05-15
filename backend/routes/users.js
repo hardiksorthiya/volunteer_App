@@ -44,6 +44,78 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
+function removeLocalProfileImageFile(profileImageUrl) {
+  if (!profileImageUrl || typeof profileImageUrl !== 'string') return;
+  if (!profileImageUrl.includes('/uploads/profiles/')) return;
+  const fileName = path.basename(profileImageUrl);
+  if (!fileName || fileName.includes('..')) return;
+  const filePath = path.join(uploadsDir, fileName);
+  if (fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+    } catch (e) {
+      console.error('Error removing profile image file:', e);
+    }
+  }
+}
+
+/** Permanently delete the authenticated user (requires req.body.password). Used by DELETE/POST /me and self DELETE /:id. */
+async function deleteOwnAccountHandler(req, res) {
+  try {
+    const password = req.body?.password;
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required to delete your account'
+      });
+    }
+
+    const userId = req.user.id;
+    const [users] = await db.promise.execute(
+      'SELECT id, password, profile_image FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const row = users[0];
+    const valid = await bcrypt.compare(password, row.password);
+    if (!valid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid password'
+      });
+    }
+
+    removeLocalProfileImageFile(row.profile_image);
+
+    const [result] = await db.promise.execute('DELETE FROM users WHERE id = ?', [userId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(500).json({
+        success: false,
+        message: 'Account could not be deleted'
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Your account has been permanently deleted'
+    });
+  } catch (error) {
+    console.error('Delete own account error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to delete account'
+    });
+  }
+}
+
 // @route   GET /api/users/me
 // @desc    Get current user profile
 // @access  Private
@@ -78,6 +150,11 @@ router.get('/me', authenticate, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// @route   POST /api/users/me/delete-account
+// @desc    Permanently delete own account (password in JSON body)
+// @access  Private (registered early so it is never shadowed by /:id)
+router.post('/me/delete-account', authenticate, deleteOwnAccountHandler);
 
 // Hour target progress handler (shared by both route paths)
 const hourTargetProgressHandler = async (req, res) => {
@@ -1095,13 +1172,18 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
   }
 });
 
+// @route   DELETE /api/users/me
+// @desc    Permanently delete the authenticated user's own account (requires password in body)
+// @access  Private
+router.delete('/me', authenticate, deleteOwnAccountHandler);
+
 // @route   DELETE /api/users/:id
-// @desc    Delete user (Admin only)
-// @access  Private (Admin)
-router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
+// @desc    Delete another user (admin only), or delete own account when :id matches caller (password required; no admin)
+// @access  Private
+router.delete('/:id', authenticate, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
-    
+    const userId = parseInt(req.params.id, 10);
+
     // Validate user ID
     if (isNaN(userId) || userId <= 0) {
       return res.status(400).json({
@@ -1109,15 +1191,26 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
         message: 'Invalid user ID'
       });
     }
-    
-    // Prevent admin from deleting themselves
+
     if (req.user.id === userId) {
-      return res.status(400).json({
+      return deleteOwnAccountHandler(req, res);
+    }
+
+    let userRole = req.user.role;
+    if (typeof userRole === 'bigint') userRole = Number(userRole);
+    else if (typeof userRole === 'string') userRole = parseInt(userRole, 10);
+    else userRole = Number(userRole);
+    if (Number.isNaN(userRole)) {
+      userRole = req.user.user_type === 'admin' ? 0 : 1;
+    }
+    const isAdmin = req.user.user_type === 'admin' || userRole === 0;
+    if (!isAdmin) {
+      return res.status(403).json({
         success: false,
-        message: 'You cannot delete your own account'
+        message: 'Access denied. Admin privileges required.'
       });
     }
-    
+
     // Check if user exists
     const [users] = await db.promise.execute(
       'SELECT id, name, email FROM users WHERE id = ?',
@@ -1191,6 +1284,8 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
 // Log registered routes for debugging
 if (process.env.NODE_ENV !== 'production') {
   console.log('User routes registered:', {
+    'POST /api/users/me/delete-account': 'Active',
+    'DELETE /api/users/me': 'Active',
     'PUT /api/users/:id/role': 'Active',
     'PUT /api/users/:id/status': 'Active',
     'PUT /api/users/:id': 'Active',
@@ -1200,4 +1295,5 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = router;
 module.exports.hourTargetProgressHandler = hourTargetProgressHandler;
+module.exports.deleteOwnAccountHandler = deleteOwnAccountHandler;
 

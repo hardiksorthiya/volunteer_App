@@ -100,9 +100,41 @@ const chatCompletion = async (messages, options = {}) => {
   }
 };
 
+/**
+ * Run OpenAI Moderation on user text. Used to block disallowed content before chat.
+ * On API/network errors, allows the request (chat still protected by system instructions).
+ * @param {string} text
+ * @returns {Promise<{ allowed: boolean, categories?: object }>}
+ */
+const moderateUserMessage = async (text) => {
+  if (!openai || !text || typeof text !== 'string') {
+    return { allowed: true };
+  }
+
+  const input = text.slice(0, 32000);
+  try {
+    const mod = await openai.moderations.create({
+      model: process.env.OPENAI_MODERATION_MODEL || 'omni-moderation-latest',
+      input,
+    });
+    const result = mod.results && mod.results[0];
+    if (!result) {
+      return { allowed: true };
+    }
+    if (result.flagged) {
+      return { allowed: false, categories: result.categories };
+    }
+    return { allowed: true };
+  } catch (error) {
+    console.error('OpenAI moderation error:', error.message);
+    return { allowed: true };
+  }
+};
+
 module.exports = {
   getOpenAIClient,
   isConfigured,
   chatCompletion,
+  moderateUserMessage,
 };
 

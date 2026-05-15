@@ -9,6 +9,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
@@ -61,6 +65,34 @@ const Profile = () => {
       month: 'long', 
       day: 'numeric' 
     });
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+    if (!deletePassword.trim()) {
+      setDeleteError('Enter your password to confirm.');
+      return;
+    }
+    setDeleteLoading(true);
+    try {
+      const response = await api.post('/auth/delete-account', { password: deletePassword });
+      if (response.data?.success) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('rememberMe');
+        setShowDeleteModal(false);
+        navigate('/login', { replace: true, state: { message: 'Your account has been deleted.' } });
+      } else {
+        setDeleteError(response.data?.message || 'Could not delete account.');
+      }
+    } catch (err) {
+      const detail = err.response?.data?.path ? ` (${err.response.data.path})` : '';
+      setDeleteError(
+        (err.response?.data?.message || 'Could not delete account. Try again.') + detail
+      );
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   if (loading) {
@@ -262,9 +294,81 @@ const Profile = () => {
                 </div>
               </div>
             </div>
+
+            <div className="card shadow-sm border-0 mt-4" style={{ borderRadius: '16px', border: '1px solid #fecaca' }}>
+              <div className="card-body p-4">
+                <h4 className="fw-bold mb-2" style={{ color: '#991b1b' }}>Delete account</h4>
+                <p className="text-muted mb-3 small">
+                  Permanently delete your account and associated data. This cannot be undone. You will be asked for your password.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-outline-danger"
+                  onClick={() => {
+                    setDeletePassword('');
+                    setDeleteError('');
+                    setShowDeleteModal(true);
+                  }}
+                >
+                  Delete my account
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {showDeleteModal ? (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.45)', zIndex: 1050 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-account-title"
+        >
+          <div className="bg-white rounded-3 shadow p-4 mx-3" style={{ maxWidth: '420px', width: '100%' }}>
+            <h5 id="delete-account-title" className="fw-bold mb-2">Confirm account deletion</h5>
+            <p className="text-muted small mb-3">
+              This permanently removes your Volunteer Connect account. Enter your current password to confirm.
+            </p>
+            <label htmlFor="delete-account-password" className="form-label small fw-semibold">
+              Password
+            </label>
+            <input
+              id="delete-account-password"
+              type="password"
+              className="form-control mb-2"
+              autoComplete="current-password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              disabled={deleteLoading}
+            />
+            {deleteError ? <div className="text-danger small mb-2">{deleteError}</div> : null}
+            <div className="d-flex gap-2 justify-content-end mt-2">
+              <button
+                type="button"
+                className="btn btn-light"
+                disabled={deleteLoading}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletePassword('');
+                  setDeleteError('');
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={deleteLoading}
+                onClick={handleDeleteAccount}
+              >
+                {deleteLoading ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

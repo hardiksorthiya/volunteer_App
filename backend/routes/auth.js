@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const db = require('../config/database');
 const { sendPasswordResetEmail } = require('../config/email');
+const { authenticate } = require('../middleware/auth');
+const usersRoutesModule = require('./users');
 
 // --- added: token authentication helper (usable by new endpoints) ---
 function authenticateToken(req, res, next) {
@@ -638,5 +640,10 @@ router.put('/users/:id', authenticateToken, async (req, res) => {
 		res.status(500).json({ success: false, message: error.message });
 	}
 });
+
+// @route   POST /api/auth/delete-account
+// @desc    Permanently delete own account (same as POST /api/users/me/delete-account; under /api/auth for proxy / client compatibility)
+// @access  Private
+router.post('/delete-account', authenticate, usersRoutesModule.deleteOwnAccountHandler);
 
 module.exports = router;

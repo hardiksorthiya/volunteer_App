@@ -10,7 +10,7 @@ dotenv.config();
 const healthRoutes = require('./routes/health');
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
-const { authenticate, authorize } = require('./middleware/auth');
+const { authenticate } = require('./middleware/auth');
 const activitiesRoutes = require('./routes/activities');
 const volunteersRoutes = require('./routes/volunteers');
 const rolesRoutes = require('./routes/roles');
@@ -38,9 +38,15 @@ app.use('/api/auth', authRoutes);
 // Register hour-target-progress on main app so path is matched before users router (avoids 404)
 app.get('/api/users/me/hour-target-progress', authenticate, usersRoutes.hourTargetProgressHandler);
 app.get('/api/users/hour-target-progress', authenticate, usersRoutes.hourTargetProgressHandler);
+// Register before /api/users router so this path is never shadowed by param routes
+app.post(
+  '/api/users/me/delete-account',
+  authenticate,
+  usersRoutes.deleteOwnAccountHandler
+);
 app.use('/api/users', usersRoutes);
 // Register import-csv on main app so path is matched before activities router (avoids 404)
-app.post('/api/activities/import-csv', authenticate, authorize('admin'), activitiesRoutes.uploadCsv.single('file'), activitiesRoutes.importCsvHandler);
+app.post('/api/activities/import-csv', authenticate, activitiesRoutes.uploadCsv.single('file'), activitiesRoutes.importCsvHandler);
 app.use('/api/activities', activitiesRoutes);
 app.use('/api/volunteers', volunteersRoutes);
 app.use('/api/roles', rolesRoutes);
@@ -74,11 +80,16 @@ app.get('*', (req, res, next) => {
   res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
-// API 404 handler
-app.use('/api/*', (req, res) => {
+// API 404 handler (Express path '/api/*' is unreliable; match any unhandled /api request)
+app.use((req, res, next) => {
+  if (!req.originalUrl.startsWith('/api')) {
+    return next();
+  }
   res.status(404).json({
     success: false,
-    message: 'API route not found'
+    message: 'API route not found',
+    method: req.method,
+    path: req.originalUrl
   });
 });
 

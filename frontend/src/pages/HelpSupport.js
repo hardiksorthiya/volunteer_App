@@ -62,8 +62,8 @@ const HelpSupport = () => {
         },
         {
           q: 'How do I delete my account?',
-            a: 'To delete your account, please contact our support team through the Help & Support page or email volunteerconnect.usa@gmail.com. Account deletion is permanent and cannot be undone.'
-          }
+          a: 'Open Profile from the sidebar, scroll to "Delete account", enter your password, and confirm. On the mobile app, use Settings → Delete account. Deletion is permanent. If you need help, email volunteerconnect.usa@gmail.com.'
+        }
       ]
     },
     {
