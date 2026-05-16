@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sheetInner: {
+    width: '100%',
     maxHeight: '85%',
   },
 });

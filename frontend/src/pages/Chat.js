@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { SendIcon, BotIcon, UserIcon, TrashIcon, PlusIcon, HistoryIcon } from '../components/Icons';
 import api from '../config/api';
+import { getChatLocationContext } from '../utils/chatLocation';
 import '../css/Chat.css';
 
 const Chat = () => {
@@ -81,21 +82,11 @@ const Chat = () => {
     }
   };
 
-  const requestLocationContext = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocationContext({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        });
-      },
-      () => {
-        // User may deny location access; chat still works without location context.
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
-    );
+  const requestLocationContext = async () => {
+    const location = await getChatLocationContext();
+    if (location) {
+      setLocationContext(location);
+    }
   };
 
   const loadConversations = () => {
@@ -234,10 +225,15 @@ const Chat = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
+      const freshLocation = (await getChatLocationContext()) || locationContext;
+      if (freshLocation) {
+        setLocationContext(freshLocation);
+      }
+
       const response = await api.post('/chat', {
         message: messageToSend,
         conversationHistory: conversationHistory,
-        locationContext
+        locationContext: freshLocation,
       });
 
       if (response.data.success) {

@@ -17,6 +17,7 @@ import Markdown from 'react-native-markdown-display';
 import Header from '../components/Header';
 import { BotIcon, UserIcon, SendIcon, HistoryIcon, TrashIcon, PlusIcon, MenuIcon } from '../components/Icons';
 import api from '../config/api';
+import { getChatLocationContext } from '../utils/chatLocation';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ const ChatScreen = () => {
   const [aiStatusMessage, setAiStatusMessage] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [locationContext, setLocationContext] = useState(null);
   const messagesEndRef = useRef(null);
   const scrollViewRef = useRef(null);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
@@ -42,6 +44,9 @@ const ChatScreen = () => {
       }
       loadConversations();
       checkAiStatus();
+      getChatLocationContext().then((location) => {
+        if (location) setLocationContext(location);
+      });
     };
     loadData();
   }, []);
@@ -238,9 +243,15 @@ const ChatScreen = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
+      const freshLocation = (await getChatLocationContext()) || locationContext;
+      if (freshLocation) {
+        setLocationContext(freshLocation);
+      }
+
       const response = await api.post('/chat', {
         message: messageToSend,
-        conversationHistory: conversationHistory
+        conversationHistory: conversationHistory,
+        locationContext: freshLocation,
       });
 
       if (response.data.success) {

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { chatCompletion, isConfigured, moderateUserMessage } = require('../config/openai');
 const { authenticate } = require('../middleware/auth');
+const { enrichLocationContext } = require('../utils/locationContext');
 const MAX_GUEST_MESSAGES = 3;
 const MAX_CHAT_MESSAGE_LENGTH = 8000;
 const guestUsage = new Map();
@@ -40,7 +41,18 @@ const getLocationInstruction = (locationContext) => {
   const roundedLng = lng.toFixed(4);
   const accuracyText = Number.isFinite(accuracy) ? ` (accuracy about ${Math.round(accuracy)} meters)` : '';
 
-  return `The user's approximate location is latitude ${roundedLat}, longitude ${roundedLng}${accuracyText}. Use this only for volunteering-related answers (for example nearby volunteer opportunities, local nonprofits, or region-specific volunteer guidance). If the user's question is not about volunteering, follow the scope rules and do not use location to answer unrelated topics.`;
+  const label =
+    (typeof locationContext.label === 'string' && locationContext.label.trim()) ||
+    [locationContext.city, locationContext.region, locationContext.country]
+      .filter((part) => typeof part === 'string' && part.trim())
+      .join(', ')
+      .trim();
+
+  const placeText = label
+    ? `near ${label} (coordinates about ${roundedLat}, ${roundedLng}${accuracyText})`
+    : `at approximately latitude ${roundedLat}, longitude ${roundedLng}${accuracyText}`;
+
+  return `The user is located ${placeText}. When they ask about "near me", "local", "nearby", or their area, tailor volunteering-related answers to this place (local nonprofits, community needs, seasonal events, and how to find opportunities in that region). Do not invent specific organizations unless you are confident they exist; suggest types of places to search and general local volunteering tips instead. Use location only for volunteering-related questions; if the topic is out of scope, follow the scope rules and do not use location.`;
 };
 
 const buildMessagesPayload = (message, conversationHistory = [], locationContext = null) => {
@@ -133,7 +145,8 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
-    const messages = buildMessagesPayload(validation.trimmed, conversationHistory, locationContext);
+    const enrichedLocation = await enrichLocationContext(locationContext);
+    const messages = buildMessagesPayload(validation.trimmed, conversationHistory, enrichedLocation);
 
     // Prepare options
     const options = {};
@@ -278,7 +291,8 @@ router.post('/guest', async (req, res) => {
       });
     }
 
-    const messages = buildMessagesPayload(validation.trimmed, conversationHistory.slice(-6), locationContext);
+    const enrichedLocation = await enrichLocationContext(locationContext);
+    const messages = buildMessagesPayload(validation.trimmed, conversationHistory.slice(-6), enrichedLocation);
     const options = {};
     if (model) options.model = model;
     if (temperature !== undefined) options.temperature = parseFloat(temperature);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
 import api from '../config/api';
+import { getChatLocationContext } from '../utils/chatLocation';
 
 export const GUEST_LIMIT = 3;
 export const GUEST_COUNT_KEY = 'mobileGuestAiChatCount';
@@ -69,24 +69,10 @@ export function useGuestAiChat({ enabled = true } = {}) {
   };
 
   const requestLocation = useCallback(async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      const payload = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      };
-      setLocationContext(payload);
-      await AsyncStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(payload));
-    } catch (error) {
-      console.warn('Location unavailable for guest AI chat:', error.message);
-    }
+    const payload = await getChatLocationContext();
+    if (!payload) return;
+    setLocationContext(payload);
+    await AsyncStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(payload));
   }, []);
 
   const handleSend = async () => {
@@ -110,11 +96,18 @@ export function useGuestAiChat({ enabled = true } = {}) {
         content: msg.text,
       }));
 
+      const freshLocation = (await getChatLocationContext()) || locationContext;
+
+      if (freshLocation) {
+        setLocationContext(freshLocation);
+        await AsyncStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(freshLocation));
+      }
+
       const response = await api.post('/chat/guest', {
         guestId: await getGuestId(),
         message: messageToSend,
         conversationHistory,
-        locationContext,
+        locationContext: freshLocation,
       });
 
       const aiMessage = {

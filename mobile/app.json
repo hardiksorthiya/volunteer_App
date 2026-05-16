@@ -39,7 +39,12 @@
     "scheme": "volunteerconnect",
     "plugins": [
       "@react-native-community/datetimepicker",
-      "expo-location"
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Volunteer Connect to use your location so AI chat can suggest volunteer opportunities near you."
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "https://volunteerconnect.cloud/api",

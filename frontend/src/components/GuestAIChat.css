@@ -9,19 +9,21 @@
 }
 
 .guest-ai-chat--embedded {
-  min-height: 420px;
-  max-height: min(560px, calc(100vh - 12rem));
-}
-
-/* Landing page embedded chat should not create a second page-edge scrollbar */
-.guest-ai-chat--embedded .guest-ai-chat__messages {
-  overflow-y: visible;
+  height: 480px;
+  max-height: min(480px, calc(100vh - 12rem));
 }
 
 .guest-ai-chat--popover {
   width: 100%;
   height: 440px;
-  max-height: 70vh;
+  max-height: min(440px, 70vh);
+}
+
+.guest-ai-chat__header,
+.guest-ai-chat__quota,
+.guest-ai-chat__form,
+.guest-ai-chat__login-cta {
+  flex-shrink: 0;
 }
 
 .guest-ai-chat__header {
@@ -59,11 +61,13 @@
 }
 
 .guest-ai-chat__messages {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1rem 1.25rem;
   background: #f8fafc;
-  min-height: 200px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .guest-ai-chat__hint {
@@ -182,12 +186,8 @@
 
 @media (max-width: 768px) {
   .guest-ai-chat--embedded {
-    max-height: none;
-    min-height: 360px;
-  }
-
-  .guest-ai-chat--embedded .guest-ai-chat__messages {
-    overflow-y: visible;
+    height: 420px;
+    max-height: min(420px, calc(100vh - 10rem));
   }
 }
 

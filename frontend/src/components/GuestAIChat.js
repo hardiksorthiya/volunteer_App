@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendIcon } from './Icons';
 import api from '../config/api';
+import { getChatLocationContext } from '../utils/chatLocation';
 import './GuestAIChat.css';
 
 export const GUEST_LIMIT = 3;
@@ -21,6 +22,7 @@ const GuestAIChat = ({ embedded = false }) => {
   const [messages, setMessages] = useState([]);
   const [guestCount, setGuestCount] = useState(0);
   const [locationContext, setLocationContext] = useState(null);
+  const messagesRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -49,23 +51,20 @@ const GuestAIChat = ({ embedded = false }) => {
   }, []);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const payload = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        };
-        setLocationContext(payload);
-        localStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(payload));
-      },
-      () => {},
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
-    );
+    getChatLocationContext().then((payload) => {
+      if (!payload) return;
+      setLocationContext(payload);
+      localStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(payload));
+    });
   }, []);
 
   const remaining = useMemo(() => Math.max(0, GUEST_LIMIT - guestCount), [guestCount]);
+
+  useEffect(() => {
+    const el = messagesRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, loading]);
 
   const persistGuestState = (nextMessages, nextCount = guestCount) => {
     localStorage.setItem(GUEST_MESSAGES_KEY, JSON.stringify(nextMessages));
@@ -102,11 +101,17 @@ const GuestAIChat = ({ embedded = false }) => {
         content: msg.text
       }));
 
+      const freshLocation = (await getChatLocationContext()) || locationContext;
+      if (freshLocation) {
+        setLocationContext(freshLocation);
+        localStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(freshLocation));
+      }
+
       const response = await api.post('/chat/guest', {
         guestId: getGuestId(),
         message: messageToSend,
         conversationHistory,
-        locationContext
+        locationContext: freshLocation,
       });
 
       const aiMessage = {
@@ -156,7 +161,7 @@ const GuestAIChat = ({ embedded = false }) => {
           : 'Free limit reached — sign in to continue.'}
       </div>
 
-      <div className="guest-ai-chat__messages">
+      <div ref={messagesRef} className="guest-ai-chat__messages">
         {messages.length === 0 && (
           <p className="guest-ai-chat__hint">
             Ask anything about volunteering. You can send {GUEST_LIMIT} messages without an account.

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -25,9 +25,17 @@ const GuestAIChatPanel = ({ variant = 'embedded', onPressLogin, onClose }) => {
     requestLocation,
   } = useGuestAiChat({ enabled: true });
 
+  const messagesScrollRef = useRef(null);
+
   useEffect(() => {
     requestLocation();
   }, [requestLocation]);
+
+  useEffect(() => {
+    if (messagesScrollRef.current) {
+      messagesScrollRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages, loading]);
 
   const isEmbedded = variant === 'embedded';
 
@@ -52,9 +60,12 @@ const GuestAIChatPanel = ({ variant = 'embedded', onPressLogin, onClose }) => {
       </Text>
 
       <ScrollView
-        style={[styles.messagesWrap, isEmbedded && styles.messagesWrapEmbedded]}
+        ref={messagesScrollRef}
+        style={styles.messagesWrap}
         contentContainerStyle={styles.messagesContent}
         keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+        showsVerticalScrollIndicator
       >
         {messages.length === 0 && (
           <Text style={styles.emptyText}>
@@ -115,14 +126,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    flexDirection: 'column',
   },
   rootEmbedded: {
-    minHeight: 360,
-    maxHeight: 480,
+    height: 440,
+    maxHeight: 440,
   },
   rootSheet: {
-    minHeight: 420,
-    maxHeight: '80%',
+    height: 480,
+    maxHeight: 480,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderWidth: 0,
@@ -183,16 +195,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e5e7eb',
   },
   messagesWrap: {
-    flexGrow: 0,
-    flexShrink: 1,
-  },
-  messagesWrapEmbedded: {
-    height: 220,
-    maxHeight: 260,
+    flex: 1,
+    minHeight: 0,
   },
   messagesContent: {
     padding: 12,
-    flexGrow: 1,
+    paddingBottom: 16,
   },
   emptyText: {
     color: '#6b7280',
