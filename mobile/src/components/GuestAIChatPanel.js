@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import { SendIcon } from './Icons';
 import { GUEST_LIMIT, useGuestAiChat } from '../hooks/useGuestAiChat';
 
@@ -78,9 +79,13 @@ const GuestAIChatPanel = ({ variant = 'embedded', onPressLogin, onClose }) => {
             key={msg.id}
             style={[styles.messageRow, msg.sender === 'user' ? styles.userRow : styles.aiRow]}
           >
-            <Text style={[styles.messageBubble, msg.sender === 'user' ? styles.userBubble : styles.aiBubble]}>
-              {msg.text}
-            </Text>
+            <View style={[styles.messageBubble, msg.sender === 'user' ? styles.userBubble : styles.aiBubble]}>
+              {msg.sender === 'ai' ? (
+                <Markdown style={aiMarkdownStyles}>{msg.text}</Markdown>
+              ) : (
+                <Text style={styles.userBubbleText}>{msg.text}</Text>
+              )}
+            </View>
           </View>
         ))}
 
@@ -117,6 +122,15 @@ const GuestAIChatPanel = ({ variant = 'embedded', onPressLogin, onClose }) => {
       )}
     </View>
   );
+};
+
+const aiMarkdownStyles = {
+  body: { color: '#111827', fontSize: 13, lineHeight: 20 },
+  strong: { fontWeight: '700', color: '#111827' },
+  paragraph: { marginTop: 4, marginBottom: 4 },
+  bullet_list: { marginVertical: 4 },
+  ordered_list: { marginVertical: 4 },
+  list_item: { marginVertical: 2 },
 };
 
 const styles = StyleSheet.create({
@@ -226,7 +240,10 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     backgroundColor: '#2563eb',
+  },
+  userBubbleText: {
     color: '#ffffff',
+    fontSize: 13,
   },
   aiBubble: {
     backgroundColor: '#f3f4f6',

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
+import { getApiErrorMessage } from '../utils/apiErrors';
 import { getChatLocationContext } from '../utils/chatLocation';
 
 export const GUEST_LIMIT = 3;
@@ -131,7 +132,7 @@ export function useGuestAiChat({ enabled = true } = {}) {
       const errorMessage = {
         id: Date.now() + 1,
         sender: 'ai',
-        text: error?.response?.data?.message || 'Something went wrong. Please try again.',
+        text: getApiErrorMessage(error, 'Something went wrong. Please try again.'),
       };
       const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);

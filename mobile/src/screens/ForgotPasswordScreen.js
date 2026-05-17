@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
+import { getApiErrorMessage } from '../utils/apiErrors';
 import { MailIcon } from '../components/Icons';
 
 const ForgotPasswordScreen = () => {
@@ -62,15 +63,11 @@ const ForgotPasswordScreen = () => {
       if (err.response?.status !== 400) {
         console.error('Forgot password error:', err);
       }
-      let errorMessage = 'Failed to send reset link. Please try again.';
-      if (err.code === 'ECONNREFUSED' || err.code === 'NETWORK_ERROR' || err.code === 'ERR_NETWORK') {
-        errorMessage = 'Cannot connect to server. Please check your connection.';
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.status === 400) {
-        errorMessage = err.response.data.message || 'Please enter a valid email address.';
+      if (err.response?.status === 400) {
+        setError(err.response?.data?.message || 'Please enter a valid email address.');
+      } else {
+        setError(getApiErrorMessage(err, 'Failed to send reset link. Please try again.'));
       }
-      setError(errorMessage);
     } finally {
       setLoading(false);
     }

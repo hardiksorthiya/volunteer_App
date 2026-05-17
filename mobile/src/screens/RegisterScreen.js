@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
+import { getApiErrorMessage } from '../utils/apiErrors';
 import { UserIcon, MailIcon, PhoneIcon, LockIcon } from '../components/Icons';
 
 const RegisterScreen = () => {
@@ -71,20 +72,13 @@ const RegisterScreen = () => {
         console.error('Registration error:', err);
       }
       
-      let errorMessage = 'Registration failed. Please try again.';
-      
-      if (err.code === 'ECONNREFUSED' || err.code === 'NETWORK_ERROR' || err.code === 'ERR_NETWORK') {
-        errorMessage = 'Cannot connect to server. Please check your connection.';
-      } else if (err.response?.data?.message) {
-        // Use the server's error message
-        errorMessage = err.response.data.message;
+      if (err.response?.status === 409) {
+        setError('An account with this email already exists.');
       } else if (err.response?.status === 400) {
-        errorMessage = 'Please check your information and try again.';
-      } else if (err.response?.status === 409) {
-        errorMessage = 'An account with this email already exists.';
+        setError(err.response?.data?.message || 'Please check your information and try again.');
+      } else {
+        setError(getApiErrorMessage(err, 'Registration failed. Please try again.'));
       }
-      
-      setError(errorMessage);
     } finally {
       setLoading(false);
     }

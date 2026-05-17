@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
+import { getApiErrorMessage } from '../utils/apiErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MailIcon, LockIcon } from '../components/Icons';
 
@@ -100,20 +101,9 @@ const LoginScreen = () => {
         console.error('Login error:', err);
       }
       
-      let errorMessage = 'Login failed. Please try again.';
-      
-      if (err.code === 'ECONNREFUSED' || err.code === 'NETWORK_ERROR' || err.code === 'ERR_NETWORK') {
-        errorMessage = 'Cannot connect to server. Please check your connection.';
-      } else if (err.response?.data?.message) {
-        // Use the server's error message (e.g., "Invalid email or password")
-        errorMessage = err.response.data.message;
-      } else if (err.response?.status === 401) {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (err.message && !err.message.includes('401') && !err.message.includes('Request failed')) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
+      setError(
+        getApiErrorMessage(err, 'Login failed. Please try again.')
+      );
       setLoading(false);
     }
   };

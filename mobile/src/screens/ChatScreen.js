@@ -17,6 +17,7 @@ import Markdown from 'react-native-markdown-display';
 import Header from '../components/Header';
 import { BotIcon, UserIcon, SendIcon, HistoryIcon, TrashIcon, PlusIcon, MenuIcon } from '../components/Icons';
 import api from '../config/api';
+import { getApiErrorMessage } from '../utils/apiErrors';
 import { getChatLocationContext } from '../utils/chatLocation';
 
 const { width } = Dimensions.get('window');
@@ -325,7 +326,7 @@ const ChatScreen = () => {
       
       const errorMessage = {
         id: Date.now() + 1,
-        text: error.response?.data?.message || error.message || 'Failed to get AI response. Please try again.',
+        text: getApiErrorMessage(error, 'Failed to get AI response. Please try again.'),
         sender: 'ai',
         timestamp: new Date().toISOString()
       };

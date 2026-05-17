@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import { SendIcon } from './Icons';
 import api from '../config/api';
 import { getChatLocationContext } from '../utils/chatLocation';
@@ -172,7 +173,13 @@ const GuestAIChat = ({ embedded = false }) => {
             key={msg.id}
             className={`guest-ai-chat__row guest-ai-chat__row--${msg.sender}`}
           >
-            <div className="guest-ai-chat__bubble">{msg.text}</div>
+            <div className="guest-ai-chat__bubble">
+              {msg.sender === 'ai' ? (
+                <ReactMarkdown className="guest-ai-chat__markdown">{msg.text}</ReactMarkdown>
+              ) : (
+                msg.text
+              )}
+            </div>
           </div>
         ))}
         {loading && <p className="guest-ai-chat__typing">AI is typing…</p>}

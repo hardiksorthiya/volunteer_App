@@ -1,21 +1,26 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// ✅ PRODUCTION API URL (your live server)
-const API_BASE_URL = "https://volunteerconnect.cloud/api";
+const DEFAULT_API_URL = 'https://volunteerconnect.cloud/api';
+const CHAT_TIMEOUT_MS = 60000;
+const DEFAULT_TIMEOUT_MS = 30000;
+
+const API_BASE_URL =
+  Constants.expoConfig?.extra?.apiUrl ||
+  Constants.manifest?.extra?.apiUrl ||
+  DEFAULT_API_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: DEFAULT_TIMEOUT_MS,
 });
 
-// Debug log
 console.log('API Base URL:', API_BASE_URL);
 
-// ✅ Convert relative image path to full URL
 export const getFullImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -24,7 +29,6 @@ export const getFullImageUrl = (path) => {
   return origin + (path.startsWith('/') ? path : '/' + path);
 };
 
-// ✅ Attach token automatically
 api.interceptors.request.use(
   async (config) => {
     try {
@@ -35,12 +39,17 @@ api.interceptors.request.use(
     } catch (error) {
       console.error('Error getting token:', error);
     }
+
+    const url = config.url || '';
+    if (url.includes('/chat')) {
+      config.timeout = CHAT_TIMEOUT_MS;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ✅ Handle response errors
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -48,11 +57,11 @@ api.interceptors.response.use(
       '/auth/login',
       '/auth/register',
       '/auth/forgot-password',
-      '/auth/reset-password'
+      '/auth/reset-password',
     ];
 
     const requestUrl = error.config?.url || '';
-    const isAuthEndpoint = authEndpoints.some(endpoint =>
+    const isAuthEndpoint = authEndpoints.some((endpoint) =>
       requestUrl.includes(endpoint)
     );
 
@@ -60,7 +69,6 @@ api.interceptors.response.use(
       try {
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('user');
-        console.log('🔒 Token expired - cleared storage');
       } catch (storageError) {
         console.error('Storage error:', storageError);
       }
