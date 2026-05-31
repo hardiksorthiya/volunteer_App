@@ -19,7 +19,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.volunteerconnect.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Allow Volunteer Connect to access your camera.",
+        "NSCameraUsageDescription": "Allow Volunteer Connect to use your camera for profile and activity photos.",
+        "NSPhotoLibraryUsageDescription": "Allow Volunteer Connect to access your photos so you can choose images for your profile.",
+        "NSLocationWhenInUseUsageDescription": "Allow Volunteer Connect to use your location so AI chat can suggest volunteer opportunities near you.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -33,7 +35,9 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_EXTERNAL_STORAGE"
       ]
     },
     "scheme": "volunteerconnect",
@@ -43,6 +47,13 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Allow Volunteer Connect to use your location so AI chat can suggest volunteer opportunities near you."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Volunteer Connect to access photos and media on your device so you can upload profile and activity images.",
+          "cameraPermission": "Allow Volunteer Connect to use your camera for profile and activity photos."
         }
       ]
     ],

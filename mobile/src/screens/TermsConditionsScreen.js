@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
+import ScreenBackButton from '../components/ScreenBackButton';
 
 const TermsConditionsScreen = () => {
   const navigation = useNavigation();
@@ -12,6 +13,7 @@ const TermsConditionsScreen = () => {
   return (
     <View style={styles.container}>
       <Header onNotificationPress={handleNotificationPress} />
+      <ScreenBackButton />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Terms & Conditions</Text>
         <Text style={styles.lastUpdated}>Last Updated: {new Date().toLocaleDateString()}</Text>

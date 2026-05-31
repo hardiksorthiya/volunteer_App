@@ -3,9 +3,16 @@ import * as Location from 'expo-location';
 /**
  * Current position for AI chat (with optional reverse-geocoded place label).
  */
-export async function getChatLocationContext() {
+export async function getChatLocationContext({ requestIfNeeded = false } = {}) {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    const existing = await Location.getForegroundPermissionsAsync();
+    let status = existing.status;
+
+    if (status !== 'granted' && requestIfNeeded) {
+      const requested = await Location.requestForegroundPermissionsAsync();
+      status = requested.status;
+    }
+
     if (status !== 'granted') {
       return null;
     }

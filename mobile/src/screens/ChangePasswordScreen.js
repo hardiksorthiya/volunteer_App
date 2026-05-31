@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
+import ScreenBackButton from '../components/ScreenBackButton';
 import api from '../config/api';
 
 const ChangePasswordScreen = () => {
@@ -127,6 +128,7 @@ const ChangePasswordScreen = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <Header onNotificationPress={handleNotificationPress} />
+      <ScreenBackButton />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}

@@ -16,16 +16,12 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { PieChart, BarChart } from 'react-native-chart-kit';
+import { PieChart } from 'react-native-chart-kit';
 import Header from '../components/Header';
+import TaskHoursByActivityChart from '../components/TaskHoursByActivityChart';
 import api from '../config/api';
 
 const screenWidth = Dimensions.get('window').width;
-
-const formatTaskHoursActivityLabel = (title) => {
-  const name = (title || 'Activity').trim();
-  return name.length > 28 ? `${name.slice(0, 28)}…` : name;
-};
 
 const DashboardScreen = () => {
   console.log('🔄 DashboardScreen - NEW VERSION LOADED');
@@ -891,49 +887,7 @@ const DashboardScreen = () => {
             </View>
           ) : taskHoursData.length > 0 ? (
             <View style={styles.chartContainer}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={taskHoursData.length > 4}
-                contentContainerStyle={styles.taskHoursChartScroll}
-              >
-                <BarChart
-                  data={{
-                    labels: taskHoursData.map((item) =>
-                      formatTaskHoursActivityLabel(item.activity_title)
-                    ),
-                    datasets: [{
-                      data: taskHoursData.map((item) => parseFloat(item.total_hours) || 0),
-                    }],
-                  }}
-                  width={Math.max(screenWidth - 64, taskHoursData.length * 56)}
-                  height={taskHoursData.length > 5 ? 320 : 300}
-                  yAxisLabel=""
-                  yAxisSuffix="h"
-                  verticalLabelRotation={-90}
-                  xLabelsOffset={8}
-                  chartConfig={{
-                    backgroundColor: '#ffffff',
-                    backgroundGradientFrom: '#ffffff',
-                    backgroundGradientTo: '#ffffff',
-                    decimalPlaces: 1,
-                    color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(55, 65, 81, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                    barPercentage: taskHoursData.length > 6 ? 0.55 : 0.7,
-                    propsForVerticalLabels: {
-                      fontSize: 10,
-                    },
-                  }}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                  showValuesOnTopOfBars
-                  fromZero
-                />
-              </ScrollView>
+              <TaskHoursByActivityChart data={taskHoursData} />
             </View>
           ) : (
             <View style={styles.emptyState}>
@@ -1531,10 +1485,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 10,
     width: '100%',
-  },
-  taskHoursChartScroll: {
-    paddingBottom: 4,
-    paddingRight: 8,
   },
   categoryLegendContainer: {
     width: '100%',

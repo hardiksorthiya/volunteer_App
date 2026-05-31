@@ -15,6 +15,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import Header from '../components/Header';
+import ScreenBackButton from '../components/ScreenBackButton';
 import api, { getFullImageUrl } from '../config/api';
 
 const ProfileScreen = () => {
@@ -258,6 +259,7 @@ const ProfileScreen = () => {
     return (
       <View style={styles.container}>
         <Header onNotificationPress={handleNotificationPress} />
+        <ScreenBackButton />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563eb" />
           <Text style={styles.loadingText}>Loading profile...</Text>
@@ -269,6 +271,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <Header onNotificationPress={handleNotificationPress} />
+      <ScreenBackButton />
       <ScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
