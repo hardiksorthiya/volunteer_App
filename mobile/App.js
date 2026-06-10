@@ -27,12 +27,6 @@ import HourTargetsScreen from './src/screens/HourTargetsScreen';
 import { HomeIcon, ActivityIcon, ChatIcon, SettingsIcon } from './src/components/Icons';
 import { ClockIcon } from './src/components/Icons';
 import AIGuestFloatingWidget from './src/components/AIGuestFloatingWidget';
-import {
-  hasCompletedPermissionsOnboarding,
-  markPermissionsOnboardingComplete,
-  requestAllAppPermissions,
-} from './src/utils/appPermissions';
-
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -123,8 +117,6 @@ export default function App() {
   const [currentRouteName, setCurrentRouteName] = useState(null);
   const navigationRef = useRef(null);
   const splashScale = useRef(new Animated.Value(0.92)).current;
-  const firstLaunchPermissionsStarted = useRef(false);
-
   useEffect(() => {
     // Run splash animation once at app start.
     Animated.sequence([
@@ -157,28 +149,6 @@ export default function App() {
       clearTimeout(splashTimer);
     };
   }, []);
-
-  const promptFirstLaunchPermissions = async () => {
-    if (firstLaunchPermissionsStarted.current) {
-      return;
-    }
-    firstLaunchPermissionsStarted.current = true;
-
-    try {
-      const complete = await hasCompletedPermissionsOnboarding();
-      if (complete) {
-        return;
-      }
-
-      // Brief pause so Landing / home is visible behind the native system dialogs.
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      await requestAllAppPermissions();
-      await markPermissionsOnboardingComplete();
-    } catch (error) {
-      console.error('First launch permission prompts failed:', error);
-      await markPermissionsOnboardingComplete();
-    }
-  };
 
   const checkAuthStatus = async () => {
     try {
@@ -241,7 +211,6 @@ export default function App() {
           onReady={() => {
             const initialRoute = navigationRef.current?.getCurrentRoute()?.name;
             setCurrentRouteName(initialRoute || null);
-            promptFirstLaunchPermissions();
           }}
           onStateChange={() => {
             const routeName = navigationRef.current?.getCurrentRoute()?.name;

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
-import { getChatLocationContext } from '../utils/chatLocation';
+import { getChatLocationContext, enableChatLocationSharing } from '../utils/chatLocation';
 
 export const GUEST_LIMIT = 3;
 export const GUEST_COUNT_KEY = 'mobileGuestAiChatCount';
@@ -16,6 +16,7 @@ export function useGuestAiChat({ enabled = true } = {}) {
   const [messages, setMessages] = useState([]);
   const [guestCount, setGuestCount] = useState(0);
   const [locationContext, setLocationContext] = useState(null);
+  const [shareLocation, setShareLocation] = useState(false);
 
   const loadState = useCallback(async () => {
     try {
@@ -37,6 +38,7 @@ export function useGuestAiChat({ enabled = true } = {}) {
         const parsedLocation = JSON.parse(savedLocation);
         if (parsedLocation && typeof parsedLocation === 'object') {
           setLocationContext(parsedLocation);
+          setShareLocation(true);
         }
       }
     } catch (error) {
@@ -69,11 +71,19 @@ export function useGuestAiChat({ enabled = true } = {}) {
     return created;
   };
 
-  const requestLocation = useCallback(async () => {
-    const payload = await getChatLocationContext();
-    if (!payload) return;
-    setLocationContext(payload);
-    await AsyncStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(payload));
+  const toggleShareLocation = useCallback(async (next) => {
+    if (!next) {
+      setShareLocation(false);
+      return;
+    }
+    const payload = await enableChatLocationSharing();
+    if (payload) {
+      setLocationContext(payload);
+      setShareLocation(true);
+      await AsyncStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(payload));
+    } else {
+      setShareLocation(false);
+    }
   }, []);
 
   const handleSend = async () => {
@@ -97,11 +107,13 @@ export function useGuestAiChat({ enabled = true } = {}) {
         content: msg.text,
       }));
 
-      const freshLocation = (await getChatLocationContext()) || locationContext;
-
-      if (freshLocation) {
-        setLocationContext(freshLocation);
-        await AsyncStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(freshLocation));
+      let freshLocation = null;
+      if (shareLocation) {
+        freshLocation = (await getChatLocationContext()) || locationContext;
+        if (freshLocation) {
+          setLocationContext(freshLocation);
+          await AsyncStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(freshLocation));
+        }
       }
 
       const response = await api.post('/chat/guest', {
@@ -150,7 +162,8 @@ export function useGuestAiChat({ enabled = true } = {}) {
     guestCount,
     remaining,
     locationContext,
-    requestLocation,
+    shareLocation,
+    toggleShareLocation,
     handleSend,
   };
 }

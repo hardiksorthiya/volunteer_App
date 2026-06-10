@@ -1,7 +1,34 @@
 import * as Location from 'expo-location';
 
 /**
- * Current position for AI chat (with optional reverse-geocoded place label).
+ * Read current permission status without prompting.
+ */
+export async function getLocationPermissionStatus() {
+  try {
+    const { status } = await Location.getForegroundPermissionsAsync();
+    return status;
+  } catch {
+    return 'undetermined';
+  }
+}
+
+/**
+ * Request location via the system dialog only (no custom pre-prompt).
+ * Call when the user explicitly enables a location-dependent feature.
+ */
+export async function requestChatLocationPermission() {
+  try {
+    const result = await Location.requestForegroundPermissionsAsync();
+    return result.status;
+  } catch (error) {
+    console.warn('Location permission request failed:', error.message);
+    return 'undetermined';
+  }
+}
+
+/**
+ * Current position for AI chat when permission is already granted.
+ * Does not show any dialog unless requestIfNeeded is true (user-initiated feature only).
  */
 export async function getChatLocationContext({ requestIfNeeded = false } = {}) {
   try {
@@ -55,4 +82,18 @@ export async function getChatLocationContext({ requestIfNeeded = false } = {}) {
     console.warn('Chat location unavailable:', error.message);
     return null;
   }
+}
+
+/**
+ * User turned on "include location" in chat — triggers system permission, then reads coords.
+ */
+export async function enableChatLocationSharing() {
+  const status = await getLocationPermissionStatus();
+  if (status !== 'granted') {
+    const requested = await requestChatLocationPermission();
+    if (requested !== 'granted') {
+      return null;
+    }
+  }
+  return getChatLocationContext();
 }

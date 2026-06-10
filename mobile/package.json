@@ -1,6 +1,6 @@
 {
   "name": "volunteer-connect-mobile",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Volunteer Connect Mobile App",
   "main": "index.js",
   "scripts": {

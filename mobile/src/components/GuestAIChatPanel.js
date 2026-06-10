@@ -11,6 +11,7 @@ import {
 import Markdown from 'react-native-markdown-display';
 import { SendIcon } from './Icons';
 import { GUEST_LIMIT, useGuestAiChat } from '../hooks/useGuestAiChat';
+import ChatLocationToggle from './ChatLocationToggle';
 
 /**
  * @param {{ variant?: 'embedded' | 'sheet', onPressLogin?: () => void, onClose?: () => void }} props
@@ -23,14 +24,11 @@ const GuestAIChatPanel = ({ variant = 'embedded', onPressLogin, onClose }) => {
     messages,
     remaining,
     handleSend,
-    requestLocation,
+    shareLocation,
+    toggleShareLocation,
   } = useGuestAiChat({ enabled: true });
 
   const messagesScrollRef = useRef(null);
-
-  useEffect(() => {
-    requestLocation();
-  }, [requestLocation]);
 
   useEffect(() => {
     if (messagesScrollRef.current) {
@@ -96,6 +94,12 @@ const GuestAIChatPanel = ({ variant = 'embedded', onPressLogin, onClose }) => {
           </View>
         )}
       </ScrollView>
+
+      <ChatLocationToggle
+        enabled={shareLocation}
+        disabled={loading || remaining <= 0}
+        onToggle={toggleShareLocation}
+      />
 
       <View style={styles.inputRow}>
         <TextInput

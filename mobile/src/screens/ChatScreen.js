@@ -18,7 +18,8 @@ import Header from '../components/Header';
 import { BotIcon, UserIcon, SendIcon, HistoryIcon, TrashIcon, PlusIcon, MenuIcon } from '../components/Icons';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
-import { getChatLocationContext } from '../utils/chatLocation';
+import { getChatLocationContext, enableChatLocationSharing } from '../utils/chatLocation';
+import ChatLocationToggle from '../components/ChatLocationToggle';
 
 const { width } = Dimensions.get('window');
 
@@ -33,6 +34,7 @@ const ChatScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [locationContext, setLocationContext] = useState(null);
+  const [shareLocation, setShareLocation] = useState(false);
   const messagesEndRef = useRef(null);
   const scrollViewRef = useRef(null);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
@@ -45,9 +47,6 @@ const ChatScreen = () => {
       }
       loadConversations();
       checkAiStatus();
-      getChatLocationContext().then((location) => {
-        if (location) setLocationContext(location);
-      });
     };
     loadData();
   }, []);
@@ -244,9 +243,12 @@ const ChatScreen = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      const freshLocation = (await getChatLocationContext()) || locationContext;
-      if (freshLocation) {
-        setLocationContext(freshLocation);
+      let freshLocation = null;
+      if (shareLocation) {
+        freshLocation = (await getChatLocationContext()) || locationContext;
+        if (freshLocation) {
+          setLocationContext(freshLocation);
+        }
       }
 
       const response = await api.post('/chat', {
@@ -725,6 +727,24 @@ const ChatScreen = () => {
               </View>
             )}
       </ScrollView>
+
+      <ChatLocationToggle
+        enabled={shareLocation}
+        disabled={loading || !aiConfigured}
+        onToggle={async (next) => {
+          if (!next) {
+            setShareLocation(false);
+            return;
+          }
+          const payload = await enableChatLocationSharing();
+          if (payload) {
+            setLocationContext(payload);
+            setShareLocation(true);
+          } else {
+            setShareLocation(false);
+          }
+        }}
+      />
 
       <View style={styles.inputContainer}>
         <TextInput

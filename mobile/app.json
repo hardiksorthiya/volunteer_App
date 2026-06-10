@@ -2,7 +2,7 @@
   "expo": {
     "name": "Volunteer Connect",
     "slug": "volunteer-connect",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -18,10 +18,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.volunteerconnect.app",
+      "buildNumber": "9",
       "infoPlist": {
-        "NSCameraUsageDescription": "Allow Volunteer Connect to use your camera for profile and activity photos.",
-        "NSPhotoLibraryUsageDescription": "Allow Volunteer Connect to access your photos so you can choose images for your profile.",
-        "NSLocationWhenInUseUsageDescription": "Allow Volunteer Connect to use your location so AI chat can suggest volunteer opportunities near you.",
+        "NSCameraUsageDescription": "Allow VolunteerConnect to access your camera to set your profile picture.",
+        "NSPhotoLibraryUsageDescription": "Allow VolunteerConnect to access photos and media on your device to set your profile picture.",
+        "NSLocationWhenInUseUsageDescription": "Your location is used to show nearby volunteers and events.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -32,6 +33,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.volunteerconnectone.app",
+      "versionCode": 10,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -46,14 +48,14 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow Volunteer Connect to use your location so AI chat can suggest volunteer opportunities near you."
+          "locationWhenInUsePermission": "Your location is used to show nearby volunteers and events."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Volunteer Connect to access photos and media on your device so you can upload profile and activity images.",
-          "cameraPermission": "Allow Volunteer Connect to use your camera for profile and activity photos."
+          "photosPermission": "Allow VolunteerConnect to access photos and media on your device to set your profile picture.",
+          "cameraPermission": "Allow VolunteerConnect to access your camera to set your profile picture."
         }
       ]
     ],

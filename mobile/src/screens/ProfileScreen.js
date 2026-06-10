@@ -14,6 +14,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import { ensureMediaLibraryPermission, ensureCameraPermission } from '../utils/appPermissions';
 import Header from '../components/Header';
 import ScreenBackButton from '../components/ScreenBackButton';
 import api, { getFullImageUrl } from '../config/api';
@@ -99,17 +100,8 @@ const ProfileScreen = () => {
   };
 
   const requestImagePickerPermission = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'Sorry, we need camera roll permissions to upload images!'
-        );
-        return false;
-      }
-    }
-    return true;
+    if (Platform.OS === 'web') return true;
+    return ensureMediaLibraryPermission();
   };
 
   const handleImagePicker = async () => {
@@ -124,11 +116,8 @@ const ProfileScreen = () => {
           text: 'Camera',
           onPress: async () => {
             try {
-              const { status } = await ImagePicker.requestCameraPermissionsAsync();
-              if (status !== 'granted') {
-                Alert.alert('Permission Required', 'Camera permission is required!');
-                return;
-              }
+              const allowed = await ensureCameraPermission();
+              if (!allowed) return;
               const result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
