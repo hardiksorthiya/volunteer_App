@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
   Alert,
   RefreshControl,
@@ -16,6 +15,7 @@ import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MailIcon, LockIcon } from '../components/Icons';
+import KeyboardFormScreen from '../components/KeyboardFormScreen';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -125,10 +125,7 @@ const LoginScreen = () => {
   }, []);
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardFormScreen
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -263,7 +260,7 @@ const LoginScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardFormScreen>
   );
 };
 

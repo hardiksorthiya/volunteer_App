@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import { MailIcon } from '../components/Icons';
+import KeyboardFormScreen from '../components/KeyboardFormScreen';
 
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
@@ -93,10 +94,7 @@ const ForgotPasswordScreen = () => {
   }, []);
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardFormScreen
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -222,7 +220,7 @@ const ForgotPasswordScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardFormScreen>
   );
 };
 

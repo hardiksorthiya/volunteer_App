@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import { UserIcon, MailIcon, PhoneIcon, LockIcon } from '../components/Icons';
+import KeyboardFormScreen from '../components/KeyboardFormScreen';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -104,10 +105,7 @@ const RegisterScreen = () => {
   }, []);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardFormScreen
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -287,7 +285,7 @@ const RegisterScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardFormScreen>
   );
 };
 

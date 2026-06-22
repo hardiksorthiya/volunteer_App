@@ -3,14 +3,14 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   Image,
 } from 'react-native';
 import GuestAIChatPanel from './GuestAIChatPanel';
+import { useEmbeddedChatKeyboardInset } from '../hooks/useEmbeddedChatKeyboardInset';
 
 const AIGuestFloatingWidget = ({ visible, onNavigateLogin }) => {
   const [open, setOpen] = useState(false);
+  const keyboardInset = useEmbeddedChatKeyboardInset();
 
   if (!visible) return null;
 
@@ -28,18 +28,16 @@ const AIGuestFloatingWidget = ({ visible, onNavigateLogin }) => {
       {open && (
         <View style={styles.overlay}>
           <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.panelWrap}>
-            <View style={styles.sheetInner}>
-              <GuestAIChatPanel
-                variant="sheet"
-                onClose={() => setOpen(false)}
-                onPressLogin={() => {
-                  setOpen(false);
-                  onNavigateLogin?.();
-                }}
-              />
-            </View>
-          </KeyboardAvoidingView>
+          <View style={[styles.panelWrap, keyboardInset > 0 && { marginBottom: keyboardInset }]}>
+            <GuestAIChatPanel
+              variant="sheet"
+              onClose={() => setOpen(false)}
+              onPressLogin={() => {
+                setOpen(false);
+                onNavigateLogin?.();
+              }}
+            />
+          </View>
         </View>
       )}
     </>
@@ -79,10 +77,6 @@ const styles = StyleSheet.create({
   },
   panelWrap: {
     width: '100%',
-  },
-  sheetInner: {
-    width: '100%',
-    maxHeight: '85%',
   },
 });
 

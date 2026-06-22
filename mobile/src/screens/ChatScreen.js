@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   RefreshControl,
   Alert,
@@ -15,11 +14,13 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Markdown from 'react-native-markdown-display';
 import Header from '../components/Header';
-import { BotIcon, UserIcon, SendIcon, HistoryIcon, TrashIcon, PlusIcon, MenuIcon } from '../components/Icons';
+import { BotIcon, UserIcon, HistoryIcon, TrashIcon, PlusIcon, MenuIcon } from '../components/Icons';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import { getChatLocationContext, enableChatLocationSharing } from '../utils/chatLocation';
 import ChatLocationToggle from '../components/ChatLocationToggle';
+import ChatPillInput from '../components/ChatPillInput';
+import ChatConversationLayout from '../components/ChatConversationLayout';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +38,7 @@ const ChatScreen = () => {
   const [shareLocation, setShareLocation] = useState(false);
   const messagesEndRef = useRef(null);
   const scrollViewRef = useRef(null);
+  const inputRef = useRef(null);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -72,7 +74,7 @@ const ChatScreen = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, loading]);
 
   const checkAiStatus = async () => {
     try {
@@ -349,6 +351,7 @@ const ChatScreen = () => {
       saveConversations(finalConversations);
     } finally {
       setLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 80);
     }
   };
 
@@ -401,22 +404,6 @@ const ChatScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      
-      {/* Gradient Header */}
-      <View style={styles.headerCard}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>Chat with our AI agent to find volunteer opportunities</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => setSidebarVisible(!sidebarVisible)}
-            style={styles.menuButton}
-          >
-            <MenuIcon size={24} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* Overlay for sidebar */}
       {sidebarVisible && (
@@ -538,24 +525,60 @@ const ChatScreen = () => {
       </Animated.View>
 
       {/* Main Content */}
-      <View style={styles.mainContent}>
-        {/* Chat Area */}
-        <View style={styles.chatArea}>
-          <View style={styles.chatHeader}>
-            <View style={styles.chatHeaderIcon}>
-              <BotIcon size={24} color="#ffffff" />
+      <View style={styles.chatShell}>
+        <ChatConversationLayout
+          style={styles.chatPanel}
+          scrollRef={scrollViewRef}
+          contentContainerStyle={messages.length === 0 ? styles.messagesContentEmpty : undefined}
+          header={(
+            <View style={styles.chatHeader}>
+              <View style={styles.chatHeaderIcon}>
+                <BotIcon size={24} color="#ffffff" />
+              </View>
+              <View style={styles.chatHeaderFlex}>
+                <Text style={styles.chatHeaderTitle}>AI Assistant</Text>
+                <Text style={styles.chatHeaderSubtitle}>Your volunteer support assistant</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setSidebarVisible(!sidebarVisible)}
+                style={styles.chatHeaderMenu}
+              >
+                <MenuIcon size={22} color="#1e293b" />
+              </TouchableOpacity>
             </View>
-            <View>
-              <Text style={styles.chatHeaderTitle}>AI Assistant</Text>
-              <Text style={styles.chatHeaderSubtitle}>Your volunteer support assistant</Text>
-            </View>
-          </View>
-
-      <ScrollView 
-            ref={scrollViewRef}
-        style={styles.messagesContainer}
-        contentContainerStyle={styles.messagesContent}
-      >
+          )}
+          footer={(
+            <>
+              <ChatLocationToggle
+                enabled={shareLocation}
+                disabled={loading || !aiConfigured}
+                onToggle={async (next) => {
+                  if (!next) {
+                    setShareLocation(false);
+                    return;
+                  }
+                  const payload = await enableChatLocationSharing();
+                  if (payload) {
+                    setLocationContext(payload);
+                    setShareLocation(true);
+                  } else {
+                    setShareLocation(false);
+                  }
+                }}
+              />
+              <ChatPillInput
+                ref={inputRef}
+                value={inputMessage}
+                onChangeText={setInputMessage}
+                placeholder={aiConfigured ? 'Message AI assistant...' : 'AI chat is not available'}
+                editable={!loading && aiConfigured}
+                sendDisabled={!inputMessage.trim() || loading || !aiConfigured}
+                onSend={handleSendMessage}
+                keepFocusOnSend
+              />
+            </>
+          )}
+        >
             {messages.length === 0 ? (
               <View style={styles.welcomeContainer}>
                 <View style={styles.welcomeIcon}>
@@ -726,47 +749,7 @@ const ChatScreen = () => {
                 </View>
               </View>
             )}
-      </ScrollView>
-
-      <ChatLocationToggle
-        enabled={shareLocation}
-        disabled={loading || !aiConfigured}
-        onToggle={async (next) => {
-          if (!next) {
-            setShareLocation(false);
-            return;
-          }
-          const payload = await enableChatLocationSharing();
-          if (payload) {
-            setLocationContext(payload);
-            setShareLocation(true);
-          } else {
-            setShareLocation(false);
-          }
-        }}
-      />
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-              placeholder={aiConfigured ? "Type your message here..." : "AI chat is not available"}
-          placeholderTextColor="#9ca3af"
-              value={inputMessage}
-              onChangeText={setInputMessage}
-          multiline
-              editable={!loading && aiConfigured}
-              onSubmitEditing={handleSendMessage}
-            />
-            <TouchableOpacity
-              style={[styles.sendButton, (!inputMessage.trim() || loading || !aiConfigured) && styles.sendButtonDisabled]}
-              onPress={handleSendMessage}
-              disabled={!inputMessage.trim() || loading || !aiConfigured}
-            >
-              <SendIcon size={20} color="#ffffff" />
-        </TouchableOpacity>
-          </View>
-          
-        </View>
+        </ChatConversationLayout>
       </View>
     </View>
   );
@@ -818,12 +801,18 @@ const styles = StyleSheet.create({
     marginRight: 2,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
-  mainContent: {
+  chatShell: {
     flex: 1,
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    gap: 12,
+    marginHorizontal: 12,
+    marginBottom: 4,
+    minHeight: 0,
+  },
+  chatPanel: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   sidebar: {
     position: 'absolute',
@@ -976,20 +965,14 @@ const styles = StyleSheet.create({
   },
   chatArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    minHeight: 0,
   },
   chatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
     backgroundColor: '#f9fafb',
@@ -1011,18 +994,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
   },
-  messagesContainer: {
+  chatHeaderFlex: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
-  messagesContent: {
-    padding: 16,
+  chatHeaderMenu: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+  },
+  messagesContentEmpty: {
+    flexGrow: 1,
   },
   welcomeContainer: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    minHeight: 180,
   },
   welcomeIcon: {
     width: 80,
@@ -1141,42 +1132,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#2563eb',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    backgroundColor: '#ffffff',
-    gap: 8,
-  },
-  input: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#1f2937',
-    maxHeight: 100,
-  },
-  sendButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#2563eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
   },
   aiStatusError: {
     fontSize: 12,

@@ -6,8 +6,6 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,18 +19,12 @@ const LandingScreen = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Re-mount guest chat panel so landing content refreshes consistently.
     setChatRefreshKey((prev) => prev + 1);
     setTimeout(() => setRefreshing(false), 450);
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      >
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
@@ -111,7 +103,6 @@ const LandingScreen = () => {
             </View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -120,9 +111,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: '#1e3a8a',
-  },
-  flex: {
-    flex: 1,
   },
   scroll: {
     flex: 1,
