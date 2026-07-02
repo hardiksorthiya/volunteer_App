@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Dimensions, Keyboard, Platform } from 'react-native';
+import { useKeyboardState } from 'react-native-keyboard-controller';
+import { isExpoGo } from '../utils/runtime';
 
 /** Trim px so the composer sits flush on the keyboard (no small gap). */
 const ANDROID_GAP_TRIM = 14;
@@ -17,10 +19,7 @@ function readKeyboardHeight(event) {
   return height > 0 ? height : 0;
 }
 
-/**
- * Returns current keyboard height in px (0 when hidden).
- */
-export function useKeyboardInset() {
+function useRnKeyboardInset() {
   const [inset, setInset] = useState(() => {
     if (Platform.OS !== 'android') {
       return 0;
@@ -65,6 +64,23 @@ export function useKeyboardInset() {
   }, []);
 
   return inset;
+}
+
+function useControllerKeyboardInset() {
+  return useKeyboardState((state) => (state.isVisible && state.height > 0 ? state.height : 0));
+}
+
+/**
+ * Returns current keyboard height in px (0 when hidden).
+ * Production builds use keyboard-controller for accurate Android edge-to-edge heights.
+ */
+export function useKeyboardInset() {
+  const rnInset = useRnKeyboardInset();
+  const controllerInset = useControllerKeyboardInset();
+  if (isExpoGo()) {
+    return rnInset;
+  }
+  return controllerInset > 0 ? controllerInset : rnInset;
 }
 
 /**

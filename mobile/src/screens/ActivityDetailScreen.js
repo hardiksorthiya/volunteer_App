@@ -8,13 +8,14 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
-  Modal,
   FlatList,
   RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
 import {
   ArrowLeftIcon,
   PlusIcon,
@@ -955,7 +956,7 @@ const ActivityDetailScreen = () => {
   return (
     <View style={styles.container}>
       <Header onNotificationPress={() => {}} />
-      <ScrollView 
+      <KeyboardAwareScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -1302,10 +1303,10 @@ const ActivityDetailScreen = () => {
             </View>
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Progress Update Modal */}
-      <Modal
+      <KeyboardAvoidingModal
         visible={showProgressModal}
         transparent={true}
         animationType="slide"
@@ -1351,7 +1352,7 @@ const ActivityDetailScreen = () => {
             </View>
           </View>
         </View>
-      </Modal>
+      </KeyboardAvoidingModal>
     </View>
   );
 };

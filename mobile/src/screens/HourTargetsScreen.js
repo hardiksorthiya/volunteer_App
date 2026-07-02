@@ -3,17 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Modal,
   TextInput,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
 import Header from '../components/Header';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
 import { ClockIcon } from '../components/Icons';
 
 const toYMD = (dateObj) => {
@@ -231,7 +231,7 @@ const HourTargetsScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.sectionHeader}>
           <View style={styles.iconWrap}>
             <ClockIcon size={20} color="#2563eb" />
@@ -309,9 +309,9 @@ const HourTargetsScreen = () => {
             ))
           )}
         </View>
+      </KeyboardAwareScrollView>
 
-        {/* Modal: add/edit */}
-        <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
+      <KeyboardAvoidingModal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>
@@ -373,8 +373,7 @@ const HourTargetsScreen = () => {
               </View>
             </View>
           </View>
-        </Modal>
-      </ScrollView>
+      </KeyboardAvoidingModal>
     </View>
   );
 };

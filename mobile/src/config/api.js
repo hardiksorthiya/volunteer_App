@@ -6,10 +6,22 @@ const DEFAULT_API_URL = 'https://volunteerconnect.cloud/api';
 const CHAT_TIMEOUT_MS = 60000;
 const DEFAULT_TIMEOUT_MS = 30000;
 
-const API_BASE_URL =
-  Constants.expoConfig?.extra?.apiUrl ||
-  Constants.manifest?.extra?.apiUrl ||
-  DEFAULT_API_URL;
+function resolveApiBaseUrl() {
+  const extra =
+    Constants.expoConfig?.extra ??
+    Constants.manifest?.extra ??
+    Constants.manifest2?.extra?.expoClient?.extra ??
+    {};
+
+  const url = extra.apiUrl;
+  if (typeof url === 'string' && url.trim().length > 0) {
+    return url.trim().replace(/\/$/, '');
+  }
+
+  return DEFAULT_API_URL;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -19,7 +31,9 @@ const api = axios.create({
   timeout: DEFAULT_TIMEOUT_MS,
 });
 
-console.log('API Base URL:', API_BASE_URL);
+if (__DEV__) {
+  console.log('API Base URL:', API_BASE_URL);
+}
 
 export const getFullImageUrl = (path) => {
   if (!path) return null;

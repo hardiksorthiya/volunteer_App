@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
@@ -13,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
 import ScreenBackButton from '../components/ScreenBackButton';
 import api from '../config/api';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
 
 const ChangePasswordScreen = () => {
   const navigation = useNavigation();
@@ -123,10 +123,9 @@ const ChangePasswordScreen = () => {
     <View style={styles.container}>
       <Header onNotificationPress={handleNotificationPress} />
       <ScreenBackButton />
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>Change Password</Text>
         <Text style={styles.subtitle}>
@@ -260,7 +259,7 @@ const ChangePasswordScreen = () => {
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

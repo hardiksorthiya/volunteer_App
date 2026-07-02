@@ -29,6 +29,7 @@ import {
   CheckIcon,
 } from '../components/Icons';
 import Header from '../components/Header';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
 
 const EditActivityScreen = () => {
   const route = useRoute();
@@ -459,7 +460,7 @@ const EditActivityScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -1178,7 +1179,7 @@ const EditActivityScreen = () => {
             )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

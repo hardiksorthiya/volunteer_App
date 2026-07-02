@@ -33,9 +33,22 @@ fi
 
 pm2 save
 
+# Ensure PM2 restarts after server reboot (safe if already configured).
+if command -v systemctl >/dev/null 2>&1; then
+  if ! systemctl is-enabled "pm2-${USER}" >/dev/null 2>&1 && ! systemctl is-enabled pm2-root >/dev/null 2>&1; then
+    echo "==> Enabling PM2 on system boot..."
+    pm2 startup systemd -u "$USER" --hp "$HOME" 2>/dev/null | tail -1 | bash 2>/dev/null || true
+    pm2 save
+  fi
+fi
+
+sleep 3
+bash scripts/show-client-link.sh 2>/dev/null || true
+
 echo ""
-echo "Expo tunnel service started."
-echo "  Status: npm run pm2:status"
-echo "  Logs:   npm run pm2:logs"
-echo "  URL:    cat logs/tunnel-url.txt  (available ~30s after start)"
+echo "Expo tunnel runs in the background — safe to close Cursor."
+echo "  Client link:  npm run share"
+echo "  Status:       npm run pm2:status"
+echo "  Logs:         npm run pm2:logs"
+echo "  Restart:      npm run pm2:restart"
 echo ""

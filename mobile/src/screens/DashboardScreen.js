@@ -3,14 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
   FlatList,
   Dimensions,
   RefreshControl,
-  Modal,
   TextInput,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -18,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { PieChart } from 'react-native-chart-kit';
 import Header from '../components/Header';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
 import TaskHoursByActivityChart from '../components/TaskHoursByActivityChart';
 import api from '../config/api';
 
@@ -596,7 +596,7 @@ const DashboardScreen = () => {
   return (
     <View style={styles.container}>
       <Header onNotificationPress={handleNotificationPress} />
-      <ScrollView 
+      <KeyboardAwareScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -896,10 +896,10 @@ const DashboardScreen = () => {
             </View>
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Hour target modal */}
-      <Modal
+      <KeyboardAvoidingModal
         visible={showHourTargetModal}
         transparent
         animationType="fade"
@@ -988,7 +988,7 @@ const DashboardScreen = () => {
             </View>
           </View>
         </View>
-      </Modal>
+      </KeyboardAvoidingModal>
     </View>
   );
 };

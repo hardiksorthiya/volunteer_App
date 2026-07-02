@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Image,
   TextInput,
   TouchableOpacity,
@@ -18,6 +17,7 @@ import { ensureMediaLibraryPermission, ensureCameraPermission } from '../utils/a
 import Header from '../components/Header';
 import ScreenBackButton from '../components/ScreenBackButton';
 import api, { getFullImageUrl } from '../config/api';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -328,10 +328,9 @@ const EditProfileScreen = () => {
     <View style={styles.container}>
       <Header onNotificationPress={handleNotificationPress} />
       <ScreenBackButton />
-      <ScrollView 
+      <KeyboardAwareScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
@@ -468,7 +467,7 @@ const EditProfileScreen = () => {
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

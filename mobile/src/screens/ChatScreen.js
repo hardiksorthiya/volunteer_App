@@ -1,1150 +1,346 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  ScrollView,
+  FlatList,
+  TextInput,
   TouchableOpacity,
-  RefreshControl,
-  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
   ActivityIndicator,
-  Dimensions,
-  Animated,
+  Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Markdown from 'react-native-markdown-display';
-import Header from '../components/Header';
-import { BotIcon, UserIcon, HistoryIcon, TrashIcon, PlusIcon, MenuIcon } from '../components/Icons';
+import { useFocusEffect } from '@react-navigation/native';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
-import { getChatLocationContext, enableChatLocationSharing } from '../utils/chatLocation';
-import ChatLocationToggle from '../components/ChatLocationToggle';
-import ChatPillInput from '../components/ChatPillInput';
-import ChatConversationLayout from '../components/ChatConversationLayout';
+import {
+  getChatLocationContext,
+  getLocationPermissionState,
+  enableChatLocationSharing,
+} from '../utils/chatLocation';
 
-const { width } = Dimensions.get('window');
+const STORAGE_KEY = 'chatConversations';
+const LOCATION_DISMISSED_KEY = 'chatLocationDismissed';
 
-const ChatScreen = () => {
-  const [conversations, setConversations] = useState([]);
-  const [currentConversationId, setCurrentConversationId] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [aiConfigured, setAiConfigured] = useState(true);
-  const [aiStatusMessage, setAiStatusMessage] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [locationContext, setLocationContext] = useState(null);
-  const [shareLocation, setShareLocation] = useState(false);
-  const messagesEndRef = useRef(null);
-  const scrollViewRef = useRef(null);
+export default function ChatScreen() {
+  const insets = useSafeAreaInsets();
+  const listRef = useRef(null);
   const inputRef = useRef(null);
-  const sidebarAnimation = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    const loadData = async () => {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        return;
-      }
-      loadConversations();
-      checkAiStatus();
-    };
-    loadData();
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [aiOk, setAiOk] = useState(true);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [chats, setChats] = useState([]);
+  const [chatId, setChatId] = useState(null);
+  const [locationGranted, setLocationGranted] = useState(false);
+  const [locationLabel, setLocationLabel] = useState(null);
+  const [showLocationBar, setShowLocationBar] = useState(false);
+
+  const refreshLocation = useCallback(async () => {
+    const dismissed = await AsyncStorage.getItem(LOCATION_DISMISSED_KEY);
+    const state = await getLocationPermissionState();
+    setLocationGranted(state.granted);
+
+    if (state.granted) {
+      const ctx = await getChatLocationContext();
+      if (ctx?.label) setLocationLabel(ctx.label);
+      setShowLocationBar(false);
+      return;
+    }
+
+    setShowLocationBar(dismissed !== 'true');
   }, []);
 
   useEffect(() => {
-    if (currentConversationId) {
-      const conversation = conversations.find(c => c.id === currentConversationId);
-      if (conversation) {
-        setMessages(conversation.messages || []);
-      }
-    } else {
-      setMessages([]);
-    }
-  }, [currentConversationId, conversations]);
+    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      if (!raw) return;
+      try {
+        const list = JSON.parse(raw);
+        setChats(list);
+        if (list[0]) {
+          setChatId(list[0].id);
+          setMessages(list[0].messages || []);
+        }
+      } catch (_) {}
+    });
+    api.get('/chat/status').then((r) => setAiOk(!!r.data?.configured)).catch(() => setAiOk(false));
+    refreshLocation();
+  }, [refreshLocation]);
+
+  useFocusEffect(useCallback(() => { refreshLocation(); }, [refreshLocation]));
 
   useEffect(() => {
-    Animated.timing(sidebarAnimation, {
-      toValue: sidebarVisible ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [sidebarVisible]);
-
-  useEffect(() => {
-    scrollToBottom();
+    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 60);
   }, [messages, loading]);
 
-  const checkAiStatus = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setAiConfigured(false);
-        setAiStatusMessage('Please log in to use AI chat');
-        return;
-      }
-      const response = await api.get('/chat/status');
-      if (response.data.success) {
-        setAiConfigured(response.data.configured);
-        setAiStatusMessage(response.data.message);
-        if (!response.data.configured) {
-          console.warn('⚠️ AI Chat not configured:', response.data.message);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking AI status:', error);
-      if (error.response?.status === 401) {
-        setAiConfigured(false);
-        setAiStatusMessage('Please log in to use AI chat');
-      } else if (error.response?.status === 503) {
-        setAiConfigured(false);
-        setAiStatusMessage(error.response?.data?.message || 'AI chat service is not configured');
-      } else {
-        setAiConfigured(false);
-        setAiStatusMessage(error.response?.data?.message || 'Unable to check AI chat status');
-      }
-    }
+  const persist = (list) => {
+    setChats(list);
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   };
 
-  const loadConversations = () => {
-    AsyncStorage.getItem('chatConversations').then(savedConversations => {
-      if (savedConversations) {
-        try {
-          const parsed = JSON.parse(savedConversations);
-          setConversations(parsed);
-          if (parsed.length > 0) {
-            const mostRecent = parsed.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
-            setCurrentConversationId(mostRecent.id);
-          }
-        } catch (error) {
-          console.error('Error loading conversations:', error);
-        }
-      }
-    });
+  const saveMessages = (id, nextMessages, title) => {
+    const list = chats.some((c) => c.id === id)
+      ? chats.map((c) =>
+          c.id === id
+            ? { ...c, messages: nextMessages, title: title || c.title, updatedAt: new Date().toISOString() }
+            : c,
+        )
+      : [{ id, title: title || 'Chat', messages: nextMessages, updatedAt: new Date().toISOString() }, ...chats];
+    persist(list);
   };
 
-  const saveConversations = (updatedConversations) => {
-    try {
-      AsyncStorage.setItem('chatConversations', JSON.stringify(updatedConversations));
-      setConversations(updatedConversations);
-    } catch (error) {
-      console.error('Error saving conversations:', error);
-    }
+  const hideLocationBar = async () => {
+    await AsyncStorage.setItem(LOCATION_DISMISSED_KEY, 'true');
+    setShowLocationBar(false);
   };
 
-  const createNewConversation = () => {
-    const newConversation = {
-      id: Date.now(),
-      title: 'New Conversation',
-      messages: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    const updated = [newConversation, ...conversations];
-    saveConversations(updated);
-    setCurrentConversationId(newConversation.id);
-    setMessages([]);
+  const onAllowLocation = async () => {
+    const payload = await enableChatLocationSharing();
+    await hideLocationBar();
+    await refreshLocation();
+    if (payload?.label) setLocationLabel(payload.label);
   };
 
-  const selectConversation = (conversationId) => {
-    setCurrentConversationId(conversationId);
-    setSidebarVisible(false); // Close sidebar when conversation is selected
-  };
+  const onDenyLocation = () => hideLocationBar();
 
-  const deleteConversation = (conversationId) => {
+  const onInfoPress = () => {
     Alert.alert(
-      'Delete Conversation',
-      'Are you sure you want to delete this conversation?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            const updated = conversations.filter(c => c.id !== conversationId);
-            saveConversations(updated);
-            if (conversationId === currentConversationId) {
-              if (updated.length > 0) {
-                setCurrentConversationId(updated[0].id);
-              } else {
-                setCurrentConversationId(null);
-                setMessages([]);
-              }
-            }
-          }
-        }
-      ]
+      'Location',
+      locationGranted
+        ? `Location is enabled${locationLabel ? ` (${locationLabel})` : ''}.`
+        : 'Enable location so AI can suggest nearby volunteer activities.',
+      locationGranted
+        ? [{ text: 'OK' }]
+        : [
+            { text: 'Not now', style: 'cancel' },
+            { text: 'Allow', onPress: onAllowLocation },
+          ],
     );
   };
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  };
+  const send = async () => {
+    const msg = text.trim();
+    if (!msg || loading || !aiOk) return;
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || loading) return;
+    let id = chatId || Date.now();
+    if (!chatId) setChatId(id);
 
-    let conversationId = currentConversationId;
-    if (!conversationId) {
-      const newConversation = {
-        id: Date.now(),
-        title: inputMessage.trim().substring(0, 30) + (inputMessage.trim().length > 30 ? '...' : ''),
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      conversationId = newConversation.id;
-      const updated = [newConversation, ...conversations];
-      saveConversations(updated);
-      setCurrentConversationId(conversationId);
-    }
-
-    const userMessage = {
-      id: Date.now(),
-      text: inputMessage.trim(),
-      sender: 'user',
-      timestamp: new Date().toISOString()
-    };
-
-    const currentConversation = conversations.find(c => c.id === conversationId);
-    let conversationTitle = currentConversation?.title || 'New Conversation';
-    if (currentConversation && currentConversation.messages.length === 0) {
-      conversationTitle = inputMessage.trim().substring(0, 30) + (inputMessage.trim().length > 30 ? '...' : '');
-    }
-
-    const messageToSend = inputMessage.trim();
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInputMessage('');
+    const userMsg = { id: Date.now(), sender: 'user', text: msg };
+    const next = [...messages, userMsg];
+    setMessages(next);
+    setText('');
     setLoading(true);
+    saveMessages(id, next, msg.slice(0, 28));
 
-    const updatedConversations = conversations.map(conv => {
-      if (conv.id === conversationId) {
-        return {
-          ...conv,
-          title: conversationTitle,
-          messages: updatedMessages,
-          updatedAt: new Date().toISOString()
-        };
-      }
-      return conv;
-    });
-    saveConversations(updatedConversations);
-
-    const conversationHistory = updatedMessages.slice(0, -1).map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.text
+    const history = next.slice(0, -1).map((m) => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text,
     }));
 
+    let locationContext = null;
+    if (locationGranted) {
+      locationContext = (await getChatLocationContext()) || null;
+    }
+
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found. Please log in again.');
-      }
-
-      let freshLocation = null;
-      if (shareLocation) {
-        freshLocation = (await getChatLocationContext()) || locationContext;
-        if (freshLocation) {
-          setLocationContext(freshLocation);
-        }
-      }
-
-      const response = await api.post('/chat', {
-        message: messageToSend,
-        conversationHistory: conversationHistory,
-        locationContext: freshLocation,
-      });
-
-      if (response.data.success) {
-        const aiMessage = {
-          id: Date.now() + 1,
-          text: response.data.message,
-          sender: 'ai',
-          timestamp: new Date().toISOString()
-        };
-
-        const finalMessages = [...updatedMessages, aiMessage];
-        setMessages(finalMessages);
-
-        const finalConversations = updatedConversations.map(conv => {
-          if (conv.id === conversationId) {
-            return {
-              ...conv,
-              messages: finalMessages,
-              updatedAt: new Date().toISOString()
-            };
-          }
-          return conv;
-        });
-        saveConversations(finalConversations);
-      } else {
-        throw new Error(response.data.message || 'Failed to get AI response');
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-      
-      if (error.response?.status === 401) {
-        const errorMessage = {
-          id: Date.now() + 1,
-          text: 'Your session has expired. Please log in again.',
-          sender: 'ai',
-          timestamp: new Date().toISOString()
-        };
-        const finalMessages = [...updatedMessages, errorMessage];
-        setMessages(finalMessages);
-        return;
-      }
-      
-      if (error.response?.status === 503) {
-        const errorMessage = {
-          id: Date.now() + 1,
-          text: 'AI chat is not configured. Please contact the administrator to set up OpenAI API key.',
-          sender: 'ai',
-          timestamp: new Date().toISOString()
-        };
-        const finalMessages = [...updatedMessages, errorMessage];
-        setMessages(finalMessages);
-        
-        const finalConversations = updatedConversations.map(conv => {
-          if (conv.id === conversationId) {
-            return {
-              ...conv,
-              messages: finalMessages,
-              updatedAt: new Date().toISOString()
-            };
-          }
-          return conv;
-        });
-        saveConversations(finalConversations);
-        return;
-      }
-      
-      const errorMessage = {
-        id: Date.now() + 1,
-        text: getApiErrorMessage(error, 'Failed to get AI response. Please try again.'),
-        sender: 'ai',
-        timestamp: new Date().toISOString()
-      };
-
-      const finalMessages = [...updatedMessages, errorMessage];
-      setMessages(finalMessages);
-
-      const finalConversations = updatedConversations.map(conv => {
-        if (conv.id === conversationId) {
-          return {
-            ...conv,
-            messages: finalMessages,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return conv;
-      });
-      saveConversations(finalConversations);
+      const res = await api.post('/chat', { message: msg, conversationHistory: history, locationContext });
+      const withAi = [...next, { id: Date.now() + 1, sender: 'ai', text: res.data.message || 'No response.' }];
+      setMessages(withAi);
+      saveMessages(id, withAi);
+    } catch (e) {
+      const withAi = [...next, { id: Date.now() + 1, sender: 'ai', text: getApiErrorMessage(e, 'Try again.') }];
+      setMessages(withAi);
+      saveMessages(id, withAi);
     } finally {
       setLoading(false);
-      setTimeout(() => inputRef.current?.focus(), 80);
-    }
-  };
-
-  const handleClearAllHistory = () => {
-    Alert.alert(
-      'Clear All History',
-      'Are you sure you want to clear all chat history?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear All',
-          style: 'destructive',
-          onPress: () => {
-            setConversations([]);
-            setCurrentConversationId(null);
-            setMessages([]);
-            AsyncStorage.removeItem('chatConversations');
-          }
-        }
-      ]
-    );
-  };
-
-  const getConversationPreview = (conversation) => {
-    if (conversation.messages.length === 0) return 'New conversation';
-    const lastMessage = conversation.messages[conversation.messages.length - 1];
-    return lastMessage.text.substring(0, 50) + (lastMessage.text.length > 50 ? '...' : '');
-  };
-
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now - date) / (1000 * 60 * 60);
-
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Header />
+    <View style={styles.root}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 8) }]}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => setHistoryOpen(true)}>
+          <Text style={styles.iconText}>☰</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>AI Assistant</Text>
+        <TouchableOpacity style={styles.iconBtn} onPress={onInfoPress}>
+          <Text style={styles.iconText}>ⓘ</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Overlay for sidebar */}
-      {sidebarVisible && (
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={() => setSidebarVisible(false)}
-        />
-      )}
-
-      {/* Full-height History Sidebar */}
-      <Animated.View style={[
-        styles.sidebar,
-        {
-          transform: [{
-            translateX: sidebarAnimation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [-width, 0],
-            }),
-          }],
-        },
-      ]}>
-        <View style={styles.sidebarHeader}>
-          <View style={styles.sidebarHeaderLeft}>
-            <HistoryIcon size={20} color="#2563eb" />
-            <Text style={styles.sidebarTitle}>Chat History</Text>
-          </View>
-          <View style={styles.sidebarHeaderRight}>
-            <TouchableOpacity
-              onPress={createNewConversation}
-              style={styles.newConversationButton}
-            >
-              <PlusIcon size={18} color="#ffffff" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setSidebarVisible(false)}
-              style={styles.closeSidebarButton}
-            >
-              <Text style={styles.closeSidebarText}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <ScrollView
-          style={styles.historyList}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={async () => {
-                setRefreshing(true);
-                loadConversations();
-                await checkAiStatus();
-                setRefreshing(false);
-              }}
-              colors={['#2563eb']}
-              tintColor="#2563eb"
-            />
-          }
-        >
-          {conversations.length === 0 ? (
-            <View style={styles.emptyHistory}>
-              <Text style={styles.emptyHistoryText}>No conversations yet</Text>
-              <Text style={styles.emptyHistorySubtext}>Start a new chat to begin!</Text>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <FlatList
+          ref={listRef}
+          data={messages}
+          keyExtractor={(item) => String(item.id)}
+          style={styles.flex}
+          contentContainerStyle={styles.list}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          ListEmptyComponent={<Text style={styles.empty}>Ask about volunteering.</Text>}
+          ListFooterComponent={loading ? <ActivityIndicator style={styles.loader} color="#2563eb" /> : null}
+          renderItem={({ item }) => (
+            <View style={[styles.bubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
+              <Text style={item.sender === 'user' ? styles.textUser : styles.textAi}>{item.text}</Text>
             </View>
-          ) : (
-            conversations
-              .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-              .map((conversation) => (
-                <TouchableOpacity
-                  key={conversation.id}
-                  style={[
-                    styles.conversationItem,
-                    currentConversationId === conversation.id && styles.conversationItemActive
-                  ]}
-                  onPress={() => selectConversation(conversation.id)}
-                >
-                  <View style={styles.conversationContent}>
-                    <Text style={[
-                      styles.conversationTitle,
-                      currentConversationId === conversation.id && styles.conversationTitleActive
-                    ]}>
-                      {conversation.title}
-                    </Text>
-                    <Text style={[
-                      styles.conversationPreview,
-                      currentConversationId === conversation.id && styles.conversationPreviewActive
-                    ]}>
-                      {getConversationPreview(conversation)}
-                    </Text>
-                    <Text style={[
-                      styles.conversationTime,
-                      currentConversationId === conversation.id && styles.conversationTimeActive
-                    ]}>
-                      {formatTime(conversation.updatedAt)}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => deleteConversation(conversation.id)}
-                    style={styles.deleteButton}
-                  >
-                    <TrashIcon size={16} color={currentConversationId === conversation.id ? '#ffffff' : '#dc2626'} />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              ))
           )}
-        </ScrollView>
+        />
 
-        {conversations.length > 0 && (
-          <View style={styles.sidebarFooter}>
-            <TouchableOpacity
-              onPress={handleClearAllHistory}
-              style={styles.clearAllButton}
-            >
-              <TrashIcon size={16} color="#dc2626" />
-              <Text style={styles.clearAllButtonText}>Clear All</Text>
-            </TouchableOpacity>
+        {showLocationBar && (
+          <View style={styles.locBar}>
+            <Text style={styles.locLabel}>Allow location for nearby suggestions?</Text>
+            <View style={styles.locRow}>
+              <Pressable style={styles.locBtnGray} onPress={onDenyLocation}>
+                <Text style={styles.locBtnGrayText}>Deny</Text>
+              </Pressable>
+              <Pressable style={styles.locBtnBlue} onPress={onAllowLocation}>
+                <Text style={styles.locBtnBlueText}>Allow</Text>
+              </Pressable>
+            </View>
           </View>
         )}
-      </Animated.View>
 
-      {/* Main Content */}
-      <View style={styles.chatShell}>
-        <ChatConversationLayout
-          style={styles.chatPanel}
-          scrollRef={scrollViewRef}
-          contentContainerStyle={messages.length === 0 ? styles.messagesContentEmpty : undefined}
-          header={(
-            <View style={styles.chatHeader}>
-              <View style={styles.chatHeaderIcon}>
-                <BotIcon size={24} color="#ffffff" />
-              </View>
-              <View style={styles.chatHeaderFlex}>
-                <Text style={styles.chatHeaderTitle}>AI Assistant</Text>
-                <Text style={styles.chatHeaderSubtitle}>Your volunteer support assistant</Text>
-              </View>
+        <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            value={text}
+            onChangeText={setText}
+            placeholder={aiOk ? 'Message…' : 'AI unavailable'}
+            placeholderTextColor="#94a3b8"
+            editable={aiOk && !loading}
+            multiline
+          />
+          <TouchableOpacity
+            style={[styles.send, (!text.trim() || loading) && styles.sendOff]}
+            onPress={send}
+            disabled={!text.trim() || loading}
+          >
+            <Text style={styles.sendLabel}>↑</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+
+      <Modal visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
+        <View style={[styles.modal, { paddingTop: Math.max(insets.top, 12) }]}>
+          <View style={styles.modalHead}>
+            <Text style={styles.modalTitle}>Chats</Text>
+            <Pressable onPress={() => setHistoryOpen(false)}>
+              <Text style={styles.done}>Done</Text>
+            </Pressable>
+          </View>
+          <TouchableOpacity
+            style={styles.newBtn}
+            onPress={() => {
+              setChatId(null);
+              setMessages([]);
+              setHistoryOpen(false);
+            }}
+          >
+            <Text style={styles.newBtnText}>+ New chat</Text>
+          </TouchableOpacity>
+          <FlatList
+            data={chats}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => setSidebarVisible(!sidebarVisible)}
-                style={styles.chatHeaderMenu}
-              >
-                <MenuIcon size={22} color="#1e293b" />
-              </TouchableOpacity>
-            </View>
-          )}
-          footer={(
-            <>
-              <ChatLocationToggle
-                enabled={shareLocation}
-                disabled={loading || !aiConfigured}
-                onToggle={async (next) => {
-                  if (!next) {
-                    setShareLocation(false);
-                    return;
-                  }
-                  const payload = await enableChatLocationSharing();
-                  if (payload) {
-                    setLocationContext(payload);
-                    setShareLocation(true);
-                  } else {
-                    setShareLocation(false);
-                  }
+                style={styles.chatRow}
+                onPress={() => {
+                  setChatId(item.id);
+                  setMessages(item.messages || []);
+                  setHistoryOpen(false);
                 }}
-              />
-              <ChatPillInput
-                ref={inputRef}
-                value={inputMessage}
-                onChangeText={setInputMessage}
-                placeholder={aiConfigured ? 'Message AI assistant...' : 'AI chat is not available'}
-                editable={!loading && aiConfigured}
-                sendDisabled={!inputMessage.trim() || loading || !aiConfigured}
-                onSend={handleSendMessage}
-                keepFocusOnSend
-              />
-            </>
-          )}
-        >
-            {messages.length === 0 ? (
-              <View style={styles.welcomeContainer}>
-                <View style={styles.welcomeIcon}>
-                  <BotIcon size={40} color="#ffffff" />
-                </View>
-                <Text style={styles.welcomeTitle}>Welcome to AI Chat!</Text>
-                <Text style={styles.welcomeText}>I'm here to help you with:</Text>
-                <View style={styles.welcomeList}>
-                  <Text style={styles.welcomeListItem}>• Finding volunteer opportunities</Text>
-                  <Text style={styles.welcomeListItem}>• Answering questions about events</Text>
-                </View>
-                <Text style={styles.welcomeFooter}>Start a conversation by typing a message below!</Text>
-              </View>
-            ) : (
-              messages.map((message) => (
-          <View
-                  key={message.id}
-            style={[
-                    styles.messageRow,
-                    message.sender === 'user' ? styles.messageRowUser : styles.messageRowAi
-                  ]}
-                >
-                  {message.sender === 'ai' && (
-                    <View style={styles.messageAvatar}>
-                      <BotIcon size={20} color="#ffffff" />
-                    </View>
-                  )}
-                  <View style={[
-                    styles.messageBubble,
-                    message.sender === 'user' ? styles.userMessageBubble : styles.aiMessageBubble
-                  ]}>
-                    {message.sender === 'ai' ? (
-                      <Markdown
-                        style={{
-                          body: {
-                            color: styles.aiMessageText.color,
-                            fontSize: styles.messageText.fontSize,
-                          },
-                          text: {
-                            color: styles.aiMessageText.color,
-                            fontSize: styles.messageText.fontSize,
-                          },
-                          code_inline: {
-                            backgroundColor: '#f0f0f0',
-                            color: '#c7254e',
-                            paddingHorizontal: 6,
-                            paddingVertical: 2,
-                            borderRadius: 4,
-                            fontFamily: 'Courier New',
-                            fontSize: 12,
-                          },
-                          code_block: {
-                            backgroundColor: '#1e293b',
-                            color: '#e2e8f0',
-                            padding: 12,
-                            borderRadius: 6,
-                            marginVertical: 8,
-                            fontFamily: 'Courier New',
-                            fontSize: 11,
-                          },
-                          heading1: {
-                            fontSize: 24,
-                            fontWeight: 'bold',
-                            marginVertical: 8,
-                            color: styles.aiMessageText.color,
-                          },
-                          heading2: {
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                            marginVertical: 6,
-                            color: styles.aiMessageText.color,
-                          },
-                          heading3: {
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            marginVertical: 6,
-                            color: styles.aiMessageText.color,
-                          },
-                          bullet_list: {
-                            marginLeft: 20,
-                            marginVertical: 6,
-                          },
-                          list_item: {
-                            marginVertical: 4,
-                          },
-                          blockquote: {
-                            borderLeftColor: '#94a3b8',
-                            borderLeftWidth: 4,
-                            paddingLeft: 12,
-                            marginVertical: 8,
-                            fontStyle: 'italic',
-                            color: '#64748b',
-                          },
-                          link: {
-                            color: '#2563eb',
-                            textDecorationLine: 'underline',
-                          },
-                          hr: {
-                            backgroundColor: '#d1d5db',
-                            height: 1,
-                            marginVertical: 12,
-                          },
-                          strong: {
-                            fontWeight: 'bold',
-                          },
-                          em: {
-                            fontStyle: 'italic',
-                          },
-                          table: {
-                            borderWidth: 1,
-                            borderColor: '#d1d5db',
-                            marginVertical: 8,
-                          },
-                          thead: {
-                            backgroundColor: '#f3f4f6',
-                          },
-                          th: {
-                            flex: 1,
-                            padding: 8,
-                            borderColor: '#d1d5db',
-                            borderWidth: 1,
-                            fontWeight: 'bold',
-                          },
-                          td: {
-                            flex: 1,
-                            padding: 8,
-                            borderColor: '#d1d5db',
-                            borderWidth: 1,
-                          },
-                        }}
-                      >
-                        {message.text}
-                      </Markdown>
-                    ) : (
-                      <Text style={[
-                        styles.messageText,
-                        styles.userMessageText
-                      ]}>
-                        {message.text}
-                      </Text>
-                    )}
-                    <Text style={[
-                      styles.messageTime,
-                      message.sender === 'user' ? styles.userMessageTime : styles.aiMessageTime
-                    ]}>
-                      {formatTime(message.timestamp)}
-                    </Text>
-                  </View>
-                  {message.sender === 'user' && (
-                    <View style={styles.messageAvatarUser}>
-                      <UserIcon size={20} color="#6b7280" />
-                    </View>
-                  )}
-                </View>
-              ))
+              >
+                <Text numberOfLines={1}>{item.title}</Text>
+              </TouchableOpacity>
             )}
-            {loading && (
-              <View style={styles.messageRow}>
-                <View style={styles.messageAvatar}>
-                  <BotIcon size={20} color="#ffffff" />
-                </View>
-                <View style={styles.loadingBubble}>
-                  <View style={styles.loadingDots}>
-                    <View style={[styles.loadingDot, { animationDelay: '0s' }]} />
-                    <View style={[styles.loadingDot, { animationDelay: '0.2s' }]} />
-                    <View style={[styles.loadingDot, { animationDelay: '0.4s' }]} />
-                  </View>
-                </View>
-              </View>
-            )}
-        </ChatConversationLayout>
-      </View>
+          />
+        </View>
+      </Modal>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  headerCard: {
-    borderRadius: 16,
-    padding: 20,
-    margin: 16,
-    marginBottom: 16,
-    backgroundColor: '#1e3a8a',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  headerContent: {
+  root: { flex: 1, backgroundColor: '#f1f5f9' },
+  flex: { flex: 1 },
+  header: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flex: 1,
-    paddingRight: 14,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 6,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#ffffff',
-    opacity: 0.9,
-  },
-  menuButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  chatShell: {
-    flex: 1,
-    marginHorizontal: 12,
-    marginBottom: 4,
-    minHeight: 0,
-  },
-  chatPanel: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  sidebar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: width * 0.8,
-    maxWidth: 320,
-    backgroundColor: '#ffffff',
-    zIndex: 999,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.35)',
-    zIndex: 998,
-  },
-  sidebarHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 8,
+    paddingBottom: 10,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#e2e8f0',
   },
-  sidebarHeaderRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  closeSidebarButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeSidebarText: {
-    fontSize: 18,
-    color: '#6b7280',
-    fontWeight: '600',
-  },
-  sidebarHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sidebarTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1e293b',
-  },
-  newConversationButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#2563eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  historyList: {
-    flex: 1,
-  },
-  emptyHistory: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyHistoryText: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  emptyHistorySubtext: {
-    fontSize: 14,
-    color: '#9ca3af',
-  },
-  conversationItem: {
-    flexDirection: 'row',
+  title: { fontSize: 17, fontWeight: '700', color: '#0f172a' },
+  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  iconText: { fontSize: 20, color: '#2563eb' },
+  list: { padding: 12, flexGrow: 1 },
+  empty: { textAlign: 'center', color: '#64748b', marginTop: 48 },
+  loader: { marginVertical: 12 },
+  bubble: { maxWidth: '85%', padding: 12, borderRadius: 14, marginBottom: 8 },
+  bubbleUser: { alignSelf: 'flex-end', backgroundColor: '#2563eb' },
+  bubbleAi: { alignSelf: 'flex-start', backgroundColor: '#fff' },
+  textUser: { color: '#fff', fontSize: 15 },
+  textAi: { color: '#0f172a', fontSize: 15 },
+  locBar: {
+    backgroundColor: '#eff6ff',
     padding: 12,
-    marginHorizontal: 8,
-    marginVertical: 4,
-    borderRadius: 8,
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  conversationItemActive: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
-  },
-  conversationContent: {
-    flex: 1,
-  },
-  conversationTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  conversationTitleActive: {
-    color: '#ffffff',
-  },
-  conversationPreview: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  conversationPreviewActive: {
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  conversationTime: {
-    fontSize: 11,
-    color: '#9ca3af',
-  },
-  conversationTimeActive: {
-    color: 'rgba(255, 255, 255, 0.7)',
-  },
-  deleteButton: {
-    padding: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sidebarFooter: {
-    padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#bfdbfe',
   },
-  clearAllButton: {
+  locLabel: { fontSize: 13, color: '#1e40af', marginBottom: 8 },
+  locRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  locBtnGray: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#e2e8f0' },
+  locBtnGrayText: { color: '#475569', fontWeight: '600' },
+  locBtnBlue: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#2563eb' },
+  locBtnBlueText: { color: '#fff', fontWeight: '600' },
+  composer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-end',
     gap: 8,
     padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#dc2626',
-    backgroundColor: 'transparent',
+    paddingTop: 8,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
   },
-  clearAllButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#dc2626',
-  },
-  chatArea: {
+  input: {
     flex: 1,
-    minHeight: 0,
-  },
-  chatHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    backgroundColor: '#f9fafb',
-  },
-  chatHeaderIcon: {
-    width: 40,
-    height: 40,
+    minHeight: 42,
+    maxHeight: 100,
+    backgroundColor: '#f1f5f9',
     borderRadius: 20,
-    backgroundColor: '#2563eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chatHeaderTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1e293b',
-  },
-  chatHeaderSubtitle: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  chatHeaderFlex: {
-    flex: 1,
-  },
-  chatHeaderMenu: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f3f4f6',
-  },
-  messagesContentEmpty: {
-    flexGrow: 1,
-  },
-  welcomeContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-    minHeight: 180,
-  },
-  welcomeIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#2563eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 12,
-  },
-  welcomeText: {
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
     fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 16,
+    color: '#0f172a',
   },
-  welcomeList: {
-    alignItems: 'flex-start',
-    marginBottom: 24,
-  },
-  welcomeListItem: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  welcomeFooter: {
-    fontSize: 14,
-    color: '#9ca3af',
-  },
-  messageRow: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'flex-end',
-  },
-  messageRowUser: {
-    justifyContent: 'flex-end',
-  },
-  messageRowAi: {
-    justifyContent: 'flex-start',
-  },
-  messageAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  send: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#2563eb',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  messageAvatarUser: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#e5e7eb',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
   },
-  messageBubble: {
-    maxWidth: '75%',
-    padding: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  userMessageBubble: {
-    backgroundColor: '#2563eb',
-  },
-  aiMessageBubble: {
-    backgroundColor: '#ffffff',
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  userMessageText: {
-    color: '#ffffff',
-  },
-  aiMessageText: {
-    color: '#1f2937',
-  },
-  messageTime: {
-    fontSize: 11,
-    marginTop: 4,
-  },
-  userMessageTime: {
-    color: 'rgba(255, 255, 255, 0.7)',
-  },
-  aiMessageTime: {
-    color: '#9ca3af',
-  },
-  loadingBubble: {
-    backgroundColor: '#ffffff',
-    padding: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  loadingDots: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  loadingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2563eb',
-  },
-  aiStatusError: {
-    fontSize: 12,
-    color: '#dc2626',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  aiStatusText: {
-    fontSize: 12,
-    color: '#6b7280',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
+  sendOff: { opacity: 0.4 },
+  sendLabel: { color: '#fff', fontSize: 20, fontWeight: '700' },
+  modal: { flex: 1, backgroundColor: '#f8fafc' },
+  modalHead: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, backgroundColor: '#fff' },
+  modalTitle: { fontSize: 18, fontWeight: '700' },
+  done: { color: '#2563eb', fontWeight: '600' },
+  newBtn: { margin: 12, padding: 12, backgroundColor: '#2563eb', borderRadius: 10, alignItems: 'center' },
+  newBtnText: { color: '#fff', fontWeight: '600' },
+  chatRow: { padding: 14, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
 });
-
-export default ChatScreen;

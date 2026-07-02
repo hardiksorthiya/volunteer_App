@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { SendIcon, BotIcon, UserIcon, TrashIcon, PlusIcon, HistoryIcon } from '../components/Icons';
+import { SendIcon, BotIcon, UserIcon, TrashIcon, PlusIcon, HistoryIcon, LocationIcon } from '../components/Icons';
 import api from '../config/api';
-import { getChatLocationContext } from '../utils/chatLocation';
+import { getChatLocationContext, requestChatLocationPermission, getLocationPermissionState } from '../utils/chatLocation';
 import '../css/Chat.css';
 
 const Chat = () => {
@@ -17,6 +17,7 @@ const Chat = () => {
   const [aiConfigured, setAiConfigured] = useState(true);
   const [aiStatusMessage, setAiStatusMessage] = useState('');
   const [locationContext, setLocationContext] = useState(null);
+  const [locationGranted, setLocationGranted] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -33,9 +34,28 @@ const Chat = () => {
     // Check AI chat status
     checkAiStatus();
 
-    // Capture user location for location-aware AI responses
-    requestLocationContext();
+    // Location for "near me" AI responses
+    initLocationContext();
   }, [navigate]);
+
+  const initLocationContext = async () => {
+    const state = await getLocationPermissionState();
+    if (state === 'granted') {
+      const location = await getChatLocationContext();
+      if (location) {
+        setLocationContext(location);
+        setLocationGranted(true);
+      }
+    }
+  };
+
+  const handleLocationPress = async () => {
+    const location = await requestChatLocationPermission();
+    if (location) {
+      setLocationContext(location);
+      setLocationGranted(true);
+    }
+  };
 
   useEffect(() => {
     // Load messages for current conversation
@@ -83,10 +103,12 @@ const Chat = () => {
   };
 
   const requestLocationContext = async () => {
+    if (!locationGranted) return null;
     const location = await getChatLocationContext();
     if (location) {
       setLocationContext(location);
     }
+    return location;
   };
 
   const loadConversations = () => {
@@ -225,9 +247,12 @@ const Chat = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      const freshLocation = (await getChatLocationContext()) || locationContext;
-      if (freshLocation) {
-        setLocationContext(freshLocation);
+      let freshLocation = null;
+      if (locationGranted) {
+        freshLocation = (await getChatLocationContext()) || locationContext;
+        if (freshLocation) {
+          setLocationContext(freshLocation);
+        }
       }
 
       const response = await api.post('/chat', {
@@ -643,12 +668,31 @@ const Chat = () => {
 
                 <form onSubmit={handleSendMessage} className="chat-input-container p-3 border-top bg-white">
                   <div className="d-flex gap-2 align-items-center">
+                    {!locationGranted && (
+                      <button
+                        type="button"
+                        onClick={handleLocationPress}
+                        className="btn btn-light d-flex align-items-center justify-content-center"
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '12px',
+                          border: '2px solid #e5e7eb',
+                          backgroundColor: '#eff6ff',
+                          flexShrink: 0,
+                        }}
+                        title="Enable location for nearby volunteer suggestions"
+                        aria-label="Enable location"
+                      >
+                        <LocationIcon style={{ width: '22px', height: '22px', color: '#2563eb' }} />
+                      </button>
+                    )}
                     <input
                       ref={inputRef}
                       type="text"
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder={aiConfigured ? "Type your message here..." : "AI chat is not available"}
+                      placeholder={aiConfigured ? 'Ask AI assistant' : 'AI chat is not available'}
                       className="form-control"
                       style={{ 
                         borderRadius: '12px',

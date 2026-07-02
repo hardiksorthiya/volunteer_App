@@ -11,7 +11,7 @@ const {
 
 const MAX_GUEST_MESSAGES = 3;
 const MAX_CHAT_MESSAGE_LENGTH = 8000;
-const DEFAULT_MAX_TOKENS = 1400;
+const DEFAULT_MAX_TOKENS = 2000;
 const guestUsage = new Map();
 
 const POLICY_REFUSAL_MESSAGE =
@@ -107,9 +107,15 @@ const runChat = async (req, res, { guest = false, guestId = null } = {}) => {
     return refusePolicyResponse(res, guest ? { remaining: Math.max(0, MAX_GUEST_MESSAGES - (guestUsage.get(guestId.trim().slice(0, 128)) || 0)) } : {});
   }
 
-  const chatContext = await prepareChatContext(db, validation.trimmed, locationContext, guest ? null : req.user?.id);
-
   const history = guest ? conversationHistory.slice(-6) : conversationHistory;
+  const chatContext = await prepareChatContext(
+    db,
+    validation.trimmed,
+    locationContext,
+    guest ? null : req.user?.id,
+    history
+  );
+
   const messages = buildMessages(validation.trimmed, history, chatContext);
 
   const options = { max_tokens: max_tokens !== undefined ? parseInt(max_tokens, 10) : DEFAULT_MAX_TOKENS };

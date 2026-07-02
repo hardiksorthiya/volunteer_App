@@ -9,9 +9,10 @@ import {
 import Markdown from 'react-native-markdown-display';
 import { GUEST_LIMIT, useGuestAiChat } from '../hooks/useGuestAiChat';
 import { useEmbeddedChatKeyboardInset } from '../hooks/useEmbeddedChatKeyboardInset';
+import { isExpoGo } from '../utils/runtime';
 import ChatConversationLayout from './ChatConversationLayout';
-import ChatLocationToggle from './ChatLocationToggle';
 import ChatPillInput from './ChatPillInput';
+import LocationPermissionBar from './LocationPermissionBar';
 
 /**
  * @param {{
@@ -32,8 +33,10 @@ const GuestAIChatPanel = ({
     messages,
     remaining,
     handleSend: sendMessage,
-    shareLocation,
-    toggleShareLocation,
+    requestLocation,
+    locationGranted,
+    locationCanAskAgain,
+    locationContext,
   } = useGuestAiChat({ enabled: true });
 
   const messagesScrollRef = useRef(null);
@@ -72,21 +75,28 @@ const GuestAIChatPanel = ({
     </Text>
   );
 
+  const locationBar = (
+    <LocationPermissionBar
+      visible={!locationGranted}
+      canAskAgain={locationCanAskAgain}
+      locationLabel={locationContext?.label}
+      onEnable={requestLocation}
+      compact
+    />
+  );
+
   const chatFooter = (
     <>
-      <ChatLocationToggle
-        enabled={shareLocation}
-        disabled={loading || remaining <= 0}
-        onToggle={toggleShareLocation}
-      />
       <ChatPillInput
         ref={inputRef}
         value={input}
         onChangeText={setInput}
-        placeholder={remaining > 0 ? 'Message AI assistant...' : 'Log in to continue'}
+        placeholder={remaining > 0 ? 'Ask AI assistant' : 'Log in to continue'}
         editable={!loading && remaining > 0}
         sendDisabled={!input.trim() || loading || remaining <= 0}
         onSend={onSendMessage}
+        onLocationPress={requestLocation}
+        showLocationButton={false}
         keepFocusOnSend
       />
       {remaining <= 0 && onPressLogin && (
@@ -103,10 +113,11 @@ const GuestAIChatPanel = ({
         style={[
           styles.root,
           styles.rootEmbedded,
-          keyboardInset > 0 && { marginBottom: keyboardInset },
+          isExpoGo() && keyboardInset > 0 && { marginBottom: keyboardInset },
         ]}
       >
         {panelHeader}
+        {locationBar}
         {limitBanner}
         <ChatConversationLayout
           scrollRef={messagesScrollRef}
@@ -147,6 +158,7 @@ const GuestAIChatPanel = ({
   return (
     <View style={[styles.root, styles.rootSheet]}>
       {panelHeader}
+      {locationBar}
       {limitBanner}
       <ChatConversationLayout
         scrollRef={messagesScrollRef}

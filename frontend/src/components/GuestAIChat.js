@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { SendIcon } from './Icons';
+import { SendIcon, LocationIcon } from './Icons';
 import api from '../config/api';
-import { getChatLocationContext } from '../utils/chatLocation';
+import { getChatLocationContext, requestChatLocationPermission, getLocationPermissionState } from '../utils/chatLocation';
 import './GuestAIChat.css';
 
 export const GUEST_LIMIT = 3;
@@ -23,6 +23,7 @@ const GuestAIChat = ({ embedded = false }) => {
   const [messages, setMessages] = useState([]);
   const [guestCount, setGuestCount] = useState(0);
   const [locationContext, setLocationContext] = useState(null);
+  const [locationGranted, setLocationGranted] = useState(false);
   const messagesRef = useRef(null);
 
   useEffect(() => {
@@ -44,19 +45,23 @@ const GuestAIChat = ({ embedded = false }) => {
         const parsedLocation = JSON.parse(savedLocation);
         if (parsedLocation && typeof parsedLocation === 'object') {
           setLocationContext(parsedLocation);
+          setLocationGranted(true);
         }
       }
+
+      getLocationPermissionState().then(async (state) => {
+        if (state === 'granted' && !savedLocation) {
+          const payload = await getChatLocationContext();
+          if (payload) {
+            setLocationContext(payload);
+            setLocationGranted(true);
+          }
+        }
+      });
+
     } catch (error) {
       console.error('Failed loading guest AI chat state:', error);
     }
-  }, []);
-
-  useEffect(() => {
-    getChatLocationContext().then((payload) => {
-      if (!payload) return;
-      setLocationContext(payload);
-      localStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(payload));
-    });
   }, []);
 
   const remaining = useMemo(() => Math.max(0, GUEST_LIMIT - guestCount), [guestCount]);
@@ -66,6 +71,15 @@ const GuestAIChat = ({ embedded = false }) => {
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, loading]);
+
+  const handleLocationPress = async () => {
+    const location = await requestChatLocationPermission();
+    if (location) {
+      setLocationContext(location);
+      setLocationGranted(true);
+      localStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(location));
+    }
+  };
 
   const persistGuestState = (nextMessages, nextCount = guestCount) => {
     localStorage.setItem(GUEST_MESSAGES_KEY, JSON.stringify(nextMessages));
@@ -102,10 +116,13 @@ const GuestAIChat = ({ embedded = false }) => {
         content: msg.text
       }));
 
-      const freshLocation = (await getChatLocationContext()) || locationContext;
-      if (freshLocation) {
-        setLocationContext(freshLocation);
-        localStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(freshLocation));
+      let freshLocation = null;
+      if (locationGranted) {
+        freshLocation = (await getChatLocationContext()) || locationContext;
+        if (freshLocation) {
+          setLocationContext(freshLocation);
+          localStorage.setItem(GUEST_LOCATION_KEY, JSON.stringify(freshLocation));
+        }
       }
 
       const response = await api.post('/chat/guest', {
@@ -186,10 +203,21 @@ const GuestAIChat = ({ embedded = false }) => {
       </div>
 
       <form onSubmit={handleSend} className="guest-ai-chat__form">
+        {!locationGranted && (
+          <button
+            type="button"
+            onClick={handleLocationPress}
+            className="guest-ai-chat__location"
+            title="Enable location for nearby volunteer suggestions"
+            aria-label="Enable location"
+          >
+            <LocationIcon style={{ width: '20px', height: '20px', color: '#2563eb' }} />
+          </button>
+        )}
         <input
           type="text"
           className="guest-ai-chat__input"
-          placeholder={remaining > 0 ? 'Ask your question…' : 'Sign in to continue'}
+          placeholder={remaining > 0 ? 'Ask AI assistant' : 'Sign in to continue'}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={loading || remaining <= 0}

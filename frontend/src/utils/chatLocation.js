@@ -21,3 +21,22 @@ export function getChatLocationContext() {
     );
   });
 }
+
+/**
+ * Prompt for browser location permission and return coordinates.
+ */
+export function requestChatLocationPermission() {
+  return getChatLocationContext();
+}
+
+export async function getLocationPermissionState() {
+  try {
+    if (navigator.permissions?.query) {
+      const result = await navigator.permissions.query({ name: 'geolocation' });
+      return result.state;
+    }
+  } catch {
+    // ignore
+  }
+  return 'prompt';
+}

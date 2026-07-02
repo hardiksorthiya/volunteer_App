@@ -12,5 +12,8 @@ fi
 pm2 restart ecosystem.config.js --update-env
 pm2 save
 
-echo "Restarted volunteer-connect-expo."
-echo "Tunnel URL will be written to logs/tunnel-url.txt within ~30 seconds."
+sleep 4
+bash scripts/show-client-link.sh 2>/dev/null || echo "Tunnel URL will appear in logs/tunnel-url.txt within ~30s."
+
+echo ""
+echo "Restarted volunteer-connect-expo (runs in background; safe to close Cursor)."

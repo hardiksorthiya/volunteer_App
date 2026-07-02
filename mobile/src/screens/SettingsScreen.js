@@ -3,17 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Alert,
   RefreshControl,
-  Modal,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../components/Header';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
 import api from '../config/api';
 
 const SettingsScreen = () => {
@@ -94,7 +94,7 @@ const SettingsScreen = () => {
   return (
     <View style={styles.container}>
       <Header onNotificationPress={handleNotificationPress} />
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
@@ -204,9 +204,9 @@ const SettingsScreen = () => {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
-      <Modal
+      <KeyboardAvoidingModal
         visible={deleteModalVisible}
         transparent
         animationType="fade"
@@ -255,7 +255,7 @@ const SettingsScreen = () => {
             </View>
           </View>
         </View>
-      </Modal>
+      </KeyboardAvoidingModal>
     </View>
   );
 };

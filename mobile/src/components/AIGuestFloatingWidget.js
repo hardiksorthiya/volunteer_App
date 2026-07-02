@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import GuestAIChatPanel from './GuestAIChatPanel';
 import { useEmbeddedChatKeyboardInset } from '../hooks/useEmbeddedChatKeyboardInset';
+import { isExpoGo } from '../utils/runtime';
 
 const AIGuestFloatingWidget = ({ visible, onNavigateLogin }) => {
   const [open, setOpen] = useState(false);
@@ -28,7 +29,7 @@ const AIGuestFloatingWidget = ({ visible, onNavigateLogin }) => {
       {open && (
         <View style={styles.overlay}>
           <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
-          <View style={[styles.panelWrap, keyboardInset > 0 && { marginBottom: keyboardInset }]}>
+          <View style={[styles.panelWrap, isExpoGo() && keyboardInset > 0 && { marginBottom: keyboardInset }]}>
             <GuestAIChatPanel
               variant="sheet"
               onClose={() => setOpen(false)}

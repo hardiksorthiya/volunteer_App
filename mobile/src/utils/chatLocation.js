@@ -1,3 +1,4 @@
+import { Linking } from 'react-native';
 import * as Location from 'expo-location';
 
 /**
@@ -9,6 +10,30 @@ export async function getLocationPermissionStatus() {
     return status;
   } catch {
     return 'undetermined';
+  }
+}
+
+/**
+ * Status + whether the system dialog can still be shown (Android/iOS).
+ */
+export async function getLocationPermissionState() {
+  try {
+    const result = await Location.getForegroundPermissionsAsync();
+    return {
+      status: result.status,
+      canAskAgain: result.canAskAgain !== false,
+      granted: result.granted === true || result.status === 'granted',
+    };
+  } catch {
+    return { status: 'undetermined', canAskAgain: true, granted: false };
+  }
+}
+
+export async function openAppSettings() {
+  try {
+    await Linking.openSettings();
+  } catch (error) {
+    console.warn('Could not open settings:', error?.message);
   }
 }
 
@@ -88,8 +113,12 @@ export async function getChatLocationContext({ requestIfNeeded = false } = {}) {
  * User turned on "include location" in chat — triggers system permission, then reads coords.
  */
 export async function enableChatLocationSharing() {
-  const status = await getLocationPermissionStatus();
-  if (status !== 'granted') {
+  const state = await getLocationPermissionState();
+  if (!state.granted) {
+    if (!state.canAskAgain) {
+      await openAppSettings();
+      return null;
+    }
     const requested = await requestChatLocationPermission();
     if (requested !== 'granted') {
       return null;

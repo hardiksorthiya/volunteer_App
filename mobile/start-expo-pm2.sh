@@ -63,6 +63,9 @@ except Exception:
 
   if [ -n "$url" ]; then
     echo "$url" > "$TUNNEL_URL_FILE"
+    host="${url#https://}"
+    host="${host#http://}"
+    echo "exp://${host}" > "$LOG_DIR/client-exp-link.txt"
     echo "[$(date -Iseconds)] Expo tunnel URL: $url"
     return 0
   fi

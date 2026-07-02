@@ -27,6 +27,7 @@ import HourTargetsScreen from './src/screens/HourTargetsScreen';
 import { HomeIcon, ActivityIcon, ChatIcon, SettingsIcon } from './src/components/Icons';
 import { ClockIcon } from './src/components/Icons';
 import AIGuestFloatingWidget from './src/components/AIGuestFloatingWidget';
+import { KeyboardRoot } from './src/utils/KeyboardRoot';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -64,7 +65,7 @@ function MainTabs() {
         component={ChatScreen}
         options={{
           tabBarLabel: 'AI Chat',
-          tabBarHideOnKeyboard: false,
+          tabBarHideOnKeyboard: true,
           tabBarIcon: ({ color, size }) => (
             <ChatIcon size={size} color={color} />
           ),
@@ -191,24 +192,27 @@ export default function App() {
   if (isLoading || !isSplashFinished) {
     // Splash screen (2 seconds) - then continue to login/dashboard.
     return (
-      <View style={styles.splashRoot}>
-        <StatusBar style="light" />
-        <Animated.View style={{ transform: [{ scale: splashScale }] }}>
-          {/* Center logo for 2 seconds */}
-          <View style={styles.splashLogoWrap}>
-            <Image
-              source={require('./assets/logo.png')}
-              style={styles.splashLogo}
-              resizeMode="contain"
-            />
-          </View>
-        </Animated.View>
-      </View>
+      <KeyboardRoot>
+        <View style={styles.splashRoot}>
+          <StatusBar style="light" />
+          <Animated.View style={{ transform: [{ scale: splashScale }] }}>
+            {/* Center logo for 2 seconds */}
+            <View style={styles.splashLogoWrap}>
+              <Image
+                source={require('./assets/logo.png')}
+                style={styles.splashLogo}
+                resizeMode="contain"
+              />
+            </View>
+          </Animated.View>
+        </View>
+      </KeyboardRoot>
     );
   }
 
   return (
-    <SafeAreaProvider>
+    <KeyboardRoot>
+      <SafeAreaProvider>
       <View style={{ flex: 1 }}>
         <NavigationContainer
           ref={navigationRef}
@@ -308,7 +312,8 @@ export default function App() {
           }}
         />
       </View>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </KeyboardRoot>
   );
 }
 

@@ -1,6 +1,7 @@
 // IMPORTANT: These must be imported first, in this order
 import 'react-native-screens';
 import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import { registerRootComponent } from 'expo';
 import App from './App';
 

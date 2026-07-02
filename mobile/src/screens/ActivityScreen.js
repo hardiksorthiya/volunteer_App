@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   Alert,
@@ -15,6 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Header from '../components/Header';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
 import { SearchIcon, FilterIcon, PlusIcon, EyeIcon, EditIcon, TrashIcon, CheckIcon } from '../components/Icons';
 import api from '../config/api';
 
@@ -501,7 +501,7 @@ const ActivityScreen = () => {
   return (
     <View style={styles.container}>
       <Header onNotificationPress={handleNotificationPress} />
-      <ScrollView 
+      <KeyboardAwareScrollView 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -596,7 +596,7 @@ const ActivityScreen = () => {
             contentContainerStyle={styles.listContainer}
           />
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Filter Modal */}
       <Modal

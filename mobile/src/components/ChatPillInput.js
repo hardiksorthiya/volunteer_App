@@ -6,24 +6,25 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { SendIcon } from './Icons';
+import { LocationIcon, SendIcon } from './Icons';
 
 /**
- * ChatGPT-style pill input: rounded bar, text only + send button.
- * Keeps keyboard open after send when keepFocusOnSend is true.
+ * ChatGPT-style composer: optional location pin (hidden after permission), send outside pill.
  */
 const ChatPillInput = forwardRef(function ChatPillInput(
   {
     value,
     onChangeText,
     onSend,
-    placeholder = 'Type a message...',
+    placeholder = 'Ask AI assistant',
     editable = true,
     sendDisabled = false,
     onFocus,
     onBlur,
     onSubmitEditing,
     keepFocusOnSend = true,
+    onLocationPress,
+    showLocationButton = false,
   },
   ref,
 ) {
@@ -60,30 +61,43 @@ const ChatPillInput = forwardRef(function ChatPillInput(
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.pill}>
-        <TextInput
-          ref={inputRef}
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="#9ca3af"
-          editable={editable}
-          multiline
-          onFocus={onFocus}
-          onBlur={onBlur}
-          onSubmitEditing={handleSubmitEditing}
-          returnKeyType="send"
-          blurOnSubmit={false}
-          enablesReturnKeyAutomatically
-        />
+      <View style={styles.row}>
+        <View style={[styles.pill, !showLocationButton && styles.pillNoLeading]}>
+          {showLocationButton ? (
+            <TouchableOpacity
+              style={styles.locationBtn}
+              onPress={onLocationPress}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              accessibilityLabel="Enable location for nearby volunteer suggestions"
+            >
+              <LocationIcon size={22} color="#2563eb" />
+            </TouchableOpacity>
+          ) : null}
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="#a1a1aa"
+            editable={editable}
+            multiline
+            onFocus={onFocus}
+            onBlur={onBlur}
+            onSubmitEditing={handleSubmitEditing}
+            returnKeyType="send"
+            blurOnSubmit={false}
+            enablesReturnKeyAutomatically
+          />
+        </View>
         <TouchableOpacity
           style={[styles.sendBtn, sendDisabled && styles.sendBtnDisabled]}
           onPress={handleSendPress}
           disabled={sendDisabled}
           activeOpacity={0.85}
         >
-          <SendIcon size={18} color="#ffffff" />
+          <SendIcon size={20} color="#ffffff" />
         </TouchableOpacity>
       </View>
     </View>
@@ -95,54 +109,82 @@ export default ChatPillInput;
 const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: 'transparent',
+    paddingTop: 6,
+    paddingBottom: 4,
+    backgroundColor: '#ffffff',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
   },
   pill: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
     backgroundColor: '#ffffff',
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    paddingLeft: 18,
-    paddingRight: 6,
+    borderColor: '#e4e4e7',
+    paddingLeft: 4,
+    paddingRight: 16,
     paddingVertical: 6,
     minHeight: 52,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
+  },
+  pillNoLeading: {
+    paddingLeft: 16,
+  },
+  locationBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
+    backgroundColor: '#eff6ff',
   },
   input: {
     flex: 1,
     fontSize: 16,
     lineHeight: 22,
-    color: '#111827',
+    color: '#18181b',
     paddingTop: Platform.OS === 'ios' ? 10 : 8,
     paddingBottom: Platform.OS === 'ios' ? 10 : 8,
-    paddingRight: 8,
     maxHeight: 120,
     backgroundColor: 'transparent',
   },
   sendBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#2563eb',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 0,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2563eb',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   sendBtnDisabled: {
-    opacity: 0.45,
+    opacity: 0.4,
   },
 });
