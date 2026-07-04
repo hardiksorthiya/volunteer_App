@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { SendIcon, BotIcon, UserIcon, TrashIcon, PlusIcon, HistoryIcon, LocationIcon } from '../components/Icons';
 import api from '../config/api';
 import { getChatLocationContext, requestChatLocationPermission, getLocationPermissionState } from '../utils/chatLocation';
@@ -70,9 +71,8 @@ const Chat = () => {
   }, [currentConversationId, conversations]);
 
   useEffect(() => {
-    // Auto-scroll to bottom when new messages arrive
     scrollToBottom();
-  }, [messages]);
+  }, [messages, loading]);
 
   const checkAiStatus = async () => {
     try {
@@ -586,8 +586,9 @@ const Chat = () => {
                         >
                           <div className="mb-1" style={{ fontSize: '0.9375rem', lineHeight: '1.6' }}>
                             {message.sender === 'ai' ? (
-                              <ReactMarkdown 
+                              <ReactMarkdown
                                 className="markdown-content"
+                                remarkPlugins={[remarkGfm]}
                                 components={{
                                   code: ({ node, inline, className, children, ...props }) => {
                                     const match = /language-(\w+)/.exec(className || '');
@@ -618,7 +619,7 @@ const Chat = () => {
                                 {message.text}
                               </ReactMarkdown>
                             ) : (
-                              message.text
+                              <span className="user-message-text">{message.text}</span>
                             )}
                           </div>
                           <div className="small" style={{ 

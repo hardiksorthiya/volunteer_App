@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../config/api';
+import { confirmPastActivityDate, isDateTimeInPast } from '../utils/pastDateConfirm';
 import { CalendarIcon, MapPinIcon, UsersIcon, CheckIcon, ClockIcon, TagIcon, BuildingIcon, InfoIcon, ArrowLeftIcon } from '../components/Icons';
 import '../css/Activities.css';
 
@@ -208,6 +209,13 @@ const EditActivity = () => {
       setFormErrors(errors);
       setSubmitting(false);
       return;
+    }
+
+    if (isDateTimeInPast(formData.start_date, formData.start_time)) {
+      if (!confirmPastActivityDate()) {
+        setSubmitting(false);
+        return;
+      }
     }
 
     try {

@@ -90,22 +90,25 @@ const parseCSVLine = (line) => {
 
 // Helper: compute activity status from dates and task completion
 // When activity has tasks: "completed" only when ALL tasks are completed.
-// When activity has no tasks: keep activity "ongoing".
 const getActivityStatusFromRow = (row) => {
   const allTasksCompleted = row.all_tasks_completed === 1 || row.all_tasks_completed === true;
   const activityHasTasks = row.activity_has_tasks === 1 || row.activity_has_tasks === true;
   if (allTasksCompleted) return 'completed';
-  if (!activityHasTasks) return 'ongoing';
+
   const startDate = row.start_date ? new Date(row.start_date) : null;
   const endDate = row.end_date ? new Date(row.end_date) : null;
   const now = new Date();
   if (!startDate) return 'upcoming';
-  // If activity has tasks but not all completed, never show "completed" (even if end_date passed)
+
   if (activityHasTasks) {
-    if (endDate && endDate < now) return 'ongoing'; // end date passed but tasks incomplete
+    if (endDate && endDate < now) return 'ongoing';
     if (startDate <= now && (!endDate || endDate >= now)) return 'ongoing';
     return 'upcoming';
   }
+
+  // No tasks — use dates (supports logging past activities)
+  if (endDate && endDate < now) return 'completed';
+  if (startDate <= now) return 'ongoing';
   return 'upcoming';
 };
 

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../config/api';
+import { confirmPastTaskDate } from '../utils/pastDateConfirm';
 import { 
   CalendarIcon, MapPinIcon, UsersIcon, CheckIcon, ClockIcon, 
   PlusIcon, ArrowLeftIcon, EditIcon, TargetIcon, FileIcon, TrashIcon, EyeIcon 
@@ -424,6 +425,10 @@ const ActivityDetail = () => {
     e.preventDefault();
     if (!taskFormData.title.trim()) return;
 
+    if (!confirmPastTaskDate(taskFormData.startDate, taskFormData.dueDate)) {
+      return;
+    }
+
     try {
       const taskData = {
         title: taskFormData.title.trim(),
@@ -505,6 +510,10 @@ const ActivityDetail = () => {
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!editTaskData.title.trim()) return;
+
+    if (!confirmPastTaskDate(editTaskData.startDate, editTaskData.dueDate)) {
+      return;
+    }
 
     try {
       const taskData = {

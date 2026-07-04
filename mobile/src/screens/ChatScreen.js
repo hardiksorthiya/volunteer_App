@@ -23,6 +23,11 @@ import {
   getLocationPermissionState,
   enableChatLocationSharing,
 } from '../utils/chatLocation';
+import { useKeyboardInset } from '../hooks/useKeyboardInset';
+import { useKeyboardResizeDetected } from '../hooks/useKeyboardResizeDetected';
+import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
+import { getKeyboardController } from '../utils/keyboardUi';
+import { isExpoGo, needsManualAndroidKeyboardLift } from '../utils/runtime';
 
 const STORAGE_KEY = 'chatConversations';
 const LOCATION_DISMISSED_KEY = 'chatLocationDismissed';
@@ -31,6 +36,11 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const listRef = useRef(null);
   const inputRef = useRef(null);
+
+  const keyboardInset = useKeyboardInset();
+  const windowResizedOnKeyboard = useKeyboardResizeDetected();
+  const keyboardController = getKeyboardController();
+  const KeyboardStickyView = keyboardController?.KeyboardStickyView;
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
@@ -42,6 +52,12 @@ export default function ChatScreen() {
   const [locationGranted, setLocationGranted] = useState(false);
   const [locationLabel, setLocationLabel] = useState(null);
   const [showLocationBar, setShowLocationBar] = useState(false);
+
+  // APK: sticky composer tracks keyboard. Disabled when adjustResize already shrank the window.
+  const useStickyFooter =
+    KeyboardStickyView != null &&
+    (Platform.OS === 'ios' ||
+      (needsManualAndroidKeyboardLift() && !(keyboardInset > 0 && windowResizedOnKeyboard)));
 
   const refreshLocation = useCallback(async () => {
     const dismissed = await AsyncStorage.getItem(LOCATION_DISMISSED_KEY);
@@ -76,9 +92,11 @@ export default function ChatScreen() {
 
   useFocusEffect(useCallback(() => { refreshLocation(); }, [refreshLocation]));
 
+  const scrollToEnd = useChatAutoScroll(listRef, [messages, loading]);
+
   useEffect(() => {
-    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 60);
-  }, [messages, loading]);
+    scrollToEnd(true);
+  }, [keyboardInset, scrollToEnd]);
 
   const persist = (list) => {
     setChats(list);
@@ -164,6 +182,87 @@ export default function ChatScreen() {
     }
   };
 
+  const footer = (
+    <View style={styles.footer}>
+      {showLocationBar && (
+        <View style={styles.locBar}>
+          <Text style={styles.locLabel}>Allow location for nearby suggestions?</Text>
+          <View style={styles.locRow}>
+            <Pressable style={styles.locBtnGray} onPress={onDenyLocation}>
+              <Text style={styles.locBtnGrayText}>Deny</Text>
+            </Pressable>
+            <Pressable style={styles.locBtnBlue} onPress={onAllowLocation}>
+              <Text style={styles.locBtnBlueText}>Allow</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.composer}>
+        <TextInput
+          ref={inputRef}
+          style={styles.input}
+          value={text}
+          onChangeText={setText}
+          placeholder={aiOk ? 'Message…' : 'AI unavailable'}
+          placeholderTextColor="#94a3b8"
+          editable={aiOk && !loading}
+          multiline
+        />
+        <TouchableOpacity
+          style={[styles.send, (!text.trim() || loading) && styles.sendOff]}
+          onPress={send}
+          disabled={!text.trim() || loading}
+        >
+          <Text style={styles.sendLabel}>↑</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const listAndFooter = (
+    <>
+      <FlatList
+        ref={listRef}
+        data={messages}
+        keyExtractor={(item) => String(item.id)}
+        style={styles.list}
+        contentContainerStyle={[
+          messages.length === 0 ? styles.listEmpty : styles.listContent,
+          keyboardInset > 0 && styles.listContentKeyboard,
+        ]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        onContentSizeChange={() => scrollToEnd(false)}
+        onLayout={() => scrollToEnd(false)}
+        ListEmptyComponent={<Text style={styles.empty}>Ask about volunteering.</Text>}
+        ListFooterComponent={loading ? <ActivityIndicator style={styles.loader} color="#2563eb" /> : null}
+        renderItem={({ item }) => (
+          <View style={[styles.bubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
+            <Text style={item.sender === 'user' ? styles.textUser : styles.textAi}>{item.text}</Text>
+          </View>
+        )}
+      />
+
+      {useStickyFooter ? (
+        <KeyboardStickyView offset={{ closed: 0, opened: 0 }} style={styles.footerSticky}>
+          {footer}
+        </KeyboardStickyView>
+      ) : (
+        footer
+      )}
+    </>
+  );
+
+  const chatBody =
+    isExpoGo() && Platform.OS === 'ios' ? (
+      <KeyboardAvoidingView style={styles.body} behavior="padding">
+        {listAndFooter}
+      </KeyboardAvoidingView>
+    ) : (
+      <View style={styles.body}>{listAndFooter}</View>
+    );
+
   return (
     <View style={styles.root}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 8) }]}>
@@ -176,58 +275,7 @@ export default function ChatScreen() {
         </TouchableOpacity>
       </View>
 
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={(item) => String(item.id)}
-          style={styles.flex}
-          contentContainerStyle={styles.list}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          ListEmptyComponent={<Text style={styles.empty}>Ask about volunteering.</Text>}
-          ListFooterComponent={loading ? <ActivityIndicator style={styles.loader} color="#2563eb" /> : null}
-          renderItem={({ item }) => (
-            <View style={[styles.bubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
-              <Text style={item.sender === 'user' ? styles.textUser : styles.textAi}>{item.text}</Text>
-            </View>
-          )}
-        />
-
-        {showLocationBar && (
-          <View style={styles.locBar}>
-            <Text style={styles.locLabel}>Allow location for nearby suggestions?</Text>
-            <View style={styles.locRow}>
-              <Pressable style={styles.locBtnGray} onPress={onDenyLocation}>
-                <Text style={styles.locBtnGrayText}>Deny</Text>
-              </Pressable>
-              <Pressable style={styles.locBtnBlue} onPress={onAllowLocation}>
-                <Text style={styles.locBtnBlueText}>Allow</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-
-        <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            value={text}
-            onChangeText={setText}
-            placeholder={aiOk ? 'Message…' : 'AI unavailable'}
-            placeholderTextColor="#94a3b8"
-            editable={aiOk && !loading}
-            multiline
-          />
-          <TouchableOpacity
-            style={[styles.send, (!text.trim() || loading) && styles.sendOff]}
-            onPress={send}
-            disabled={!text.trim() || loading}
-          >
-            <Text style={styles.sendLabel}>↑</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+      {chatBody}
 
       <Modal visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
         <View style={[styles.modal, { paddingTop: Math.max(insets.top, 12) }]}>
@@ -271,7 +319,7 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f1f5f9' },
-  flex: { flex: 1 },
+  body: { flex: 1, minHeight: 0 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -285,14 +333,19 @@ const styles = StyleSheet.create({
   title: { fontSize: 17, fontWeight: '700', color: '#0f172a' },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   iconText: { fontSize: 20, color: '#2563eb' },
-  list: { padding: 12, flexGrow: 1 },
-  empty: { textAlign: 'center', color: '#64748b', marginTop: 48 },
+  list: { flex: 1, backgroundColor: '#f1f5f9' },
+  listContent: { padding: 12, paddingBottom: 8 },
+  listContentKeyboard: { paddingBottom: 16 },
+  listEmpty: { flexGrow: 1, padding: 12, justifyContent: 'center' },
+  empty: { textAlign: 'center', color: '#64748b' },
   loader: { marginVertical: 12 },
   bubble: { maxWidth: '85%', padding: 12, borderRadius: 14, marginBottom: 8 },
   bubbleUser: { alignSelf: 'flex-end', backgroundColor: '#2563eb' },
   bubbleAi: { alignSelf: 'flex-start', backgroundColor: '#fff' },
   textUser: { color: '#fff', fontSize: 15 },
   textAi: { color: '#0f172a', fontSize: 15 },
+  footerSticky: { flexShrink: 0 },
+  footer: { flexShrink: 0, backgroundColor: '#fff' },
   locBar: {
     backgroundColor: '#eff6ff',
     padding: 12,
@@ -309,8 +362,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
-    padding: 12,
+    paddingHorizontal: 12,
     paddingTop: 8,
+    paddingBottom: 8,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',

@@ -31,6 +31,7 @@ import {
   EyeIcon,
 } from '../components/Icons';
 import api from '../config/api';
+import { confirmPastTaskDate, isDateInPast } from '../utils/pastDateConfirm';
 
 const ActivityDetailScreen = () => {
   const route = useRoute();
@@ -363,6 +364,11 @@ const ActivityDetailScreen = () => {
       return;
     }
 
+    if (isDateInPast(taskFormData.startDate) || isDateInPast(taskFormData.dueDate)) {
+      const ok = await confirmPastTaskDate();
+      if (!ok) return;
+    }
+
     try {
       const taskData = {
         title: taskFormData.title.trim(),
@@ -450,6 +456,11 @@ const ActivityDetailScreen = () => {
     if (!editTaskData.title.trim()) {
       Alert.alert('Error', 'Task title is required');
       return;
+    }
+
+    if (isDateInPast(editTaskData.startDate) || isDateInPast(editTaskData.dueDate)) {
+      const ok = await confirmPastTaskDate();
+      if (!ok) return;
     }
 
     try {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
+import { confirmPastActivityDate, confirmPastTaskDate, isDateTimeInPast } from '../utils/pastDateConfirm';
 import { CalendarIcon, MapPinIcon, UsersIcon, CheckIcon, ClockIcon, TagIcon, BuildingIcon, InfoIcon, PlusIcon, ArrowLeftIcon } from '../components/Icons';
 import '../css/Activities.css';
 
@@ -129,6 +130,13 @@ const AddActivity = () => {
       setFormErrors(errors);
       setSubmitting(false);
       return;
+    }
+
+    if (isDateTimeInPast(formData.start_date, formData.start_time)) {
+      if (!confirmPastActivityDate()) {
+        setSubmitting(false);
+        return;
+      }
     }
 
     try {

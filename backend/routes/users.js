@@ -157,6 +157,84 @@ router.get('/me', authenticate, async (req, res) => {
 router.post('/me/delete-account', authenticate, deleteOwnAccountHandler);
 
 // Hour target progress handler (shared by both route paths)
+const normalizeYMD = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    const m = String(value.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(value.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  const s = String(value);
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+  if (dmy) {
+    const dd = String(parseInt(dmy[1], 10)).padStart(2, '0');
+    const mm = String(parseInt(dmy[2], 10)).padStart(2, '0');
+    return `${dmy[3]}-${mm}-${dd}`;
+  }
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return s;
+  const y = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${y}-${mm}-${dd}`;
+};
+
+const toUtcDate = (ymd) => {
+  if (!ymd) return null;
+  const dt = new Date(`${ymd}T00:00:00Z`);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+};
+
+const dayDiffInclusive = (startDt, endDt) => {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((endDt - startDt) / msPerDay) + 1;
+};
+
+async function computeOverlapHoursForRange(userId, rangeStartStr, rangeEndStr) {
+  const rangeStartDate = toUtcDate(rangeStartStr);
+  const rangeEndDate = toUtcDate(rangeEndStr);
+  if (!rangeStartDate || !rangeEndDate) return 0;
+
+  const [taskRows] = await db.promise.execute(
+    `SELECT at.total_hours, at.start_date, at.due_date, at.created_at
+     FROM activity_tasks at
+     INNER JOIN activities a ON at.activity_id = a.id
+     WHERE a.is_active = true
+       AND at.created_by = ?
+       AND at.total_hours IS NOT NULL
+       AND at.total_hours > 0`,
+    [userId]
+  );
+
+  let overlapHours = 0;
+  taskRows.forEach((task) => {
+    const totalHoursNum = Number(task.total_hours || 0);
+    if (!(totalHoursNum > 0)) return;
+
+    const taskStartStr = normalizeYMD(task.start_date || task.due_date || task.created_at);
+    const taskEndStr = normalizeYMD(task.due_date || task.start_date || task.created_at);
+    const taskStartDate = toUtcDate(taskStartStr);
+    const taskEndDate = toUtcDate(taskEndStr);
+    if (!taskStartDate || !taskEndDate) return;
+
+    const effectiveStart = taskStartDate <= taskEndDate ? taskStartDate : taskEndDate;
+    const effectiveEnd = taskStartDate <= taskEndDate ? taskEndDate : taskStartDate;
+    const totalTaskDays = Math.max(1, dayDiffInclusive(effectiveStart, effectiveEnd));
+
+    const overlapStart = new Date(Math.max(effectiveStart.getTime(), rangeStartDate.getTime()));
+    const overlapEnd = new Date(Math.min(effectiveEnd.getTime(), rangeEndDate.getTime()));
+    if (overlapStart > overlapEnd) return;
+
+    const overlapDays = dayDiffInclusive(overlapStart, overlapEnd);
+    overlapHours += (totalHoursNum * overlapDays) / totalTaskDays;
+  });
+
+  return Number(overlapHours.toFixed(2));
+}
+
 const hourTargetProgressHandler = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -175,31 +253,6 @@ const hourTargetProgressHandler = async (req, res) => {
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
     const todayStr = `${y}-${m}-${d}`;
-
-    const normalizeYMD = (value) => {
-      if (!value) return null;
-      if (value instanceof Date) {
-        const y = value.getUTCFullYear();
-        const m = String(value.getUTCMonth() + 1).padStart(2, '0');
-        const d = String(value.getUTCDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-      }
-      const s = String(value);
-      const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-      const dmy = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
-      if (dmy) {
-        const dd = String(parseInt(dmy[1], 10)).padStart(2, '0');
-        const mm = String(parseInt(dmy[2], 10)).padStart(2, '0');
-        return `${dmy[3]}-${mm}-${dd}`;
-      }
-      const dt = new Date(value);
-      if (Number.isNaN(dt.getTime())) return s;
-      const y = dt.getUTCFullYear();
-      const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
-      const dd = String(dt.getUTCDate()).padStart(2, '0');
-      return `${y}-${mm}-${dd}`;
-    };
 
     const dayOfWeek = now.getDay();
     const startOfWeek = new Date(now);
@@ -258,58 +311,25 @@ const hourTargetProgressHandler = async (req, res) => {
     let currentRangeHours = 0;
     let periodLabelRange = null;
     if (rangeStartStr && rangeEndStr && targetHours != null) {
-      const [taskRows] = await db.promise.execute(
-        `SELECT at.total_hours, at.start_date, at.due_date, at.created_at
-         FROM activity_tasks at
-         INNER JOIN activities a ON at.activity_id = a.id
-         WHERE a.is_active = true
-           AND at.created_by = ?
-           AND at.total_hours IS NOT NULL
-           AND at.total_hours > 0`,
-        [userId]
-      );
-
-      const toUtcDate = (ymd) => {
-        if (!ymd) return null;
-        const dt = new Date(`${ymd}T00:00:00Z`);
-        return Number.isNaN(dt.getTime()) ? null : dt;
-      };
-      const dayDiffInclusive = (startDt, endDt) => {
-        const msPerDay = 24 * 60 * 60 * 1000;
-        return Math.floor((endDt - startDt) / msPerDay) + 1;
-      };
-
-      const rangeStartDate = toUtcDate(rangeStartStr);
-      const rangeEndDate = toUtcDate(rangeEndStr);
-      let overlapHours = 0;
-
-      if (rangeStartDate && rangeEndDate) {
-        taskRows.forEach((task) => {
-          const totalHoursNum = Number(task.total_hours || 0);
-          if (!(totalHoursNum > 0)) return;
-
-          const taskStartStr = normalizeYMD(task.start_date || task.due_date || task.created_at);
-          const taskEndStr = normalizeYMD(task.due_date || task.start_date || task.created_at);
-          const taskStartDate = toUtcDate(taskStartStr);
-          const taskEndDate = toUtcDate(taskEndStr);
-          if (!taskStartDate || !taskEndDate) return;
-
-          const effectiveStart = taskStartDate <= taskEndDate ? taskStartDate : taskEndDate;
-          const effectiveEnd = taskStartDate <= taskEndDate ? taskEndDate : taskStartDate;
-          const totalTaskDays = Math.max(1, dayDiffInclusive(effectiveStart, effectiveEnd));
-
-          const overlapStart = new Date(Math.max(effectiveStart.getTime(), rangeStartDate.getTime()));
-          const overlapEnd = new Date(Math.min(effectiveEnd.getTime(), rangeEndDate.getTime()));
-          if (overlapStart > overlapEnd) return;
-
-          const overlapDays = dayDiffInclusive(overlapStart, overlapEnd);
-          overlapHours += (totalHoursNum * overlapDays) / totalTaskDays;
-        });
-      }
-
-      currentRangeHours = Number(overlapHours.toFixed(2));
+      currentRangeHours = await computeOverlapHoursForRange(userId, rangeStartStr, rangeEndStr);
       periodLabelRange = `${rangeStartStr} - ${rangeEndStr}`;
     }
+
+    let statsFrom = normalizeYMD(req.query.stats_from);
+    let statsTo = normalizeYMD(req.query.stats_to);
+    if (!statsFrom || !statsTo) {
+      const defaultFrom = new Date();
+      defaultFrom.setFullYear(defaultFrom.getFullYear() - 1);
+      statsFrom = statsFrom || normalizeYMD(defaultFrom);
+      statsTo = statsTo || todayStr;
+    }
+    if (statsFrom > statsTo) {
+      const swap = statsFrom;
+      statsFrom = statsTo;
+      statsTo = swap;
+    }
+    const statisticsHours = await computeOverlapHoursForRange(userId, statsFrom, statsTo);
+
     res.json({
       success: true,
       data: {
@@ -321,6 +341,10 @@ const hourTargetProgressHandler = async (req, res) => {
         target_end_date: normalizeYMD(row.hour_target_end_date) || rangeEndStr,
         current_range_hours: currentRangeHours,
         period_label_range: periodLabelRange,
+
+        statistics_from: statsFrom,
+        statistics_to: statsTo,
+        statistics_hours: statisticsHours,
 
         current_week_hours: currentWeekHours,
         current_month_hours: currentMonthHours,

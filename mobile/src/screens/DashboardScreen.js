@@ -20,6 +20,7 @@ import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
 import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
 import TaskHoursByActivityChart from '../components/TaskHoursByActivityChart';
 import api from '../config/api';
+import { formatMDY, toYMD } from '../utils/dateFormat';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -688,8 +689,7 @@ const DashboardScreen = () => {
           {hourTargetProgress?.target_hours != null && hourTargetProgress?.target_start_date && hourTargetProgress?.target_end_date ? (
             <>
               <Text style={styles.hourTargetPeriod}>
-                {hourTargetProgress.period_label_range ||
-                  `${hourTargetProgress.target_start_date} - ${hourTargetProgress.target_end_date}`}
+                {`${formatMDY(hourTargetProgress.target_start_date)} - ${formatMDY(hourTargetProgress.target_end_date)}`}
               </Text>
               {(() => {
                 const current = hourTargetProgress.current_range_hours ?? 0;
@@ -916,7 +916,7 @@ const DashboardScreen = () => {
             >
               <Text style={hourTargetForm.startDate ? styles.modalDateButtonTextSelected : styles.modalDateButtonText}>
                 {hourTargetForm.startDate
-                  ? hourTargetForm.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                  ? formatMDY(toYMD(hourTargetForm.startDate))
                   : 'Select start date'}
               </Text>
             </TouchableOpacity>
@@ -940,7 +940,7 @@ const DashboardScreen = () => {
             >
               <Text style={hourTargetForm.endDate ? styles.modalDateButtonTextSelected : styles.modalDateButtonText}>
                 {hourTargetForm.endDate
-                  ? hourTargetForm.endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                  ? formatMDY(toYMD(hourTargetForm.endDate))
                   : 'Select end date'}
               </Text>
             </TouchableOpacity>

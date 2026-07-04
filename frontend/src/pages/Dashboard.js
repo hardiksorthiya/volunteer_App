@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
+import { formatMDY } from '../utils/dateFormat';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../css/Dashboard.css';
@@ -103,13 +104,7 @@ const Dashboard = () => {
     return match ? match[1] : s;
   };
 
-  const formatDMY = (value) => {
-    const ymd = extractYMD(value);
-    const m = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) return ymd;
-    const [, y, mo, d] = m;
-    return `${d}-${mo}-${y}`;
-  };
+  const formatDMY = formatMDY;
 
   useEffect(() => {
     const token = localStorage.getItem('token');

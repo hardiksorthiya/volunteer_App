@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
+import { formatMDY, oneYearAgoYMD, todayYMD } from '../utils/dateFormat';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/HourTargets.css';
 
 const HourTargets = () => {
   const navigate = useNavigate();
@@ -17,6 +19,9 @@ const HourTargets = () => {
   const [form, setForm] = useState({ startDate: '', endDate: '', hours: '' });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [statsFrom, setStatsFrom] = useState(oneYearAgoYMD());
+  const [statsTo, setStatsTo] = useState(todayYMD());
+  const [statisticsHours, setStatisticsHours] = useState(0);
 
   const extractYMD = (value) => {
     if (!value) return '';
@@ -25,29 +30,43 @@ const HourTargets = () => {
     return match ? match[1] : s;
   };
 
-  const formatDMY = (value) => {
-    const ymd = extractYMD(value);
-    const m = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) return ymd;
-    const [, y, mo, d] = m;
-    return `${d}-${mo}-${y}`;
-  };
+  const formatDMY = formatMDY;
 
-  const load = async () => {
+  const load = async (fromDate = statsFrom, toDate = statsTo) => {
     setLoading(true);
     setError('');
     try {
-      const [meRes, histRes] = await Promise.all([
+      const [meRes, histRes, progressRes] = await Promise.all([
         api.get('/users/me'),
-        api.get('/users/me/hour-targets')
+        api.get('/users/me/hour-targets'),
+        api.get('/users/me/hour-target-progress', {
+          params: { stats_from: fromDate, stats_to: toDate },
+        }),
       ]);
       if (meRes.data.success) setCurrent(meRes.data.data);
       if (histRes.data.success) setHistory(histRes.data.data || []);
+      if (progressRes.data.success) {
+        setStatisticsHours(progressRes.data.data.statistics_hours ?? 0);
+      }
     } catch (e) {
       console.error('Error loading hour targets:', e);
       setError(e.response?.data?.message || 'Failed to load hour targets');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStatsFromChange = async (value) => {
+    setStatsFrom(value);
+    if (value && statsTo) {
+      await load(value, statsTo);
+    }
+  };
+
+  const handleStatsToChange = async (value) => {
+    setStatsTo(value);
+    if (statsFrom && value) {
+      await load(statsFrom, value);
     }
   };
 
@@ -226,6 +245,41 @@ const HourTargets = () => {
                   {deletingId === 'active' ? 'Clearing…' : 'Clear active'}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+
+        <div className="card mb-3">
+          <div className="card-body">
+            <h5 className="card-title mb-2">Volunteer hours statistics</h5>
+            <p className="text-muted small mb-3">Completed hours for the selected date range</p>
+            <div className="row g-3 align-items-end">
+              <div className="col-md-4">
+                <label className="form-label">From date</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={statsFrom}
+                  onChange={(e) => handleStatsFromChange(e.target.value)}
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">To date</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={statsTo}
+                  onChange={(e) => handleStatsToChange(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="hour-target-stats-highlight mt-4">
+              <div className="hour-target-stats-value">{statisticsHours}</div>
+              <div className="hour-target-stats-label">hours completed</div>
+              <div className="hour-target-stats-range text-muted small">
+                {formatMDY(statsFrom)} – {formatMDY(statsTo)}
+              </div>
             </div>
           </div>
         </div>

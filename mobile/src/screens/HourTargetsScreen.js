@@ -15,29 +15,7 @@ import Header from '../components/Header';
 import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
 import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
 import { ClockIcon } from '../components/Icons';
-
-const toYMD = (dateObj) => {
-  if (!dateObj) return null;
-  const y = dateObj.getFullYear();
-  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const d = String(dateObj.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-
-const extractYMD = (value) => {
-  if (!value) return '';
-  const s = String(value);
-  const match = s.match(/^(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : s;
-};
-
-const formatDMY = (value) => {
-  const ymd = extractYMD(value);
-  const parts = ymd.split('-'); // [yyyy, mm, dd]
-  if (parts.length !== 3) return ymd;
-  const [yyyy, mm, dd] = parts;
-  return `${dd}-${mm}-${yyyy}`;
-};
+import { extractYMD, formatMDY, toYMD, oneYearAgo } from '../utils/dateFormat';
 
 const HourTargetsScreen = () => {
   const [loading, setLoading] = useState(true);
@@ -57,6 +35,12 @@ const HourTargetsScreen = () => {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
+  const [statsFrom, setStatsFrom] = useState(oneYearAgo());
+  const [statsTo, setStatsTo] = useState(new Date());
+  const [statisticsHours, setStatisticsHours] = useState(0);
+  const [showStatsFromPicker, setShowStatsFromPicker] = useState(false);
+  const [showStatsToPicker, setShowStatsToPicker] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [deletingRowId, setDeletingRowId] = useState(null);
   const [clearingActive, setClearingActive] = useState(false);
@@ -73,12 +57,20 @@ const HourTargetsScreen = () => {
 
       const [meRes, progressRes, historyRes] = await Promise.all([
         api.get('/users/me'),
-        api.get('/users/me/hour-target-progress'),
+        api.get('/users/me/hour-target-progress', {
+          params: {
+            stats_from: toYMD(statsFrom),
+            stats_to: toYMD(statsTo),
+          },
+        }),
         api.get('/users/me/hour-targets'),
       ]);
 
       if (meRes.data?.success) setUser(meRes.data.data);
-      if (progressRes.data?.success) setHourTargetProgress(progressRes.data.data);
+      if (progressRes.data?.success) {
+        setHourTargetProgress(progressRes.data.data);
+        setStatisticsHours(progressRes.data.data.statistics_hours ?? 0);
+      }
       setHistory(historyRes.data?.success ? historyRes.data.data || [] : []);
     } catch (e) {
       console.error('HourTargetsScreen load error:', e);
@@ -92,6 +84,22 @@ const HourTargetsScreen = () => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const refreshStatistics = async (fromDate = statsFrom, toDate = statsTo) => {
+    try {
+      const progressRes = await api.get('/users/me/hour-target-progress', {
+        params: {
+          stats_from: toYMD(fromDate),
+          stats_to: toYMD(toDate),
+        },
+      });
+      if (progressRes.data?.success) {
+        setStatisticsHours(progressRes.data.data.statistics_hours ?? 0);
+      }
+    } catch (e) {
+      console.error('HourTargetsScreen stats error:', e);
+    }
+  };
 
   const openAdd = () => {
     setModalMode('add');
@@ -250,7 +258,7 @@ const HourTargetsScreen = () => {
           {currentHours != null && currentStart && currentEnd ? (
             <>
               <Text style={styles.rangeText}>
-                {formatDMY(currentStart)} - {formatDMY(currentEnd)}
+                {formatMDY(currentStart)} - {formatMDY(currentEnd)}
               </Text>
               <Text style={styles.hoursText}>
                 {currentDone} / {currentHours} hours
@@ -273,6 +281,57 @@ const HourTargetsScreen = () => {
         </View>
 
         <View style={styles.card}>
+          <Text style={styles.cardTitle}>Volunteer hours statistics</Text>
+          <Text style={styles.mutedSmall}>Filter completed hours by date range</Text>
+
+          <Text style={styles.inputLabel}>From date</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStatsFromPicker(true)}>
+            <Text style={styles.dateButtonText}>{formatMDY(toYMD(statsFrom))}</Text>
+          </TouchableOpacity>
+          {showStatsFromPicker && (
+            <DateTimePicker
+              value={statsFrom}
+              mode="date"
+              display="default"
+              onChange={(event, date) => {
+                setShowStatsFromPicker(false);
+                if (date) {
+                  setStatsFrom(date);
+                  refreshStatistics(date, statsTo);
+                }
+              }}
+            />
+          )}
+
+          <Text style={styles.inputLabel}>To date</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStatsToPicker(true)}>
+            <Text style={styles.dateButtonText}>{formatMDY(toYMD(statsTo))}</Text>
+          </TouchableOpacity>
+          {showStatsToPicker && (
+            <DateTimePicker
+              value={statsTo}
+              mode="date"
+              display="default"
+              onChange={(event, date) => {
+                setShowStatsToPicker(false);
+                if (date) {
+                  setStatsTo(date);
+                  refreshStatistics(statsFrom, date);
+                }
+              }}
+            />
+          )}
+
+          <View style={styles.statsHighlight}>
+            <Text style={styles.statsHoursValue}>{statisticsHours}</Text>
+            <Text style={styles.statsHoursLabel}>hours completed</Text>
+            <Text style={styles.statsRangeText}>
+              {formatMDY(toYMD(statsFrom))} – {formatMDY(toYMD(statsTo))}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.card}>
           <View style={styles.rowBetween}>
             <Text style={styles.cardTitle}>Target history</Text>
             <Text style={styles.mutedSmall}>{history.length} record(s)</Text>
@@ -286,11 +345,11 @@ const HourTargetsScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.historyRange}>
                     {row.start_date && row.end_date
-                      ? `${formatDMY(row.start_date)} - ${formatDMY(row.end_date)}`
-                      : formatDMY(row.created_at)}
+                      ? `${formatMDY(row.start_date)} - ${formatMDY(row.end_date)}`
+                      : formatMDY(row.created_at)}
                   </Text>
                   <Text style={styles.historyHours}>{row.target_hours} hours</Text>
-                  <Text style={styles.mutedTiny}>Created: {formatDMY(row.created_at)}</Text>
+                  <Text style={styles.mutedTiny}>Created: {formatMDY(row.created_at)}</Text>
                 </View>
 
                 <View style={styles.rowActions}>
@@ -321,7 +380,7 @@ const HourTargetsScreen = () => {
               <Text style={styles.inputLabel}>Start date</Text>
               <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartPicker(true)}>
                 <Text style={styles.dateButtonText}>
-                  {startDate ? formatDMY(toYMD(startDate)) : 'Select start date'}
+                  {startDate ? formatMDY(toYMD(startDate)) : 'Select start date'}
                 </Text>
               </TouchableOpacity>
               {showStartPicker && (
@@ -339,7 +398,7 @@ const HourTargetsScreen = () => {
               <Text style={styles.inputLabel}>End date</Text>
               <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndPicker(true)}>
                 <Text style={styles.dateButtonText}>
-                  {endDate ? formatDMY(toYMD(endDate)) : 'Select end date'}
+                  {endDate ? formatMDY(toYMD(endDate)) : 'Select end date'}
                 </Text>
               </TouchableOpacity>
               {showEndPicker && (
@@ -397,6 +456,36 @@ const styles = StyleSheet.create({
   dangerButtonText: { color: '#fff', fontWeight: '700' },
   rangeText: { marginTop: 10, color: '#111827', fontWeight: '700' },
   hoursText: { marginTop: 6, color: '#374151' },
+  statsHighlight: {
+    marginTop: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: '#eff6ff',
+    borderWidth: 2,
+    borderColor: '#2563eb',
+    alignItems: 'center',
+  },
+  statsHoursValue: {
+    fontSize: 48,
+    fontWeight: '800',
+    color: '#1d4ed8',
+    lineHeight: 52,
+  },
+  statsHoursLabel: {
+    marginTop: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e40af',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statsRangeText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#3b82f6',
+    fontWeight: '600',
+  },
   progressBg: { marginTop: 12, height: 10, borderRadius: 999, backgroundColor: '#e5e7eb', overflow: 'hidden' },
   progressFill: { height: 10, backgroundColor: '#10b981', borderRadius: 999 },
   historyRow: { flexDirection: 'row', gap: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#f3f4f6' },

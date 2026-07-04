@@ -257,11 +257,22 @@
 /* Markdown Content Styling - ChatGPT-like formatting */
 .markdown-content {
   width: 100%;
+  word-break: break-word;
 }
 
-.markdown-content p {
+.markdown-content > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-paragraph {
   margin-bottom: 0.75rem;
   line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.user-message-text {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .markdown-content > *:last-child {

@@ -14,6 +14,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import api from '../config/api';
+import { confirmPastActivityDate, isDateTimeInPast } from '../utils/pastDateConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ArrowLeftIcon,
@@ -347,6 +348,14 @@ const EditActivityScreen = () => {
       setFormErrors(errors);
       setSubmitting(false);
       return;
+    }
+
+    if (isDateTimeInPast(formData.start_date, formData.start_time)) {
+      const ok = await confirmPastActivityDate();
+      if (!ok) {
+        setSubmitting(false);
+        return;
+      }
     }
 
     try {
@@ -872,7 +881,7 @@ const EditActivityScreen = () => {
                       mode="date"
                       display="default"
                       onChange={handleEndDateChange}
-                      minimumDate={startDate || new Date()}
+                      minimumDate={startDate || undefined}
                     />
                   )}
                 </>

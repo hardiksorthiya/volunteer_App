@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardInset } from '../hooks/useKeyboardInset';
+import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
 import { getKeyboardController } from '../utils/keyboardUi';
 
 /**
@@ -30,6 +31,7 @@ export default function ChatConversationLayout({
   const isAndroid = Platform.OS === 'android';
   const keyboardInset = useKeyboardInset();
   const keyboardOpen = keyboardInset > 0;
+  useChatAutoScroll(scrollRef, [children]);
   const baseBottom =
     extraBottomInset > 0
       ? extraBottomInset
@@ -75,7 +77,11 @@ export default function ChatConversationLayout({
       <ScrollView
         ref={scrollRef}
         style={[styles.messages, isFlat && styles.messagesFlat]}
-        contentContainerStyle={[styles.messagesContent, contentContainerStyle]}
+        contentContainerStyle={[
+          styles.messagesContent,
+          contentContainerStyle,
+          keyboardOpen && styles.messagesContentKeyboard,
+        ]}
         keyboardShouldPersistTaps="always"
         keyboardDismissMode="on-drag"
         nestedScrollEnabled
@@ -136,6 +142,9 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 8,
     flexGrow: 1,
+  },
+  messagesContentKeyboard: {
+    paddingBottom: 16,
   },
   footerSticky: {
     flexShrink: 0,

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 import Markdown from 'react-native-markdown-display';
 import { GUEST_LIMIT, useGuestAiChat } from '../hooks/useGuestAiChat';
 import { useEmbeddedChatKeyboardInset } from '../hooks/useEmbeddedChatKeyboardInset';
+import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
 import { isExpoGo } from '../utils/runtime';
 import ChatConversationLayout from './ChatConversationLayout';
 import ChatPillInput from './ChatPillInput';
@@ -44,9 +45,7 @@ const GuestAIChatPanel = ({
   const keyboardInset = useEmbeddedChatKeyboardInset();
   const isEmbedded = variant === 'embedded';
 
-  useEffect(() => {
-    messagesScrollRef.current?.scrollToEnd({ animated: true });
-  }, [messages, loading]);
+  useChatAutoScroll(messagesScrollRef, [messages, loading]);
 
   const onSendMessage = async () => {
     await sendMessage();
