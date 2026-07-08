@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { SendIcon, BotIcon, UserIcon, TrashIcon, PlusIcon, HistoryIcon, LocationIcon } from '../components/Icons';
 import api from '../config/api';
 import { getChatLocationContext, requestChatLocationPermission, getLocationPermissionState } from '../utils/chatLocation';
+import { getChatConversationsStorageKey } from '../utils/chatStorage';
 import '../css/Chat.css';
 
 const Chat = () => {
@@ -112,7 +113,13 @@ const Chat = () => {
   };
 
   const loadConversations = () => {
-    const savedConversations = localStorage.getItem('chatConversations');
+    const storageKey = getChatConversationsStorageKey();
+    if (!storageKey) {
+      setConversations([]);
+      setCurrentConversationId(null);
+      return;
+    }
+    const savedConversations = localStorage.getItem(storageKey);
     if (savedConversations) {
       try {
         const parsed = JSON.parse(savedConversations);
@@ -125,12 +132,17 @@ const Chat = () => {
       } catch (error) {
         console.error('Error loading conversations:', error);
       }
+    } else {
+      setConversations([]);
+      setCurrentConversationId(null);
     }
   };
 
   const saveConversations = (updatedConversations) => {
+    const storageKey = getChatConversationsStorageKey();
+    if (!storageKey) return;
     try {
-      localStorage.setItem('chatConversations', JSON.stringify(updatedConversations));
+      localStorage.setItem(storageKey, JSON.stringify(updatedConversations));
       setConversations(updatedConversations);
     } catch (error) {
       console.error('Error saving conversations:', error);
@@ -350,11 +362,13 @@ const Chat = () => {
 
 
   const handleClearAllHistory = () => {
+    const storageKey = getChatConversationsStorageKey();
+    if (!storageKey) return;
     if (window.confirm('Are you sure you want to clear all chat history?')) {
       setConversations([]);
       setCurrentConversationId(null);
       setMessages([]);
-      localStorage.removeItem('chatConversations');
+      localStorage.removeItem(storageKey);
     }
   };
 

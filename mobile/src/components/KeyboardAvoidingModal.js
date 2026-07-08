@@ -1,23 +1,28 @@
 import React from 'react';
-import { KeyboardAvoidingView, Modal, Platform, StyleSheet } from 'react-native';
-import { getKeyboardController } from '../utils/keyboardUi';
+import { Modal, ScrollView, StyleSheet } from 'react-native';
+import { useKeyboardContentPadding } from '../hooks/useKeyboardContentPadding';
 
 /**
- * Modal wrapper that lifts content above the keyboard when a TextInput is focused.
+ * Modal wrapper: scrolls focused inputs into view without pushing the whole popup upward.
  */
 export default function KeyboardAvoidingModal({ children, ...modalProps }) {
-  const keyboardController = getKeyboardController();
-  const AvoidingView = keyboardController?.KeyboardAvoidingView || KeyboardAvoidingView;
+  const keyboardPad = useKeyboardContentPadding(12);
 
   return (
     <Modal {...modalProps}>
-      <AvoidingView
+      <ScrollView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
+        contentContainerStyle={[
+          styles.scrollContent,
+          keyboardPad > 0 && { paddingBottom: keyboardPad },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
       >
         {children}
-      </AvoidingView>
+      </ScrollView>
     </Modal>
   );
 }
@@ -25,5 +30,8 @@ export default function KeyboardAvoidingModal({ children, ...modalProps }) {
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
 });

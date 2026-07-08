@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getKeyboardController } from '../utils/keyboardUi';
+import { useKeyboardContentPadding } from '../hooks/useKeyboardContentPadding';
 
 /**
  * ScrollView that keeps the focused TextInput visible above the keyboard.
@@ -14,14 +15,20 @@ const KeyboardAwareScrollView = forwardRef(function KeyboardAwareScrollView(
     style,
     contentContainerStyle,
     bottomOffset,
-    extraKeyboardSpace = 12,
+    extraKeyboardSpace = 24,
     keyboardVerticalOffset = 0,
     ...rest
   },
   ref,
 ) {
   const insets = useSafeAreaInsets();
-  const resolvedBottomOffset = bottomOffset ?? Math.max(insets.bottom, 20);
+  const keyboardContentPad = useKeyboardContentPadding(20);
+  const resolvedBottomOffset = bottomOffset ?? Math.max(insets.bottom, 16);
+  const mergedContentStyle = [
+    contentContainerStyle,
+    keyboardContentPad > 0 && { paddingBottom: keyboardContentPad },
+  ];
+
   const keyboardController = getKeyboardController();
   const NativeKeyboardAwareScrollView = keyboardController?.KeyboardAwareScrollView;
 
@@ -30,10 +37,12 @@ const KeyboardAwareScrollView = forwardRef(function KeyboardAwareScrollView(
       <NativeKeyboardAwareScrollView
         ref={ref}
         style={[styles.flex, style]}
-        contentContainerStyle={contentContainerStyle}
+        contentContainerStyle={mergedContentStyle}
         bottomOffset={resolvedBottomOffset}
         extraKeyboardSpace={extraKeyboardSpace}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        nestedScrollEnabled
         {...rest}
       >
         {children}
@@ -44,15 +53,17 @@ const KeyboardAwareScrollView = forwardRef(function KeyboardAwareScrollView(
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
       keyboardVerticalOffset={keyboardVerticalOffset}
     >
       <ScrollView
         ref={ref}
         style={[styles.flex, style]}
-        contentContainerStyle={contentContainerStyle}
+        contentContainerStyle={mergedContentStyle}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        nestedScrollEnabled
         {...rest}
       >
         {children}

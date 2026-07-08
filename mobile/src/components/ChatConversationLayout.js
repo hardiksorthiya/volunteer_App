@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView as RNKeyboardAvoidingView,
   Platform,
@@ -8,13 +8,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardInset } from '../hooks/useKeyboardInset';
-import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
+import { useKeyboardResizeDetected } from '../hooks/useKeyboardResizeDetected';
 import { getKeyboardController } from '../utils/keyboardUi';
+import { isExpoGo, needsManualAndroidKeyboardLift } from '../utils/runtime';
+
+const DEFAULT_FOOTER_HEIGHT = 72;
 
 /**
  * ChatGPT-style shell: messages flex above a pinned composer.
- * iOS: KeyboardStickyView tracks the keyboard.
- * Android: adjustResize (useResizeMode) moves the layout — sticky must stay off to avoid a gap.
+ * iOS / Android APK: KeyboardStickyView tracks the keyboard when resize is unavailable.
  */
 export default function ChatConversationLayout({
   header,
@@ -31,7 +33,8 @@ export default function ChatConversationLayout({
   const isAndroid = Platform.OS === 'android';
   const keyboardInset = useKeyboardInset();
   const keyboardOpen = keyboardInset > 0;
-  useChatAutoScroll(scrollRef, [children]);
+  const windowResizedOnKeyboard = useKeyboardResizeDetected();
+  const [footerHeight, setFooterHeight] = useState(DEFAULT_FOOTER_HEIGHT);
   const baseBottom =
     extraBottomInset > 0
       ? extraBottomInset
@@ -41,28 +44,63 @@ export default function ChatConversationLayout({
   const KeyboardStickyView = keyboardController?.KeyboardStickyView;
   const KeyboardAvoidingView = keyboardController?.KeyboardAvoidingView || RNKeyboardAvoidingView;
 
-  // Sticky footer only on iOS. On Android, useResizeMode already resizes the window;
-  // enabling sticky as well creates the large empty gap above the keyboard.
   const useIosSticky = !isAndroid && KeyboardStickyView != null;
+  const useAndroidSticky =
+    isAndroid &&
+    KeyboardStickyView != null &&
+    needsManualAndroidKeyboardLift() &&
+    !(keyboardOpen && windowResizedOnKeyboard);
+  const useStickyFooter = useIosSticky || useAndroidSticky;
+
+  const scrollMessagesToEnd = useCallback(
+    (animated = true) => {
+      requestAnimationFrame(() => {
+        scrollRef?.current?.scrollToEnd?.({ animated });
+      });
+    },
+    [scrollRef],
+  );
+
+  const scrollMessagesToEndWithRetries = useCallback(() => {
+    [0, 80, 200].forEach((delay) => {
+      setTimeout(() => scrollMessagesToEnd(delay === 0), delay);
+    });
+  }, [scrollMessagesToEnd]);
+
+  useEffect(() => {
+    if (keyboardInset > 0) {
+      scrollMessagesToEndWithRetries();
+    }
+  }, [keyboardInset, scrollMessagesToEndWithRetries]);
+
+  // Footer in layout flow (Expo Go / adjustResize): only small pad — flexGrow was causing answers to jump to top.
+  const messagesBottomPad = useStickyFooter ? footerHeight + 12 : 8;
 
   const footerBottomPad = (() => {
     if (!keyboardOpen) {
       return baseBottom;
     }
-    if (useIosSticky) {
+    if (useStickyFooter) {
       return 0;
     }
-    // Android: useResizeMode resizes the window — no extra keyboard padding.
     return baseBottom;
   })();
 
   const footerNode = (
-    <View style={[styles.footer, isFlat && styles.footerFlat, { paddingBottom: footerBottomPad }]}>
+    <View
+      onLayout={(e) => {
+        const h = e.nativeEvent.layout.height;
+        if (h > 0 && Math.abs(h - footerHeight) > 2) {
+          setFooterHeight(h);
+        }
+      }}
+      style={[styles.footer, isFlat && styles.footerFlat, { paddingBottom: footerBottomPad }]}
+    >
       {footer}
     </View>
   );
 
-  const footerSlot = useIosSticky ? (
+  const footerSlot = useStickyFooter ? (
     <KeyboardStickyView offset={{ closed: 0, opened: 0 }} style={styles.footerSticky}>
       {footerNode}
     </KeyboardStickyView>
@@ -77,15 +115,12 @@ export default function ChatConversationLayout({
       <ScrollView
         ref={scrollRef}
         style={[styles.messages, isFlat && styles.messagesFlat]}
-        contentContainerStyle={[
-          styles.messagesContent,
-          contentContainerStyle,
-          keyboardOpen && styles.messagesContentKeyboard,
-        ]}
+        contentContainerStyle={[styles.messagesContent, contentContainerStyle, { paddingBottom: messagesBottomPad }]}
         keyboardShouldPersistTaps="always"
         keyboardDismissMode="on-drag"
         nestedScrollEnabled
         showsVerticalScrollIndicator
+        onContentSizeChange={() => scrollMessagesToEnd(false)}
       >
         {children}
       </ScrollView>
@@ -94,7 +129,7 @@ export default function ChatConversationLayout({
     </View>
   );
 
-  if (useIosSticky || isAndroid) {
+  if (useStickyFooter || isAndroid) {
     return <View style={[styles.avoid, style]}>{column}</View>;
   }
 
@@ -108,6 +143,8 @@ export default function ChatConversationLayout({
     </KeyboardAvoidingView>
   );
 }
+
+export { DEFAULT_FOOTER_HEIGHT };
 
 const styles = StyleSheet.create({
   avoid: {
@@ -123,6 +160,7 @@ const styles = StyleSheet.create({
   },
   columnFlat: {
     borderRadius: 0,
+    backgroundColor: '#f8fafc',
   },
   headerSlot: {
     flexShrink: 0,
@@ -136,15 +174,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   messagesFlat: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
   },
   messagesContent: {
     padding: 16,
-    paddingBottom: 8,
-    flexGrow: 1,
-  },
-  messagesContentKeyboard: {
-    paddingBottom: 16,
   },
   footerSticky: {
     flexShrink: 0,

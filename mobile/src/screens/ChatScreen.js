@@ -3,19 +3,18 @@ import {
   View,
   Text,
   FlatList,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   Alert,
   Modal,
   Pressable,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import Markdown from 'react-native-markdown-display';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import {
@@ -23,25 +22,31 @@ import {
   getLocationPermissionState,
   enableChatLocationSharing,
 } from '../utils/chatLocation';
-import { useKeyboardInset } from '../hooks/useKeyboardInset';
-import { useKeyboardResizeDetected } from '../hooks/useKeyboardResizeDetected';
+import {
+  chatConversationsKey,
+  chatLocationDismissedKey,
+  getCurrentUserId,
+} from '../utils/chatStorage';
 import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
-import { getKeyboardController } from '../utils/keyboardUi';
-import { isExpoGo, needsManualAndroidKeyboardLift } from '../utils/runtime';
+import ChatConversationLayout from '../components/ChatConversationLayout';
+import ChatPillInput from '../components/ChatPillInput';
+import LocationPermissionBar from '../components/LocationPermissionBar';
 
-const STORAGE_KEY = 'chatConversations';
-const LOCATION_DISMISSED_KEY = 'chatLocationDismissed';
+const aiMarkdownStyles = {
+  body: { color: '#0f172a', fontSize: 15, lineHeight: 22 },
+  strong: { fontWeight: '700', color: '#0f172a' },
+  paragraph: { marginTop: 4, marginBottom: 4 },
+  bullet_list: { marginVertical: 4 },
+  ordered_list: { marginVertical: 4 },
+  list_item: { marginVertical: 2 },
+};
 
 export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const listRef = useRef(null);
   const inputRef = useRef(null);
 
-  const keyboardInset = useKeyboardInset();
-  const windowResizedOnKeyboard = useKeyboardResizeDetected();
-  const keyboardController = getKeyboardController();
-  const KeyboardStickyView = keyboardController?.KeyboardStickyView;
-
+  const [userId, setUserId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,14 +58,41 @@ export default function ChatScreen() {
   const [locationLabel, setLocationLabel] = useState(null);
   const [showLocationBar, setShowLocationBar] = useState(false);
 
-  // APK: sticky composer tracks keyboard. Disabled when adjustResize already shrank the window.
-  const useStickyFooter =
-    KeyboardStickyView != null &&
-    (Platform.OS === 'ios' ||
-      (needsManualAndroidKeyboardLift() && !(keyboardInset > 0 && windowResizedOnKeyboard)));
+  const loadChatsForUser = useCallback(async (uid) => {
+    const key = chatConversationsKey(uid);
+    if (!key) {
+      setChats([]);
+      setChatId(null);
+      setMessages([]);
+      return;
+    }
+    const raw = await AsyncStorage.getItem(key);
+    if (!raw) {
+      setChats([]);
+      setChatId(null);
+      setMessages([]);
+      return;
+    }
+    try {
+      const list = JSON.parse(raw);
+      setChats(list);
+      if (list[0]) {
+        setChatId(list[0].id);
+        setMessages(list[0].messages || []);
+      } else {
+        setChatId(null);
+        setMessages([]);
+      }
+    } catch {
+      setChats([]);
+      setChatId(null);
+      setMessages([]);
+    }
+  }, []);
 
-  const refreshLocation = useCallback(async () => {
-    const dismissed = await AsyncStorage.getItem(LOCATION_DISMISSED_KEY);
+  const refreshLocation = useCallback(async (uid) => {
+    const dismissedKey = chatLocationDismissedKey(uid);
+    const dismissed = await AsyncStorage.getItem(dismissedKey);
     const state = await getLocationPermissionState();
     setLocationGranted(state.granted);
 
@@ -74,33 +106,35 @@ export default function ChatScreen() {
     setShowLocationBar(dismissed !== 'true');
   }, []);
 
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-      if (!raw) return;
-      try {
-        const list = JSON.parse(raw);
-        setChats(list);
-        if (list[0]) {
-          setChatId(list[0].id);
-          setMessages(list[0].messages || []);
-        }
-      } catch (_) {}
-    });
+  const initScreen = useCallback(async () => {
+    const uid = await getCurrentUserId();
+    setUserId(uid);
+    await loadChatsForUser(uid);
+    await refreshLocation(uid);
     api.get('/chat/status').then((r) => setAiOk(!!r.data?.configured)).catch(() => setAiOk(false));
-    refreshLocation();
-  }, [refreshLocation]);
+  }, [loadChatsForUser, refreshLocation]);
 
-  useFocusEffect(useCallback(() => { refreshLocation(); }, [refreshLocation]));
+  useEffect(() => {
+    initScreen();
+  }, [initScreen]);
+
+  useFocusEffect(
+    useCallback(() => {
+      initScreen();
+    }, [initScreen]),
+  );
 
   const scrollToEnd = useChatAutoScroll(listRef, [messages, loading]);
 
-  useEffect(() => {
+  const onComposerFocus = useCallback(() => {
     scrollToEnd(true);
-  }, [keyboardInset, scrollToEnd]);
+  }, [scrollToEnd]);
 
-  const persist = (list) => {
+  const persist = async (list, uid = userId) => {
+    const key = chatConversationsKey(uid);
+    if (!key) return;
     setChats(list);
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    await AsyncStorage.setItem(key, JSON.stringify(list));
   };
 
   const saveMessages = (id, nextMessages, title) => {
@@ -115,18 +149,16 @@ export default function ChatScreen() {
   };
 
   const hideLocationBar = async () => {
-    await AsyncStorage.setItem(LOCATION_DISMISSED_KEY, 'true');
+    await AsyncStorage.setItem(chatLocationDismissedKey(userId), 'true');
     setShowLocationBar(false);
   };
 
   const onAllowLocation = async () => {
     const payload = await enableChatLocationSharing();
     await hideLocationBar();
-    await refreshLocation();
+    await refreshLocation(userId);
     if (payload?.label) setLocationLabel(payload.label);
   };
-
-  const onDenyLocation = () => hideLocationBar();
 
   const onInfoPress = () => {
     Alert.alert(
@@ -137,7 +169,7 @@ export default function ChatScreen() {
       locationGranted
         ? [{ text: 'OK' }]
         : [
-            { text: 'Not now', style: 'cancel' },
+            { text: 'Not now', style: 'cancel', onPress: hideLocationBar },
             { text: 'Allow', onPress: onAllowLocation },
           ],
     );
@@ -178,109 +210,125 @@ export default function ChatScreen() {
       saveMessages(id, withAi);
     } finally {
       setLoading(false);
+      scrollToEnd(true);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
-  const footer = (
-    <View style={styles.footer}>
-      {showLocationBar && (
-        <View style={styles.locBar}>
-          <Text style={styles.locLabel}>Allow location for nearby suggestions?</Text>
-          <View style={styles.locRow}>
-            <Pressable style={styles.locBtnGray} onPress={onDenyLocation}>
-              <Text style={styles.locBtnGrayText}>Deny</Text>
-            </Pressable>
-            <Pressable style={styles.locBtnBlue} onPress={onAllowLocation}>
-              <Text style={styles.locBtnBlueText}>Allow</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+  const deleteChat = (id) => {
+    Alert.alert('Delete chat', 'Remove this conversation from your history?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          const updated = chats.filter((c) => c.id !== id);
+          persist(updated);
+          if (chatId === id) {
+            if (updated[0]) {
+              setChatId(updated[0].id);
+              setMessages(updated[0].messages || []);
+            } else {
+              setChatId(null);
+              setMessages([]);
+            }
+          }
+        },
+      },
+    ]);
+  };
 
-      <View style={styles.composer}>
-        <TextInput
-          ref={inputRef}
-          style={styles.input}
-          value={text}
-          onChangeText={setText}
-          placeholder={aiOk ? 'Message…' : 'AI unavailable'}
-          placeholderTextColor="#94a3b8"
-          editable={aiOk && !loading}
-          multiline
-        />
-        <TouchableOpacity
-          style={[styles.send, (!text.trim() || loading) && styles.sendOff]}
-          onPress={send}
-          disabled={!text.trim() || loading}
-        >
-          <Text style={styles.sendLabel}>↑</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const listAndFooter = (
+  const chatFooter = (
     <>
-      <FlatList
-        ref={listRef}
-        data={messages}
-        keyExtractor={(item) => String(item.id)}
-        style={styles.list}
-        contentContainerStyle={[
-          messages.length === 0 ? styles.listEmpty : styles.listContent,
-          keyboardInset > 0 && styles.listContentKeyboard,
-        ]}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-        onContentSizeChange={() => scrollToEnd(false)}
-        onLayout={() => scrollToEnd(false)}
-        ListEmptyComponent={<Text style={styles.empty}>Ask about volunteering.</Text>}
-        ListFooterComponent={loading ? <ActivityIndicator style={styles.loader} color="#2563eb" /> : null}
-        renderItem={({ item }) => (
-          <View style={[styles.bubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
-            <Text style={item.sender === 'user' ? styles.textUser : styles.textAi}>{item.text}</Text>
-          </View>
-        )}
+      <LocationPermissionBar
+        visible={showLocationBar}
+        canAskAgain
+        locationLabel={locationLabel}
+        onEnable={onAllowLocation}
+        compact
       />
-
-      {useStickyFooter ? (
-        <KeyboardStickyView offset={{ closed: 0, opened: 0 }} style={styles.footerSticky}>
-          {footer}
-        </KeyboardStickyView>
-      ) : (
-        footer
-      )}
+      <ChatPillInput
+        ref={inputRef}
+        value={text}
+        onChangeText={setText}
+        placeholder={aiOk ? 'Ask about volunteering…' : 'AI unavailable'}
+        editable={aiOk && !loading}
+        sendDisabled={!text.trim() || loading || !aiOk}
+        onSend={send}
+        onFocus={onComposerFocus}
+        showLocationButton={false}
+        keepFocusOnSend
+      />
     </>
   );
 
-  const chatBody =
-    isExpoGo() && Platform.OS === 'ios' ? (
-      <KeyboardAvoidingView style={styles.body} behavior="padding">
-        {listAndFooter}
-      </KeyboardAvoidingView>
-    ) : (
-      <View style={styles.body}>{listAndFooter}</View>
-    );
-
   return (
     <View style={styles.root}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 8) }]}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => setHistoryOpen(true)}>
-          <Text style={styles.iconText}>☰</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>AI Assistant</Text>
-        <TouchableOpacity style={styles.iconBtn} onPress={onInfoPress}>
-          <Text style={styles.iconText}>ⓘ</Text>
-        </TouchableOpacity>
+      <View style={[styles.hero, { paddingTop: Math.max(insets.top, 8) }]}>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="Volunteer Connect logo"
+        />
+        <Text style={styles.heroTitle}>Volunteer Connect</Text>
+        <Text style={styles.heroTagline}>Connect. Volunteer. Make a Difference.</Text>
+
+        <View style={styles.toolbar}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => setHistoryOpen(true)}>
+            <Text style={styles.iconText}>☰</Text>
+          </TouchableOpacity>
+          <View style={styles.toolbarCenter}>
+            <Text style={styles.toolbarTitle}>AI Assistant</Text>
+            <Text style={styles.toolbarBadge}>Your personal volunteer guide</Text>
+          </View>
+          <TouchableOpacity style={styles.iconBtn} onPress={onInfoPress}>
+            <Text style={styles.iconText}>ⓘ</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {chatBody}
+      <View style={styles.chatPanel}>
+        <ChatConversationLayout
+          scrollRef={listRef}
+          style={styles.body}
+          variant="flat"
+          contentContainerStyle={styles.messagesContent}
+          footer={chatFooter}
+        >
+          {messages.length === 0 && (
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyTitle}>How can I help you volunteer today?</Text>
+              <Text style={styles.empty}>
+                Ask about opportunities, hours, activities, or how to use Volunteer Connect.
+              </Text>
+            </View>
+          )}
+          {messages.map((item) => (
+            <View
+              key={item.id}
+              style={[
+                styles.messageRow,
+                item.sender === 'user' ? styles.messageRowUser : styles.messageRowAi,
+              ]}
+            >
+              <View style={[styles.bubble, item.sender === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
+                {item.sender === 'ai' ? (
+                  <Markdown style={aiMarkdownStyles}>{item.text}</Markdown>
+                ) : (
+                  <Text style={styles.textUser}>{item.text}</Text>
+                )}
+              </View>
+            </View>
+          ))}
+          {loading && <ActivityIndicator style={styles.loader} color="#2563eb" />}
+        </ChatConversationLayout>
+      </View>
 
       <Modal visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
         <View style={[styles.modal, { paddingTop: Math.max(insets.top, 12) }]}>
           <View style={styles.modalHead}>
-            <Text style={styles.modalTitle}>Chats</Text>
+            <Text style={styles.modalTitle}>Your chats</Text>
             <Pressable onPress={() => setHistoryOpen(false)}>
               <Text style={styles.done}>Done</Text>
             </Pressable>
@@ -296,19 +344,32 @@ export default function ChatScreen() {
             <Text style={styles.newBtnText}>+ New chat</Text>
           </TouchableOpacity>
           <FlatList
-            data={chats}
+            data={[...chats].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))}
             keyExtractor={(item) => String(item.id)}
+            ListEmptyComponent={
+              <Text style={styles.historyEmpty}>No conversations yet. Start a new chat!</Text>
+            }
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.chatRow}
-                onPress={() => {
-                  setChatId(item.id);
-                  setMessages(item.messages || []);
-                  setHistoryOpen(false);
-                }}
-              >
-                <Text numberOfLines={1}>{item.title}</Text>
-              </TouchableOpacity>
+              <View style={styles.chatRow}>
+                <TouchableOpacity
+                  style={styles.chatRowMain}
+                  onPress={() => {
+                    setChatId(item.id);
+                    setMessages(item.messages || []);
+                    setHistoryOpen(false);
+                  }}
+                >
+                  <Text style={styles.chatRowTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.chatRowMeta} numberOfLines={1}>
+                    {item.messages?.length || 0} messages
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.chatRowDelete} onPress={() => deleteChat(item.id)}>
+                  <Text style={styles.chatRowDeleteText}>×</Text>
+                </TouchableOpacity>
+              </View>
             )}
           />
         </View>
@@ -318,83 +379,133 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f1f5f9' },
-  body: { flex: 1, minHeight: 0 },
-  header: {
+  root: { flex: 1, backgroundColor: '#1e3a8a' },
+  hero: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+  },
+  logo: {
+    width: 180,
+    height: 50,
+    marginBottom: 10,
+  },
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#ffffff',
+    textAlign: 'center',
+    letterSpacing: 0.4,
+    marginBottom: 4,
+  },
+  heroTagline: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.92)',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '100%',
+    paddingTop: 4,
+  },
+  toolbarCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  toolbarTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  toolbarBadge: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  iconText: { fontSize: 18, color: '#ffffff', fontWeight: '600' },
+  chatPanel: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+    minHeight: 0,
+  },
+  body: { flex: 1, minHeight: 0 },
+  messagesContent: { padding: 14, paddingTop: 12 },
+  emptyWrap: { alignItems: 'center', paddingHorizontal: 12, paddingVertical: 24 },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1e293b',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  empty: { textAlign: 'center', color: '#64748b', fontSize: 14, lineHeight: 20 },
+  loader: { marginVertical: 12 },
+  messageRow: { marginBottom: 10, flexDirection: 'row' },
+  messageRowUser: { justifyContent: 'flex-end' },
+  messageRowAi: { justifyContent: 'flex-start' },
+  bubble: { maxWidth: '88%', padding: 12, borderRadius: 14 },
+  bubbleUser: { backgroundColor: '#2563eb' },
+  bubbleAi: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  textUser: { color: '#fff', fontSize: 15, lineHeight: 22 },
+  modal: { flex: 1, backgroundColor: '#f8fafc' },
+  modalHead: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingBottom: 10,
+    alignItems: 'center',
+    padding: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
-  title: { fontSize: 17, fontWeight: '700', color: '#0f172a' },
-  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  iconText: { fontSize: 20, color: '#2563eb' },
-  list: { flex: 1, backgroundColor: '#f1f5f9' },
-  listContent: { padding: 12, paddingBottom: 8 },
-  listContentKeyboard: { paddingBottom: 16 },
-  listEmpty: { flexGrow: 1, padding: 12, justifyContent: 'center' },
-  empty: { textAlign: 'center', color: '#64748b' },
-  loader: { marginVertical: 12 },
-  bubble: { maxWidth: '85%', padding: 12, borderRadius: 14, marginBottom: 8 },
-  bubbleUser: { alignSelf: 'flex-end', backgroundColor: '#2563eb' },
-  bubbleAi: { alignSelf: 'flex-start', backgroundColor: '#fff' },
-  textUser: { color: '#fff', fontSize: 15 },
-  textAi: { color: '#0f172a', fontSize: 15 },
-  footerSticky: { flexShrink: 0 },
-  footer: { flexShrink: 0, backgroundColor: '#fff' },
-  locBar: {
-    backgroundColor: '#eff6ff',
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a' },
+  done: { color: '#2563eb', fontWeight: '600', fontSize: 16 },
+  newBtn: {
+    margin: 12,
     padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#bfdbfe',
-  },
-  locLabel: { fontSize: 13, color: '#1e40af', marginBottom: 8 },
-  locRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  locBtnGray: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#e2e8f0' },
-  locBtnGrayText: { color: '#475569', fontWeight: '600' },
-  locBtnBlue: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#2563eb' },
-  locBtnBlueText: { color: '#fff', fontWeight: '600' },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
-  input: {
-    flex: 1,
-    minHeight: 42,
-    maxHeight: 100,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
-    fontSize: 16,
-    color: '#0f172a',
-  },
-  send: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
     backgroundColor: '#2563eb',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  newBtnText: { color: '#fff', fontWeight: '600' },
+  historyEmpty: {
+    textAlign: 'center',
+    color: '#64748b',
+    padding: 24,
+    fontSize: 14,
+  },
+  chatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  chatRowMain: { flex: 1, padding: 14 },
+  chatRowTitle: { fontSize: 15, fontWeight: '600', color: '#0f172a', marginBottom: 2 },
+  chatRowMeta: { fontSize: 12, color: '#64748b' },
+  chatRowDelete: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendOff: { opacity: 0.4 },
-  sendLabel: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  modal: { flex: 1, backgroundColor: '#f8fafc' },
-  modalHead: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, backgroundColor: '#fff' },
-  modalTitle: { fontSize: 18, fontWeight: '700' },
-  done: { color: '#2563eb', fontWeight: '600' },
-  newBtn: { margin: 12, padding: 12, backgroundColor: '#2563eb', borderRadius: 10, alignItems: 'center' },
-  newBtnText: { color: '#fff', fontWeight: '600' },
-  chatRow: { padding: 14, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  chatRowDeleteText: { fontSize: 22, color: '#94a3b8', fontWeight: '600' },
 });

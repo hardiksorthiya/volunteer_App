@@ -33,7 +33,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.volunteerconnectone.app",
-      "versionCode": 21,
+      "versionCode": 24,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",

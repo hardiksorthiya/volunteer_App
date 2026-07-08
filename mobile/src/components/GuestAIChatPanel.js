@@ -8,9 +8,9 @@ import {
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { GUEST_LIMIT, useGuestAiChat } from '../hooks/useGuestAiChat';
-import { useEmbeddedChatKeyboardInset } from '../hooks/useEmbeddedChatKeyboardInset';
 import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
-import { isExpoGo } from '../utils/runtime';
+import { getComposerKeyboardMargin, useKeyboardInset } from '../hooks/useKeyboardInset';
+import EmbeddedGuestChatLayout from './EmbeddedGuestChatLayout';
 import ChatConversationLayout from './ChatConversationLayout';
 import ChatPillInput from './ChatPillInput';
 import LocationPermissionBar from './LocationPermissionBar';
@@ -42,14 +42,24 @@ const GuestAIChatPanel = ({
 
   const messagesScrollRef = useRef(null);
   const inputRef = useRef(null);
-  const keyboardInset = useEmbeddedChatKeyboardInset();
   const isEmbedded = variant === 'embedded';
+  const keyboardInset = useKeyboardInset();
+  const embeddedPanelLift =
+    isEmbedded && keyboardInset > 0 ? getComposerKeyboardMargin(keyboardInset) : 0;
 
-  useChatAutoScroll(messagesScrollRef, [messages, loading]);
+  const scrollToEnd = useChatAutoScroll(messagesScrollRef, [messages, loading], {
+    scrollOnKeyboard: !isEmbedded,
+  });
 
   const onSendMessage = async () => {
     await sendMessage();
     setTimeout(() => inputRef.current?.focus(), 80);
+  };
+
+  const onComposerFocus = () => {
+    if (!isEmbedded) {
+      scrollToEnd(true);
+    }
   };
 
   const panelHeader = (
@@ -94,6 +104,7 @@ const GuestAIChatPanel = ({
         editable={!loading && remaining > 0}
         sendDisabled={!input.trim() || loading || remaining <= 0}
         onSend={onSendMessage}
+        onFocus={isEmbedded ? undefined : onComposerFocus}
         onLocationPress={requestLocation}
         showLocationButton={false}
         keepFocusOnSend
@@ -112,13 +123,13 @@ const GuestAIChatPanel = ({
         style={[
           styles.root,
           styles.rootEmbedded,
-          isExpoGo() && keyboardInset > 0 && { marginBottom: keyboardInset },
+          embeddedPanelLift > 0 && { marginBottom: embeddedPanelLift },
         ]}
       >
         {panelHeader}
         {locationBar}
         {limitBanner}
-        <ChatConversationLayout
+        <EmbeddedGuestChatLayout
           scrollRef={messagesScrollRef}
           style={styles.embeddedLayout}
           contentContainerStyle={styles.embeddedMessagesContent}
@@ -149,7 +160,7 @@ const GuestAIChatPanel = ({
               <Text style={styles.loaderText}>AI is typing...</Text>
             </View>
           )}
-        </ChatConversationLayout>
+        </EmbeddedGuestChatLayout>
       </View>
     );
   }
