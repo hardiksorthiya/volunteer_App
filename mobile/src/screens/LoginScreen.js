@@ -174,6 +174,7 @@ const LoginScreen = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoFocus
             />
           </View>
         </View>

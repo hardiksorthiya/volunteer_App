@@ -1,21 +1,13 @@
 import React from 'react';
 import { Modal, ScrollView, StyleSheet } from 'react-native';
-import { useKeyboardContentPadding } from '../hooks/useKeyboardContentPadding';
 
-/**
- * Modal wrapper: scrolls focused inputs into view without pushing the whole popup upward.
- */
+/** Modal with plain scroll — no keyboard padding or auto-scroll. */
 export default function KeyboardAvoidingModal({ children, ...modalProps }) {
-  const keyboardPad = useKeyboardContentPadding(12);
-
   return (
     <Modal {...modalProps}>
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={[
-          styles.scrollContent,
-          keyboardPad > 0 && { paddingBottom: keyboardPad },
-        ]}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         bounces={false}

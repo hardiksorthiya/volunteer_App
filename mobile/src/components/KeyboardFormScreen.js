@@ -1,32 +1,26 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import KeyboardAwareScrollView from './KeyboardAwareScrollView';
+import { ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-/**
- * Auth / form screens: scrollable layout with keyboard-aware scrolling.
- */
+/** Auth / form screens: plain scroll, no keyboard auto-scroll. */
 export default function KeyboardFormScreen({
   children,
   style,
   contentContainerStyle,
   refreshControl,
 }) {
-  const insets = useSafeAreaInsets();
-  const bottomOffset = Math.max(insets.bottom, 20);
-
   return (
     <SafeAreaView style={[styles.safe, style]} edges={['top', 'left', 'right']}>
-      <KeyboardAwareScrollView
+      <ScrollView
         style={styles.flex}
         contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshControl={refreshControl}
-        bottomOffset={bottomOffset}
-        extraKeyboardSpace={12}
       >
         {children}
-      </KeyboardAwareScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }

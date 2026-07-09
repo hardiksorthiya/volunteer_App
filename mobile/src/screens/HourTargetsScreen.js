@@ -420,6 +420,7 @@ const HourTargetsScreen = () => {
                 keyboardType="number-pad"
                 value={formHours}
                 onChangeText={setFormHours}
+                autoFocus
               />
 
               <View style={styles.modalActions}>

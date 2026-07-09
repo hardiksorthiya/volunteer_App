@@ -963,6 +963,7 @@ const DashboardScreen = () => {
               onChangeText={(text) => setHourTargetForm(f => ({ ...f, hours: text }))}
               placeholder="e.g. 10"
               keyboardType="number-pad"
+              autoFocus
             />
             <Text style={styles.modalHint}>Leave empty to clear your target.</Text>
             <View style={styles.modalButtons}>

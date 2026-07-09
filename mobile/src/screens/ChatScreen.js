@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -27,8 +27,7 @@ import {
   chatLocationDismissedKey,
   getCurrentUserId,
 } from '../utils/chatStorage';
-import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
-import ChatConversationLayout from '../components/ChatConversationLayout';
+import SimpleChatLayout from '../components/SimpleChatLayout';
 import ChatPillInput from '../components/ChatPillInput';
 import LocationPermissionBar from '../components/LocationPermissionBar';
 
@@ -43,8 +42,6 @@ const aiMarkdownStyles = {
 
 export default function ChatScreen() {
   const insets = useSafeAreaInsets();
-  const listRef = useRef(null);
-  const inputRef = useRef(null);
 
   const [userId, setUserId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -123,12 +120,6 @@ export default function ChatScreen() {
       initScreen();
     }, [initScreen]),
   );
-
-  const scrollToEnd = useChatAutoScroll(listRef, [messages, loading]);
-
-  const onComposerFocus = useCallback(() => {
-    scrollToEnd(true);
-  }, [scrollToEnd]);
 
   const persist = async (list, uid = userId) => {
     const key = chatConversationsKey(uid);
@@ -210,8 +201,6 @@ export default function ChatScreen() {
       saveMessages(id, withAi);
     } finally {
       setLoading(false);
-      scrollToEnd(true);
-      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
@@ -248,14 +237,12 @@ export default function ChatScreen() {
         compact
       />
       <ChatPillInput
-        ref={inputRef}
         value={text}
         onChangeText={setText}
         placeholder={aiOk ? 'Ask about volunteering…' : 'AI unavailable'}
         editable={aiOk && !loading}
         sendDisabled={!text.trim() || loading || !aiOk}
         onSend={send}
-        onFocus={onComposerFocus}
         showLocationButton={false}
         keepFocusOnSend
       />
@@ -289,11 +276,11 @@ export default function ChatScreen() {
       </View>
 
       <View style={styles.chatPanel}>
-        <ChatConversationLayout
-          scrollRef={listRef}
+        <SimpleChatLayout
           style={styles.body}
-          variant="flat"
           contentContainerStyle={styles.messagesContent}
+          messagesStyle={styles.messagesFlat}
+          footerStyle={styles.footerFlat}
           footer={chatFooter}
         >
           {messages.length === 0 && (
@@ -322,7 +309,7 @@ export default function ChatScreen() {
             </View>
           ))}
           {loading && <ActivityIndicator style={styles.loader} color="#2563eb" />}
-        </ChatConversationLayout>
+        </SimpleChatLayout>
       </View>
 
       <Modal visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
@@ -443,6 +430,8 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   body: { flex: 1, minHeight: 0 },
+  messagesFlat: { backgroundColor: '#f8fafc' },
+  footerFlat: { borderTopWidth: 0 },
   messagesContent: { padding: 14, paddingTop: 12 },
   emptyWrap: { alignItems: 'center', paddingHorizontal: 12, paddingVertical: 24 },
   emptyTitle: {

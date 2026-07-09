@@ -147,6 +147,7 @@ const ForgotPasswordScreen = () => {
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!loading}
+                  autoFocus
                 />
               </View>
             </View>

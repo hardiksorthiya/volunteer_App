@@ -525,6 +525,7 @@ const EditActivityScreen = () => {
               onChangeText={(value) => handleInputChange('title', value)}
               placeholder="e.g., Community Cleanup Day"
               editable={!submitting}
+              autoFocus
             />
             {formErrors.title && (
               <Text style={styles.errorText}>{formErrors.title}</Text>

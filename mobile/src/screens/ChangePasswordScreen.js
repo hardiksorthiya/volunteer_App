@@ -150,6 +150,7 @@ const ChangePasswordScreen = () => {
                   secureTextEntry={!showCurrentPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  autoFocus
                 />
                 <TouchableOpacity
                   style={styles.eyeIcon}

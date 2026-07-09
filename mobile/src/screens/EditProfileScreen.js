@@ -396,6 +396,7 @@ const EditProfileScreen = () => {
                   onChangeText={(value) => handleChange('name', value)}
                   placeholder="Enter your name"
                   placeholderTextColor="#9ca3af"
+                  autoFocus
                 />
               </View>
             </View>

@@ -151,6 +151,7 @@ const RegisterScreen = () => {
               value={formData.name}
               onChangeText={(value) => handleChange('name', value)}
               autoCapitalize="words"
+              autoFocus
             />
           </View>
         </View>

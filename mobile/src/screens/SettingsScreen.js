@@ -227,6 +227,7 @@ const SettingsScreen = () => {
               onChangeText={setDeletePassword}
               editable={!deleteLoading}
               autoCapitalize="none"
+              autoFocus
             />
             <View style={styles.modalActions}>
               <TouchableOpacity

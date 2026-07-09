@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,30 +6,17 @@ import {
   Image,
   TouchableOpacity,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import GuestAIChatPanel from '../components/GuestAIChatPanel';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
-import { useKeyboardInset } from '../hooks/useKeyboardInset';
 
 const LandingScreen = () => {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
-  const keyboardInset = useKeyboardInset();
-  const landingScrollRef = useRef(null);
   const [refreshing, setRefreshing] = useState(false);
   const [chatRefreshKey, setChatRefreshKey] = useState(0);
 
-  useEffect(() => {
-    if (keyboardInset <= 0) {
-      return;
-    }
-    const timer = setTimeout(() => {
-      landingScrollRef.current?.scrollToEnd?.({ animated: true });
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [keyboardInset]);
   const onRefresh = async () => {
     setRefreshing(true);
     setChatRefreshKey((prev) => prev + 1);
@@ -38,15 +25,12 @@ const LandingScreen = () => {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <KeyboardAwareScrollView
-        ref={landingScrollRef}
+      <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator
-        scrollEnabled={keyboardInset <= 0}
         nestedScrollEnabled
-        bottomOffset={Math.max(insets.bottom, 20)}
-        extraKeyboardSpace={24}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -119,7 +103,7 @@ const LandingScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAwareScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 };

@@ -749,6 +749,7 @@ const ActivityDetailScreen = () => {
               placeholder="Task Title *"
               value={editTaskData.title}
               onChangeText={(value) => handleEditTaskInputChange('title', value)}
+              autoFocus
             />
             <TextInput
               style={[styles.input, styles.textArea]}
@@ -1163,6 +1164,7 @@ const ActivityDetailScreen = () => {
                 placeholder="Task Title *"
                 value={taskFormData.title}
                 onChangeText={(value) => handleTaskInputChange('title', value)}
+                autoFocus
               />
               <TextInput
                 style={[styles.input, styles.textArea]}
@@ -1332,6 +1334,7 @@ const ActivityDetailScreen = () => {
               keyboardType="numeric"
               value={newProgress.toString()}
               onChangeText={(value) => setNewProgress(parseInt(value) || 0)}
+              autoFocus
             />
             <View style={styles.progressPreview}>
               <View style={styles.progressBar}>

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,20 +8,10 @@ import {
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { GUEST_LIMIT, useGuestAiChat } from '../hooks/useGuestAiChat';
-import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
-import { getComposerKeyboardMargin, useKeyboardInset } from '../hooks/useKeyboardInset';
-import EmbeddedGuestChatLayout from './EmbeddedGuestChatLayout';
-import ChatConversationLayout from './ChatConversationLayout';
+import SimpleChatLayout from './SimpleChatLayout';
 import ChatPillInput from './ChatPillInput';
 import LocationPermissionBar from './LocationPermissionBar';
 
-/**
- * @param {{
- *   variant?: 'embedded' | 'sheet',
- *   onPressLogin?: () => void,
- *   onClose?: () => void,
- * }} props
- */
 const GuestAIChatPanel = ({
   variant = 'embedded',
   onPressLogin,
@@ -40,27 +30,7 @@ const GuestAIChatPanel = ({
     locationContext,
   } = useGuestAiChat({ enabled: true });
 
-  const messagesScrollRef = useRef(null);
-  const inputRef = useRef(null);
   const isEmbedded = variant === 'embedded';
-  const keyboardInset = useKeyboardInset();
-  const embeddedPanelLift =
-    isEmbedded && keyboardInset > 0 ? getComposerKeyboardMargin(keyboardInset) : 0;
-
-  const scrollToEnd = useChatAutoScroll(messagesScrollRef, [messages, loading], {
-    scrollOnKeyboard: !isEmbedded,
-  });
-
-  const onSendMessage = async () => {
-    await sendMessage();
-    setTimeout(() => inputRef.current?.focus(), 80);
-  };
-
-  const onComposerFocus = () => {
-    if (!isEmbedded) {
-      scrollToEnd(true);
-    }
-  };
 
   const panelHeader = (
     <View style={styles.header}>
@@ -76,35 +46,15 @@ const GuestAIChatPanel = ({
     </View>
   );
 
-  const limitBanner = (
-    <Text style={styles.limitText} numberOfLines={1}>
-      {remaining > 0
-        ? `${remaining} free question${remaining === 1 ? '' : 's'} left without login`
-        : 'Free limit reached — log in to continue.'}
-    </Text>
-  );
-
-  const locationBar = (
-    <LocationPermissionBar
-      visible={!locationGranted}
-      canAskAgain={locationCanAskAgain}
-      locationLabel={locationContext?.label}
-      onEnable={requestLocation}
-      compact
-    />
-  );
-
   const chatFooter = (
     <>
       <ChatPillInput
-        ref={inputRef}
         value={input}
         onChangeText={setInput}
         placeholder={remaining > 0 ? 'Ask AI assistant' : 'Log in to continue'}
         editable={!loading && remaining > 0}
         sendDisabled={!input.trim() || loading || remaining <= 0}
-        onSend={onSendMessage}
-        onFocus={isEmbedded ? undefined : onComposerFocus}
+        onSend={sendMessage}
         onLocationPress={requestLocation}
         showLocationButton={false}
         keepFocusOnSend
@@ -117,64 +67,22 @@ const GuestAIChatPanel = ({
     </>
   );
 
-  if (isEmbedded) {
-    return (
-      <View
-        style={[
-          styles.root,
-          styles.rootEmbedded,
-          embeddedPanelLift > 0 && { marginBottom: embeddedPanelLift },
-        ]}
-      >
-        {panelHeader}
-        {locationBar}
-        {limitBanner}
-        <EmbeddedGuestChatLayout
-          scrollRef={messagesScrollRef}
-          style={styles.embeddedLayout}
-          contentContainerStyle={styles.embeddedMessagesContent}
-          footer={chatFooter}
-        >
-          {messages.length === 0 && (
-            <Text style={styles.emptyText}>
-              Ask anything about volunteering. You can send up to {GUEST_LIMIT} messages without an account.
-            </Text>
-          )}
-          {messages.map((msg) => (
-            <View
-              key={msg.id}
-              style={[styles.messageRow, msg.sender === 'user' ? styles.userRow : styles.aiRow]}
-            >
-              <View style={[styles.messageBubble, msg.sender === 'user' ? styles.userBubble : styles.aiBubble]}>
-                {msg.sender === 'ai' ? (
-                  <Markdown style={aiMarkdownStyles}>{msg.text}</Markdown>
-                ) : (
-                  <Text style={styles.userBubbleText}>{msg.text}</Text>
-                )}
-              </View>
-            </View>
-          ))}
-          {loading && (
-            <View style={styles.loaderRow}>
-              <ActivityIndicator size="small" color="#2563eb" />
-              <Text style={styles.loaderText}>AI is typing...</Text>
-            </View>
-          )}
-        </EmbeddedGuestChatLayout>
-      </View>
-    );
-  }
-
   return (
-    <View style={[styles.root, styles.rootSheet]}>
+    <View style={[styles.root, isEmbedded ? styles.rootEmbedded : styles.rootSheet]}>
       {panelHeader}
-      {locationBar}
-      {limitBanner}
-      <ChatConversationLayout
-        scrollRef={messagesScrollRef}
-        style={styles.sheetLayout}
-        footer={chatFooter}
-      >
+      <LocationPermissionBar
+        visible={!locationGranted}
+        canAskAgain={locationCanAskAgain}
+        locationLabel={locationContext?.label}
+        onEnable={requestLocation}
+        compact
+      />
+      <Text style={styles.limitText} numberOfLines={1}>
+        {remaining > 0
+          ? `${remaining} free question${remaining === 1 ? '' : 's'} left without login`
+          : 'Free limit reached — log in to continue.'}
+      </Text>
+      <SimpleChatLayout style={styles.chatLayout} footer={chatFooter}>
         {messages.length === 0 && (
           <Text style={styles.emptyText}>
             Ask anything about volunteering. You can send up to {GUEST_LIMIT} messages without an account.
@@ -200,7 +108,7 @@ const GuestAIChatPanel = ({
             <Text style={styles.loaderText}>AI is typing...</Text>
           </View>
         )}
-      </ChatConversationLayout>
+      </SimpleChatLayout>
     </View>
   );
 };
@@ -234,17 +142,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     borderWidth: 0,
   },
-  embeddedLayout: {
+  chatLayout: {
     flex: 1,
     minHeight: 0,
-  },
-  sheetLayout: {
-    flex: 1,
-    minHeight: 0,
-  },
-  embeddedMessagesContent: {
-    padding: 12,
-    paddingBottom: 8,
   },
   header: {
     flexDirection: 'row',
