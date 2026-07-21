@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import { UserIcon, MailIcon, PhoneIcon, LockIcon } from '../components/Icons';
-import KeyboardFormScreen from '../components/KeyboardFormScreen';
+import { KeyboardFormScreen } from '../components/Keyboard';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();

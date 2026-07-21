@@ -6,14 +6,15 @@ import {
   Image,
   TouchableOpacity,
   RefreshControl,
-  ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import GuestAIChatPanel from '../components/GuestAIChatPanel';
+import { KeyboardFormScreen } from '../components/Keyboard';
 
 const LandingScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [chatRefreshKey, setChatRefreshKey] = useState(0);
 
@@ -24,98 +25,85 @@ const LandingScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator
-        nestedScrollEnabled
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#2563eb']}
-            tintColor="#2563eb"
-            title="Pull to refresh"
-            titleColor="#ffffff"
-          />
-        }
-      >
-        <View style={styles.hero}>
-          <Image
-            source={require('../../assets/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-            accessibilityLabel="Volunteer Connect logo"
-          />
-          <Text style={styles.title}>Volunteer Connect</Text>
-          <Text style={styles.tagline}>Connect. Volunteer. Make a Difference.</Text>
-          <Text style={styles.description}>
-            Join volunteers and organizations making an impact. Discover opportunities, track your hours,
-            and get help from our AI assistant — scroll down to try it before you sign in.
-          </Text>
-        </View>
+    <KeyboardFormScreen
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#2563eb']}
+          tintColor="#2563eb"
+          title="Pull to refresh"
+          titleColor="#ffffff"
+        />
+      }
+    >
+      <View style={styles.hero}>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="Volunteer Connect logo"
+        />
+        <Text style={styles.title}>Volunteer Connect</Text>
+        <Text style={styles.tagline}>Connect. Volunteer. Make a Difference.</Text>
+        <Text style={styles.description}>
+          Join volunteers and organizations making an impact. Discover opportunities, track your hours,
+          and get help from our AI assistant — scroll down to try it before you sign in.
+        </Text>
+      </View>
 
-        <View style={styles.aiSection}>
-          <Text style={styles.aiSectionTitle}>Try the AI assistant</Text>
-          <Text style={styles.aiSectionHint}>
-            You can ask up to 3 questions without logging in.
-          </Text>
-          <GuestAIChatPanel
-            key={chatRefreshKey}
-            variant="embedded"
-            onPressLogin={() => navigation.navigate('Login')}
-          />
-          <View style={styles.bottomActions}>
-            <View style={styles.btnRow}>
-              <TouchableOpacity
-                style={styles.btnLogin}
-                onPress={() => navigation.navigate('Login')}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.btnLoginText}>Login</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.btnSignup}
-                onPress={() => navigation.navigate('Register')}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.btnSignupText}>Sign up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-        <View style={styles.footer}>
-          <View style={styles.legalLinksRow}>
+      <View style={styles.aiSection}>
+        <Text style={styles.aiSectionTitle}>Try the AI assistant</Text>
+        <Text style={styles.aiSectionHint}>
+          You can ask up to 3 questions without logging in.
+        </Text>
+        <GuestAIChatPanel
+          key={chatRefreshKey}
+          variant="embedded"
+          onPressLogin={() => navigation.navigate('Login')}
+        />
+        <View style={styles.bottomActions}>
+          <View style={styles.btnRow}>
             <TouchableOpacity
-              onPress={() => navigation.navigate('TermsConditions')}
-              activeOpacity={0.7}
+              style={styles.btnLogin}
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.85}
             >
-              <Text style={styles.legalLinkText}>Terms & Conditions</Text>
+              <Text style={styles.btnLoginText}>Login</Text>
             </TouchableOpacity>
-            <Text style={styles.legalDivider}>|</Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate('PrivacyPolicy')}
-              activeOpacity={0.7}
+              style={styles.btnSignup}
+              onPress={() => navigation.navigate('Register')}
+              activeOpacity={0.85}
             >
-              <Text style={styles.legalLinkText}>Privacy Policy</Text>
+              <Text style={styles.btnSignupText}>Sign up</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+        <View style={styles.legalLinksRow}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('TermsConditions')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.legalLinkText}>Terms & Conditions</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalDivider}>|</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PrivacyPolicy')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.legalLinkText}>Privacy Policy</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardFormScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#1e3a8a',
-  },
-  scroll: {
-    flex: 1,
-  },
   scrollContent: {
     paddingBottom: 32,
     flexGrow: 1,

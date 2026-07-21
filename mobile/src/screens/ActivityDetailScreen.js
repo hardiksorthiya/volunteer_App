@@ -14,8 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
-import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
+import { KeyboardAwareScrollView, KeyboardAvoidingModal } from '../components/Keyboard';
 import {
   ArrowLeftIcon,
   PlusIcon,

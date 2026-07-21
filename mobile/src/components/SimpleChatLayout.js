@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useChatAutoScroll } from '../hooks/useChatAutoScroll';
 
-/** Messages above a fixed footer — no keyboard or auto-scroll logic. */
+/**
+ * Simple chat shell: messages scroll + composer footer.
+ */
 export default function SimpleChatLayout({
   children,
   footer,
@@ -9,19 +12,32 @@ export default function SimpleChatLayout({
   contentContainerStyle,
   messagesStyle,
   footerStyle,
+  /** Change when messages/loading update so the list scrolls to the latest reply. */
+  autoScrollDeps = [],
 }) {
+  const scrollRef = useRef(null);
+  const scrollToLatest = useChatAutoScroll(scrollRef, autoScrollDeps);
+
   return (
     <View style={[styles.root, style]}>
       <ScrollView
+        ref={scrollRef}
         style={[styles.messages, messagesStyle]}
-        contentContainerStyle={[styles.content, contentContainerStyle]}
+        contentContainerStyle={[styles.content, { paddingBottom: 16 }, contentContainerStyle]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         nestedScrollEnabled
         showsVerticalScrollIndicator
+        onContentSizeChange={() => scrollToLatest(true)}
+        onLayout={() => {
+          requestAnimationFrame(() => {
+            scrollRef.current?.scrollToEnd?.({ animated: false });
+          });
+        }}
       >
         {children}
       </ScrollView>
+
       {footer ? <View style={[styles.footer, footerStyle]}>{footer}</View> : null}
     </View>
   );

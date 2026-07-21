@@ -1,5 +1,4 @@
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 
 /**
  * True when running inside Expo Go (not a store / APK / IPA build).
@@ -20,12 +19,4 @@ export function isStandaloneApp() {
     Constants.executionEnvironment === 'standalone' ||
     Constants.executionEnvironment === 'bare'
   );
-}
-
-/**
- * Android production builds need manual keyboard lift (edge-to-edge breaks resize).
- * Expo Go on Android can rely on window resize.
- */
-export function needsManualAndroidKeyboardLift() {
-  return Platform.OS === 'android' && !isExpoGo();
 }

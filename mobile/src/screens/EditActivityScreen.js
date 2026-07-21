@@ -30,7 +30,7 @@ import {
   CheckIcon,
 } from '../components/Icons';
 import Header from '../components/Header';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import { KeyboardAwareScrollView, KeyboardAvoidingModal } from '../components/Keyboard';
 
 const EditActivityScreen = () => {
   const route = useRoute();
@@ -1012,7 +1012,7 @@ const EditActivityScreen = () => {
               )}
             </View>
 
-            <Modal
+            <KeyboardAvoidingModal
               visible={isUserDropdownOpen}
               transparent={true}
               animationType="slide"
@@ -1038,10 +1038,10 @@ const EditActivityScreen = () => {
                     placeholder="Search users..."
                     value={userSearchQuery}
                     onChangeText={setUserSearchQuery}
-                    autoFocus
+                    showSoftInputOnFocus
                   />
 
-                  <ScrollView style={styles.userList}>
+                  <ScrollView style={styles.userList} keyboardShouldPersistTaps="handled">
                     {filteredUsers.map((u) => {
                       const isSelected = selectedUsers.includes(
                         String(u.id)
@@ -1082,7 +1082,7 @@ const EditActivityScreen = () => {
                   </ScrollView>
                 </View>
               </TouchableOpacity>
-            </Modal>
+            </KeyboardAvoidingModal>
           </View>
         )}
 

@@ -16,8 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { PieChart } from 'react-native-chart-kit';
 import Header from '../components/Header';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
-import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
+import { KeyboardAwareScrollView, KeyboardAvoidingModal } from '../components/Keyboard';
 import TaskHoursByActivityChart from '../components/TaskHoursByActivityChart';
 import api from '../config/api';
 import { formatMDY, toYMD } from '../utils/dateFormat';
@@ -962,8 +961,8 @@ const DashboardScreen = () => {
               value={hourTargetForm.hours}
               onChangeText={(text) => setHourTargetForm(f => ({ ...f, hours: text }))}
               placeholder="e.g. 10"
-              keyboardType="number-pad"
-              autoFocus
+              keyboardType="numeric"
+              showSoftInputOnFocus
             />
             <Text style={styles.modalHint}>Leave empty to clear your target.</Text>
             <View style={styles.modalButtons}>

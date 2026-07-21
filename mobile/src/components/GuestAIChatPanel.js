@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ const GuestAIChatPanel = ({
   variant = 'embedded',
   onPressLogin,
   onClose,
+  inputRef: externalInputRef,
 }) => {
   const {
     input,
@@ -30,6 +31,8 @@ const GuestAIChatPanel = ({
     locationContext,
   } = useGuestAiChat({ enabled: true });
 
+  const internalInputRef = useRef(null);
+  const inputRef = externalInputRef || internalInputRef;
   const isEmbedded = variant === 'embedded';
 
   const panelHeader = (
@@ -49,6 +52,7 @@ const GuestAIChatPanel = ({
   const chatFooter = (
     <>
       <ChatPillInput
+        ref={inputRef}
         value={input}
         onChangeText={setInput}
         placeholder={remaining > 0 ? 'Ask AI assistant' : 'Log in to continue'}
@@ -82,7 +86,16 @@ const GuestAIChatPanel = ({
           ? `${remaining} free question${remaining === 1 ? '' : 's'} left without login`
           : 'Free limit reached — log in to continue.'}
       </Text>
-      <SimpleChatLayout style={styles.chatLayout} footer={chatFooter}>
+      <SimpleChatLayout
+        style={styles.chatLayout}
+        footer={chatFooter}
+        autoScrollDeps={[
+          messages.length,
+          loading,
+          messages[messages.length - 1]?.id,
+          messages[messages.length - 1]?.text?.length,
+        ]}
+      >
         {messages.length === 0 && (
           <Text style={styles.emptyText}>
             Ask anything about volunteering. You can send up to {GUEST_LIMIT} messages without an account.

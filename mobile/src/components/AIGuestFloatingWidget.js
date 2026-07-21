@@ -1,20 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   TouchableOpacity,
   StyleSheet,
   Image,
+  Platform,
+  Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GuestAIChatPanel from './GuestAIChatPanel';
+import { useKeyboardBottomPad } from './Keyboard';
 
-const AIGuestFloatingWidget = ({ visible, onNavigateLogin }) => {
+const ANDROID_NAV_FALLBACK = 48;
+
+/**
+ * Floating AI button (Login / Register).
+ * Same guest chat as landing; bottom pad tracks the keyboard (no cut-off / no large gap).
+ */
+export default function AIGuestFloatingWidget({ visible, onNavigateLogin }) {
   const [open, setOpen] = useState(false);
+  const insets = useSafeAreaInsets();
+  const inputRef = useRef(null);
+  const bottomInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'android' ? ANDROID_NAV_FALLBACK : 0,
+  );
+  // Modal does not follow activity resize — always lift by full keyboard height.
+  const sheetBottomPad = useKeyboardBottomPad(bottomInset);
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const timer = setTimeout(() => inputRef.current?.focus?.(), 350);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  if (!visible) {
+    return null;
+  }
 
   return (
     <>
-      <TouchableOpacity style={styles.fab} onPress={() => setOpen(true)} activeOpacity={0.85} accessibilityLabel="Open AI chat">
+      <TouchableOpacity
+        style={[styles.fab, { bottom: 16 + bottomInset }]}
+        onPress={() => setOpen(true)}
+        activeOpacity={0.85}
+        accessibilityLabel="Open AI chat"
+      >
         <Image
           source={require('../../assets/chatbot.png')}
           style={styles.fabIcon}
@@ -23,12 +56,22 @@ const AIGuestFloatingWidget = ({ visible, onNavigateLogin }) => {
         />
       </TouchableOpacity>
 
-      {open && (
-        <View style={styles.overlay}>
-          <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
-          <View style={styles.panelWrap}>
+      <Modal
+        visible={open}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpen(false)}
+      >
+        <View style={[styles.overlay, { paddingBottom: open ? sheetBottomPad : 0 }]}>
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={() => setOpen(false)}
+          />
+          <View style={styles.dialog}>
             <GuestAIChatPanel
-              variant="sheet"
+              variant="embedded"
+              inputRef={inputRef}
               onClose={() => setOpen(false)}
               onPressLogin={() => {
                 setOpen(false);
@@ -37,16 +80,15 @@ const AIGuestFloatingWidget = ({ visible, onNavigateLogin }) => {
             />
           </View>
         </View>
-      )}
+      </Modal>
     </>
   );
-};
+}
 
 const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 18,
-    bottom: 24,
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -65,17 +107,19 @@ const styles = StyleSheet.create({
     height: 32,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     justifyContent: 'flex-end',
-    zIndex: 30,
+    paddingHorizontal: 16,
+    paddingTop: 24,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
   },
-  panelWrap: {
+  dialog: {
     width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    zIndex: 1,
   },
 });
-
-export default AIGuestFloatingWidget;

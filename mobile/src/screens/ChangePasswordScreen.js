@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
 import ScreenBackButton from '../components/ScreenBackButton';
 import api from '../config/api';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import { KeyboardAwareScrollView } from '../components/Keyboard';
 
 const ChangePasswordScreen = () => {
   const navigation = useNavigation();

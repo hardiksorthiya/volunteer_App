@@ -17,7 +17,7 @@ import { ensureMediaLibraryPermission, ensureCameraPermission } from '../utils/a
 import Header from '../components/Header';
 import ScreenBackButton from '../components/ScreenBackButton';
 import api, { getFullImageUrl } from '../config/api';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import { KeyboardAwareScrollView } from '../components/Keyboard';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();

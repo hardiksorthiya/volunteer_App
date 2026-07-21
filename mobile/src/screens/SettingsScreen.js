@@ -12,8 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../components/Header';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
-import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
+import { KeyboardAwareScrollView, KeyboardAvoidingModal } from '../components/Keyboard';
 import api from '../config/api';
 
 const SettingsScreen = () => {

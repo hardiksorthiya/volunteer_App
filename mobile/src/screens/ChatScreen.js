@@ -15,6 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
+import {
+  KeyboardStickyView,
+  useKeyboardState,
+} from 'react-native-keyboard-controller';
 import api from '../config/api';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import {
@@ -42,6 +46,10 @@ const aiMarkdownStyles = {
 
 export default function ChatScreen() {
   const insets = useSafeAreaInsets();
+  // Same keyboard height source as KeyboardStickyView (RN Keyboard events miss on some Samsungs).
+  const kb = useKeyboardState((s) => (s.isVisible && s.height > 0 ? Math.round(s.height) : 0));
+  // Composer already sits below the list; sticky only needs keyboard height + small gap.
+  const listPad = kb > 0 ? kb + 16 : 20;
 
   const [userId, setUserId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -278,10 +286,16 @@ export default function ChatScreen() {
       <View style={styles.chatPanel}>
         <SimpleChatLayout
           style={styles.body}
-          contentContainerStyle={styles.messagesContent}
+          contentContainerStyle={[styles.messagesContent, { paddingBottom: listPad }]}
           messagesStyle={styles.messagesFlat}
-          footerStyle={styles.footerFlat}
-          footer={chatFooter}
+          autoScrollDeps={[
+            messages.length,
+            loading,
+            chatId,
+            listPad,
+            messages[messages.length - 1]?.id,
+            messages[messages.length - 1]?.text?.length,
+          ]}
         >
           {messages.length === 0 && (
             <View style={styles.emptyWrap}>
@@ -310,6 +324,10 @@ export default function ChatScreen() {
           ))}
           {loading && <ActivityIndicator style={styles.loader} color="#2563eb" />}
         </SimpleChatLayout>
+
+        <KeyboardStickyView offset={{ closed: 0, opened: 0 }} style={styles.composer}>
+          {chatFooter}
+        </KeyboardStickyView>
       </View>
 
       <Modal visible={historyOpen} animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
@@ -426,12 +444,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    overflow: 'hidden',
     minHeight: 0,
   },
   body: { flex: 1, minHeight: 0 },
   messagesFlat: { backgroundColor: '#f8fafc' },
-  footerFlat: { borderTopWidth: 0 },
+  composer: {
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
   messagesContent: { padding: 14, paddingTop: 12 },
   emptyWrap: { alignItems: 'center', paddingHorizontal: 12, paddingVertical: 24 },
   emptyTitle: {

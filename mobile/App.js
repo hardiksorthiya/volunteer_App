@@ -27,7 +27,7 @@ import HourTargetsScreen from './src/screens/HourTargetsScreen';
 import { HomeIcon, ActivityIcon, ChatIcon, SettingsIcon } from './src/components/Icons';
 import { ClockIcon } from './src/components/Icons';
 import AIGuestFloatingWidget from './src/components/AIGuestFloatingWidget';
-import { KeyboardRoot } from './src/utils/KeyboardRoot';
+import { KeyboardRoot } from './src/components/Keyboard';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -217,12 +217,10 @@ export default function App() {
         <NavigationContainer
           ref={navigationRef}
           onReady={() => {
-            const initialRoute = navigationRef.current?.getCurrentRoute()?.name;
-            setCurrentRouteName(initialRoute || null);
+            setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name || null);
           }}
           onStateChange={() => {
-            const routeName = navigationRef.current?.getCurrentRoute()?.name;
-            setCurrentRouteName(routeName || null);
+            setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name || null);
           }}
         >
           <StatusBar style="light" />

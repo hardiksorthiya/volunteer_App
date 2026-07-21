@@ -25,6 +25,7 @@ const ChatPillInput = forwardRef(function ChatPillInput(
     keepFocusOnSend = true,
     onLocationPress,
     showLocationButton = false,
+    autoFocus = false,
   },
   ref,
 ) {
@@ -83,6 +84,9 @@ const ChatPillInput = forwardRef(function ChatPillInput(
             placeholderTextColor="#a1a1aa"
             editable={editable}
             multiline
+            autoFocus={autoFocus}
+            showSoftInputOnFocus
+            onPressIn={() => inputRef.current?.focus()}
             onFocus={onFocus}
             onBlur={onBlur}
             onSubmitEditing={handleSubmitEditing}

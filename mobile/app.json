@@ -69,15 +69,15 @@
     "extra": {
       "apiUrl": "https://volunteerconnect.cloud/api",
       "eas": {
-        "projectId": "55332645-ee23-4454-8e78-f87af83b8d0b"
+        "projectId": "c647c77f-5705-49c1-9be9-b62ea985f1db"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/55332645-ee23-4454-8e78-f87af83b8d0b"
+      "url": "https://u.expo.dev/c647c77f-5705-49c1-9be9-b62ea985f1db"
     },
-    "owner": "umashankars1"
+    "owner": "sorath8461"
   }
 }

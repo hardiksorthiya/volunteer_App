@@ -14,7 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Header from '../components/Header';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
+import { KeyboardAwareScrollView } from '../components/Keyboard';
 import { SearchIcon, FilterIcon, PlusIcon, EyeIcon, EditIcon, TrashIcon, CheckIcon } from '../components/Icons';
 import api from '../config/api';
 

@@ -12,8 +12,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
 import Header from '../components/Header';
-import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
-import KeyboardAvoidingModal from '../components/KeyboardAvoidingModal';
+import { KeyboardAwareScrollView, KeyboardAvoidingModal } from '../components/Keyboard';
 import { ClockIcon } from '../components/Icons';
 import { extractYMD, formatMDY, toYMD, oneYearAgo } from '../utils/dateFormat';
 
@@ -239,7 +238,10 @@ const HourTargetsScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <KeyboardAwareScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.sectionHeader}>
           <View style={styles.iconWrap}>
             <ClockIcon size={20} color="#2563eb" />
@@ -370,7 +372,12 @@ const HourTargetsScreen = () => {
         </View>
       </KeyboardAwareScrollView>
 
-      <KeyboardAvoidingModal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
+      <KeyboardAvoidingModal
+        visible={showModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowModal(false)}
+      >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>
@@ -417,10 +424,10 @@ const HourTargetsScreen = () => {
               <TextInput
                 style={styles.modalInput}
                 placeholder="e.g. 10"
-                keyboardType="number-pad"
+                keyboardType="numeric"
+                showSoftInputOnFocus
                 value={formHours}
                 onChangeText={setFormHours}
-                autoFocus
               />
 
               <View style={styles.modalActions}>

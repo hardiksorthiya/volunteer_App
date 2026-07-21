@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useKeyboardInset } from './useKeyboardInset';
+import { Keyboard } from 'react-native';
 
 const SCROLL_RETRY_MS = [0, 50, 120, 250, 400, 600];
 
 /**
- * Keeps chat message lists pinned to the latest message when content or keyboard changes.
- * Retries scroll several times so async layouts (Markdown, long AI replies) are fully visible.
+ * Keeps chat message lists pinned to the latest message when content changes.
  */
-export function useChatAutoScroll(scrollRef, deps = [], options = {}) {
-  const { scrollOnKeyboard = true } = options;
-  const keyboardInset = useKeyboardInset();
+export function useChatAutoScroll(scrollRef, deps = []) {
   const timersRef = useRef([]);
 
   const clearTimers = useCallback(() => {
@@ -27,9 +24,9 @@ export function useChatAutoScroll(scrollRef, deps = [], options = {}) {
   );
 
   const scrollToEndWithRetries = useCallback(
-    (animated = true) => {
+    (animated = true, delays = SCROLL_RETRY_MS) => {
       clearTimers();
-      SCROLL_RETRY_MS.forEach((delay) => {
+      delays.forEach((delay) => {
         const timer = setTimeout(() => scrollToEnd(animated && delay === 0), delay);
         timersRef.current.push(timer);
       });
@@ -44,14 +41,13 @@ export function useChatAutoScroll(scrollRef, deps = [], options = {}) {
   }, [...deps, scrollToEndWithRetries]);
 
   useEffect(() => {
-    if (!scrollOnKeyboard || keyboardInset <= 0) {
-      return undefined;
-    }
-    const timers = SCROLL_RETRY_MS.map((delay) =>
-      setTimeout(() => scrollToEnd(true), 80 + delay),
-    );
-    return () => timers.forEach(clearTimeout);
-  }, [keyboardInset, scrollOnKeyboard, scrollToEnd]);
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      scrollToEndWithRetries(true);
+    });
+    return () => {
+      showSub.remove();
+    };
+  }, [scrollToEndWithRetries]);
 
   useEffect(() => clearTimers, [clearTimers]);
 
