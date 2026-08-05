@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.volunteerconnect.app",
-      "buildNumber": "14",
+      "buildNumber": "15",
       "infoPlist": {
         "NSCameraUsageDescription": "Allow VolunteerConnect to access your camera to set your profile picture.",
         "NSPhotoLibraryUsageDescription": "Allow VolunteerConnect to access photos and media on your device to set your profile picture.",
@@ -33,7 +33,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.volunteerconnectone.app",
-      "versionCode": 25,
+      "versionCode": 26,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",
@@ -69,15 +69,12 @@
     "extra": {
       "apiUrl": "https://volunteerconnect.cloud/api",
       "eas": {
-        "projectId": "c647c77f-5705-49c1-9be9-b62ea985f1db"
+        "projectId": "55332645-ee23-4454-8e78-f87af83b8d0b"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/c647c77f-5705-49c1-9be9-b62ea985f1db"
-    },
-    "owner": "sorath8461"
+    "owner": "umashankars1"
   }
 }
